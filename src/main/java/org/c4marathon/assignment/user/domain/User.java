@@ -12,6 +12,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -38,4 +39,12 @@ public class User extends BaseTimeEntity {
 	@Enumerated(STRING)
 	@Column(name = "role", nullable = false)
 	private UserRole role;
+
+	@Builder
+	private User(String email, String password, String name, UserRole role) {
+		this.email = email;
+		this.password = password;
+		this.name = name;
+		this.role = role;
+	}
 }
