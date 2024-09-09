@@ -4,41 +4,14 @@ import static org.springframework.http.MediaType.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import org.c4marathon.assignment.account.repository.AccountRepository;
-import org.c4marathon.assignment.common.fixture.UserFixture;
-import org.c4marathon.assignment.user.domain.User;
+import org.c4marathon.assignment.common.support.ApiTestSupport;
 import org.c4marathon.assignment.user.dto.request.JoinRequestDto;
 import org.c4marathon.assignment.user.dto.request.LoginRequestDto;
-import org.c4marathon.assignment.user.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.web.servlet.MockMvc;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-@SpringBootTest
-@AutoConfigureMockMvc
-class UserControllerTest {
-
-	@Autowired
-	private MockMvc mockMvc;
-
-	@Autowired
-	private ObjectMapper objectMapper;
-
-	@Autowired
-	private UserRepository userRepository;
-
-	@Autowired
-	private AccountRepository accountRepository;
-
-	@Autowired
-	private PasswordEncoder passwordEncoder;
+class UserControllerTest extends ApiTestSupport {
 
 	@AfterEach
 	void tearDown() {
@@ -54,7 +27,7 @@ class UserControllerTest {
 
 		// when		// then
 		mockMvc.perform(post("/api/user/join")
-				.content(objectMapper.writeValueAsString(request))
+				.content(toJson(request))
 				.contentType(APPLICATION_JSON)
 			)
 			.andExpect(status().isOk())
@@ -66,13 +39,11 @@ class UserControllerTest {
 	void loginApi() throws Exception {
 		// given
 		final String password = "mini1234";
-		User user = UserFixture.userWithEncodingPassword(passwordEncoder);
-		userRepository.save(user);
-		LoginRequestDto request = new LoginRequestDto(user.getEmail(), password);
+		LoginRequestDto request = new LoginRequestDto(loginUser.getEmail(), password);
 
 		// when		// then
 		mockMvc.perform(post("/api/user/login")
-				.content(objectMapper.writeValueAsString(request))
+				.content(toJson(request))
 				.contentType(APPLICATION_JSON)
 			)
 			.andExpect(status().isOk());
