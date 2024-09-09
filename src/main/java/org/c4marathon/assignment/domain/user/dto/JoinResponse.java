@@ -10,4 +10,7 @@ public enum JoinResponse {
     JoinResponse(String responseMsg){
         this.responseMsg = responseMsg;
     }
+    public String getResponseMsg() {
+        return responseMsg;
+    }
 }
