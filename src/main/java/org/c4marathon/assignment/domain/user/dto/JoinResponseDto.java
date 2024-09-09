@@ -1,2 +1,7 @@
-package org.c4marathon.assignment.domain.user.dto;public class JoinResponseDto {
+package org.c4marathon.assignment.domain.user.dto;
+
+import lombok.Builder;
+
+@Builder
+public record JoinResponseDto(String responseMsg) {
 }
