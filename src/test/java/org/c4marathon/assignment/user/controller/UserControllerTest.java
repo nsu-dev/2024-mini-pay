@@ -4,7 +4,10 @@ import static org.springframework.http.MediaType.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import org.c4marathon.assignment.account.repository.AccountRepository;
 import org.c4marathon.assignment.user.dto.request.JoinRequestDto;
+import org.c4marathon.assignment.user.repository.UserRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,13 +19,25 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class UserControllerTest {
+class UserControllerTest {
 
 	@Autowired
 	private MockMvc mockMvc;
 
 	@Autowired
 	private ObjectMapper objectMapper;
+
+	@Autowired
+	private UserRepository userRepository;
+
+	@Autowired
+	private AccountRepository accountRepository;
+
+	@AfterEach
+	void tearDown() {
+		userRepository.deleteAll();
+		accountRepository.deleteAll();
+	}
 
 	@DisplayName("[회원가입 테스트]")
 	@Test
