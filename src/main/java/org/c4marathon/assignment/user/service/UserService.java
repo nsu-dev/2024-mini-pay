@@ -53,7 +53,7 @@ public class UserService {
 			.orElseThrow(() -> new BaseException(UserErrorCode.NOT_FOUND_USER));
 
 		if (!passwordEncoder.matches(loginRequestDto.password(), findUser.getPassword())) {
-			new BaseException(UserErrorCode.NOT_MATCH_PASSWORD);
+			throw new BaseException(UserErrorCode.NOT_MATCH_PASSWORD);
 		}
 
 		String token = jwtProvider.createToken(findUser, new Date());
