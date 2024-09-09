@@ -57,5 +57,6 @@ public class Account {
         // 출금 처리
         balance -= amount;
         todayWithdrawnAmount += amount;
+
     }
 }
