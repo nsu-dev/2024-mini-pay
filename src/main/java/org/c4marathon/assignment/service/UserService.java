@@ -1,18 +1,22 @@
 package org.c4marathon.assignment.service;
 import org.c4marathon.assignment.domain.Account;
 import org.c4marathon.assignment.domain.User;
+import org.c4marathon.assignment.repository.AccountRepository;
 import org.c4marathon.assignment.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.List;
+
 @Service
 public class UserService {
     @Autowired
     private UserRepository userRepository;
     @Autowired
-    private org.c4marathon.assignment.repository.AccountRepository accountRepository;
+    private AccountRepository accountRepository;
 
     //사용자 회원가입(메인계좌 생성)
     @Transactional
@@ -31,7 +35,7 @@ public class UserService {
     }
 
     @Transactional
-    public void assSavingsAccount(Long userId){
+    public void addSavingsAccount(Long userId){
         User user = userRepository.findById(userId).orElseThrow(()-> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         //적금 계좌 생성
@@ -52,18 +56,10 @@ public class UserService {
         Account savingsAccount = accountRepository.findById(savingsAccountId)
                 .orElseThrow(() -> new IllegalArgumentException("적금 계좌를 찾을 수 없습니다."));
 
-        // 출금 한도 체크
-        if (amount > mainAccount.getDailyWithdrawalLimit()) {
-            throw new IllegalArgumentException("1일 출금한도 초과입니다.");
-        }
+        // 메인 계좌에서 출금
+        mainAccount.withdraw(amount);
 
-        // 메인 계좌 잔액 체크
-        if (amount > mainAccount.getBalance()) {
-            throw new IllegalArgumentException("메인 계좌 금액이 부족합니다.");
-        }
-
-        // 메인 계좌에서 출금 및 적금 계좌로 입금
-        mainAccount.setBalance(mainAccount.getBalance() - amount);
+        // 적금 계좌로 입금
         savingsAccount.setBalance(savingsAccount.getBalance() + amount);
 
         // 계좌 저장
