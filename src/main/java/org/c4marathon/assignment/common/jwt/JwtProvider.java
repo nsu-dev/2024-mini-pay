@@ -31,12 +31,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class JwtProvider {
 
-	@Value("${jwt.key}")
-	private String key;
-	private SecretKey secretKey;
 	private static final String ROLE_KEY = "ROLE";
 	private static final long TOKEN_EXPIRE_TIME = 1000 * 60 * 60 * 5L;
 	private final UserRepository userRepository;
+	@Value("${jwt.key}")
+	private String key;
+	private SecretKey secretKey;
 
 	@PostConstruct
 	private void initSecretKey() {
