@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -44,7 +45,7 @@ public class AccountController {
 	@PostMapping("/api/send")
 	public ResponseEntity<SendResponseDto> sendMoney(
 		@AuthenticationPrincipal User user,
-		@RequestBody SendRequestDto requestDto) {
+		@Valid @RequestBody SendRequestDto requestDto) {
 
 		SendResponseDto sendResponseDto = accountService.sendMoney(user, requestDto);
 		return ResponseEntity.ok(sendResponseDto);
@@ -53,7 +54,7 @@ public class AccountController {
 	@PostMapping("/api/account/charge")
 	public ResponseEntity<ChargeResponseDto> chargeMainAccount(
 		@AuthenticationPrincipal User user,
-		@RequestBody ChargeRequestDto requestDto) {
+		@Valid @RequestBody ChargeRequestDto requestDto) {
 
 		ChargeResponseDto chargeResponseDto = accountService.chargeMainAccount(user, requestDto);
 		return ResponseEntity.ok(chargeResponseDto);

@@ -21,8 +21,7 @@ public class UserController {
 
 	@PostMapping("/api/user/join")
 	public ResponseEntity<JoinResponseDto> join(
-		@Valid
-		@RequestBody JoinRequestDto joinRequestDto
+		@Valid @RequestBody JoinRequestDto joinRequestDto
 	) {
 		JoinResponseDto joinResponseDto = userService.join(joinRequestDto);
 		return ResponseEntity.ok(joinResponseDto);
@@ -30,8 +29,7 @@ public class UserController {
 
 	@PostMapping("/api/user/login")
 	public ResponseEntity<LoginResponseDto> login(
-		@Valid
-		@RequestBody LoginRequestDto loginRequestDto
+		@Valid @RequestBody LoginRequestDto loginRequestDto
 	) {
 		LoginResponseDto loginResponseDto = userService.login(loginRequestDto);
 
