@@ -55,7 +55,7 @@ public class AccountService {
 		Account toAccount = findAccount(sendRequestDto.toAccountId(), sendRequestDto.toAccountType());
 		Account fromAccount = findAccount(sendRequestDto.fromAccountId(), sendRequestDto.fromAccountType());
 
-		if (!verifyAccountByUser(user, toAccount) || verifyAccountByUser(user, fromAccount)) {
+		if (!verifyAccountByUser(user, toAccount) || !verifyAccountByUser(user, fromAccount)) {
 			throw new BaseException(AccountErrorCode.NOT_AUTHORIZED_ACCOUNT);
 		}
 
