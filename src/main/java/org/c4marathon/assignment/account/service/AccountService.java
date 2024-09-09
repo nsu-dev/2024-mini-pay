@@ -77,6 +77,7 @@ public class AccountService {
 		return user.equals(account.getUser());
 	}
 
+	@Transactional(isolation = Isolation.SERIALIZABLE)
 	public ChargeResponseDto chargeMainAccount(User user, ChargeRequestDto requestDto) {
 
 		Account findAccount = accountRepository.findById(requestDto.accountId()).orElseThrow(
