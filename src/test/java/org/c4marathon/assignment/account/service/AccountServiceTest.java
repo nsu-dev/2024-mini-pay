@@ -5,8 +5,15 @@ import static org.c4marathon.assignment.account.domain.AccountType.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
+import java.util.Optional;
+
+import org.c4marathon.assignment.account.domain.Account;
+import org.c4marathon.assignment.account.dto.request.SendRequestDto;
 import org.c4marathon.assignment.account.dto.response.SavingAccountResponseDto;
+import org.c4marathon.assignment.account.dto.response.SendResponseDto;
 import org.c4marathon.assignment.account.repository.AccountRepository;
+import org.c4marathon.assignment.common.exception.runtime.BaseException;
+import org.c4marathon.assignment.common.fixture.AccountFixture;
 import org.c4marathon.assignment.common.fixture.UserFixture;
 import org.c4marathon.assignment.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
@@ -46,5 +53,87 @@ class AccountServiceTest {
 			() -> assertThat(response.userName()).isEqualTo(user.getName()),
 			() -> assertThat(response.userEmail()).isEqualTo(user.getEmail())
 		);
+	}
+
+	@DisplayName("[메인계좌에서 적금계좌로 송금한다.]")
+	@Test
+	void sendMoney() {
+		// given
+		User user = UserFixture.basicUser();
+		Account mainAccount = AccountFixture.accountWithTypeAndAmount(user, MAIN_ACCOUNT, 600_000);
+		Account savingAccount = AccountFixture.accountWithTypeAndAmount(user, SAVING_ACCOUNT, 0);
+
+		SendRequestDto requestDto = new SendRequestDto(
+			mainAccount.getId(),
+			MAIN_ACCOUNT.getType(),
+			300_000,
+			savingAccount.getId(),
+			SAVING_ACCOUNT.getType()
+		);
+
+		given(accountRepository.findByIdAndType(mainAccount.getId(), MAIN_ACCOUNT)).willReturn(
+			Optional.of(mainAccount));
+		given(accountRepository.findByIdAndType(savingAccount.getId(), SAVING_ACCOUNT)).willReturn(
+			Optional.of(savingAccount));
+
+		// when
+		SendResponseDto responseDto = accountService.sendMoney(user, requestDto);
+
+		// then
+		assertAll(
+			() -> assertThat(responseDto.toAccountMoney()).isEqualTo(300_000),
+			() -> assertThat(responseDto.fromAccountMoney()).isEqualTo(300_000)
+		);
+	}
+
+	@DisplayName("[다른 회원 계좌를 인출하면 예외가 발생한다.]")
+	@Test
+	void sendMoneyByUser() {
+		// given
+		User user1 = UserFixture.basicUser();
+		User user2 = UserFixture.basicUser();
+		Account mainAccount = AccountFixture.accountWithTypeAndAmount(user1, MAIN_ACCOUNT, 600_000);
+		Account savingAccount = AccountFixture.accountWithTypeAndAmount(user1, SAVING_ACCOUNT, 0);
+
+		SendRequestDto requestDto = new SendRequestDto(
+			mainAccount.getId(),
+			MAIN_ACCOUNT.getType(),
+			300_000,
+			savingAccount.getId(),
+			SAVING_ACCOUNT.getType()
+		);
+
+		given(accountRepository.findByIdAndType(mainAccount.getId(), MAIN_ACCOUNT)).willReturn(
+			Optional.of(mainAccount));
+		given(accountRepository.findByIdAndType(savingAccount.getId(), SAVING_ACCOUNT)).willReturn(
+			Optional.of(savingAccount));
+
+		// when  // then
+		assertThrows(BaseException.class, () -> accountService.sendMoney(user2, requestDto));
+	}
+
+	@DisplayName("[메인계좌 금액보다 큰 금액을 인출하면 예외가 발생한다.]")
+	@Test
+	void SendToMoneyWithIsNotEnoughMoney() {
+		// given
+		User user1 = UserFixture.basicUser();
+		Account mainAccount = AccountFixture.accountWithTypeAndAmount(user1, MAIN_ACCOUNT, 200_000);
+		Account savingAccount = AccountFixture.accountWithTypeAndAmount(user1, SAVING_ACCOUNT, 0);
+
+		SendRequestDto requestDto = new SendRequestDto(
+			mainAccount.getId(),
+			MAIN_ACCOUNT.getType(),
+			300_000,
+			savingAccount.getId(),
+			SAVING_ACCOUNT.getType()
+		);
+
+		given(accountRepository.findByIdAndType(mainAccount.getId(), MAIN_ACCOUNT)).willReturn(
+			Optional.of(mainAccount));
+		given(accountRepository.findByIdAndType(savingAccount.getId(), SAVING_ACCOUNT)).willReturn(
+			Optional.of(savingAccount));
+
+		// when  // then
+		assertThrows(BaseException.class, () -> accountService.sendMoney(user1, requestDto));
 	}
 }
