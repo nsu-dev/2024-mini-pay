@@ -31,19 +31,28 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    
+    //spring bean validation
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    /*JWT 관련 라이브러리*/
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+    implementation 'io.jsonwebtoken:jjwt-impl:0.12.3'
+    implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'com.mysql:mysql-connector-j'
     annotationProcessor 'org.projectlombok:lombok'
+
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
     testCompileOnly 'org.projectlombok:lombok:1.18.22'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
 
     // JUnit
     testImplementation "org.junit.jupiter:junit-jupiter:5.8.1"
-
-    //spring bean validation
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
-
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 checkstyle {
