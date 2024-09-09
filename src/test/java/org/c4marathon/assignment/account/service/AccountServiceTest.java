@@ -8,7 +8,9 @@ import static org.mockito.BDDMockito.*;
 import java.util.Optional;
 
 import org.c4marathon.assignment.account.domain.Account;
+import org.c4marathon.assignment.account.dto.request.ChargeRequestDto;
 import org.c4marathon.assignment.account.dto.request.SendRequestDto;
+import org.c4marathon.assignment.account.dto.response.ChargeResponseDto;
 import org.c4marathon.assignment.account.dto.response.SavingAccountResponseDto;
 import org.c4marathon.assignment.account.dto.response.SendResponseDto;
 import org.c4marathon.assignment.account.repository.AccountRepository;
@@ -135,5 +137,42 @@ class AccountServiceTest {
 
 		// when  // then
 		assertThrows(BaseException.class, () -> accountService.sendMoney(user1, requestDto));
+	}
+
+	@DisplayName("[메인계좌에 금액을 충전한다.]")
+	@Test
+	void chargeMainAccount() {
+		// given
+		User user = UserFixture.basicUser();
+		Account account = AccountFixture.accountWithTypeAndAmount(user, MAIN_ACCOUNT, 300_000);
+
+		ChargeRequestDto requestDto = new ChargeRequestDto(account.getId(), 300_000);
+
+		given(accountRepository.findById(any())).willReturn(Optional.of(account));
+
+		// when
+		ChargeResponseDto responseDto = accountService.chargeMainAccount(user, requestDto);
+
+		// then
+		assertAll(
+			() -> assertThat(responseDto.accountId()).isEqualTo(account.getId()),
+			() -> assertThat(responseDto.amount()).isEqualTo(600_000),
+			() -> assertThat(responseDto.limitAmount()).isEqualTo(3_000_000 - requestDto.chargeAmount())
+		);
+	}
+
+	@DisplayName("[메인계좌에 금액을 충전 시 충전금액을 초과하면 예외가 발생한다.]")
+	@Test
+	void chargeMainAccountWithNotEnoughLimitAmount() {
+		// given
+		User user = UserFixture.basicUser();
+		Account account = AccountFixture.accountWithTypeAndAmount(user, MAIN_ACCOUNT, 300_000);
+
+		ChargeRequestDto requestDto = new ChargeRequestDto(account.getId(), 3_000_000);
+
+		given(accountRepository.findById(any())).willReturn(Optional.of(account));
+
+		// when		// then
+		assertThrows(BaseException.class, () -> accountService.chargeMainAccount(user, requestDto));
 	}
 }
