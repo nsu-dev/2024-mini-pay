@@ -15,7 +15,7 @@ import org.springframework.web.client.HttpClientErrorException;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
-    public String join(UserDto userDto){
+    public JoinResponseDto join(UserDto userDto){
         String userPhone = userDto.getUserPhone();
         if(duplicatedUser(userPhone)){
             User user = UserMapper.toUser(userDto);
@@ -23,9 +23,9 @@ public class UserService {
             // 메인계좌 생성 메서드 호출, 호출부는 트랜잭션 이벤트리스너
 
             JoinResponseDto joinResponseDto = JoinResponseDto.builder()
-                    .responseMsg(JoinResponse.SUCCESS.toString())
+                    .responseMsg(JoinResponse.SUCCESS.getResponseMsg())
                     .build();
-            return joinResponseDto.toString();
+            return joinResponseDto;
         } else{
             throw new HttpClientErrorException(HttpStatusCode.valueOf(400));
         }
