@@ -1,11 +1,18 @@
 package org.c4marathon.assignment.account.controller;
 
+import java.util.List;
+
+import org.c4marathon.assignment.account.dto.request.SendRequestDto;
+import org.c4marathon.assignment.account.dto.response.AccountResponseDto;
 import org.c4marathon.assignment.account.dto.response.SavingAccountResponseDto;
+import org.c4marathon.assignment.account.dto.response.SendResponseDto;
 import org.c4marathon.assignment.account.service.AccountService;
 import org.c4marathon.assignment.user.domain.User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.RequiredArgsConstructor;
@@ -23,4 +30,22 @@ public class AccountController {
 		SavingAccountResponseDto savingAccountResponseDto = accountService.generateSavingAccount(user);
 		return ResponseEntity.ok(savingAccountResponseDto);
 	}
+
+	@GetMapping("/api/accounts")
+	public ResponseEntity<List<AccountResponseDto>> getAccounts(
+		@AuthenticationPrincipal User user
+	) {
+		List<AccountResponseDto> accountResponseDto = accountService.getAccounts(user);
+		return ResponseEntity.ok(accountResponseDto);
+	}
+
+	@PostMapping("/api/send")
+	public ResponseEntity<SendResponseDto> sendMoney(
+		@AuthenticationPrincipal User user,
+		@RequestBody SendRequestDto requestDto) {
+
+		SendResponseDto sendResponseDto = accountService.sendMoney(user, requestDto);
+		return ResponseEntity.ok(sendResponseDto);
+	}
+
 }

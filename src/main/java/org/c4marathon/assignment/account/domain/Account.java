@@ -4,6 +4,8 @@ import static jakarta.persistence.EnumType.*;
 import static jakarta.persistence.GenerationType.*;
 import static lombok.AccessLevel.*;
 
+import org.c4marathon.assignment.account.exception.AccountErrorCode;
+import org.c4marathon.assignment.common.exception.runtime.BaseException;
 import org.c4marathon.assignment.user.domain.User;
 
 import jakarta.persistence.Column;
@@ -50,5 +52,16 @@ public class Account {
 		this.amount = amount;
 		this.limitAmount = limitAmount;
 		this.user = user;
+	}
+
+	public void decreaseAmount(int amount) {
+		if (this.amount < amount) {
+			throw new BaseException(AccountErrorCode.NOT_ENOUGH_AMOUNT);
+		}
+		this.amount -= amount;
+	}
+
+	public void increaseAmount(int amount) {
+		this.amount += amount;
 	}
 }
