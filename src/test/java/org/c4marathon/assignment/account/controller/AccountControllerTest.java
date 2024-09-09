@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.c4marathon.assignment.account.domain.Account;
 import org.c4marathon.assignment.account.domain.AccountType;
+import org.c4marathon.assignment.account.dto.request.ChargeRequestDto;
 import org.c4marathon.assignment.account.dto.request.SendRequestDto;
 import org.c4marathon.assignment.common.fixture.AccountFixture;
 import org.c4marathon.assignment.common.support.ApiTestSupport;
@@ -36,7 +37,8 @@ class AccountControllerTest extends ApiTestSupport {
 			.andExpect(jsonPath("$.type").value(AccountType.SAVING_ACCOUNT.getType()))
 			.andExpect(jsonPath("$.amount").value(0))
 			.andExpect(jsonPath("$.userName").value(loginUser.getName()))
-			.andExpect(jsonPath("$.userEmail").value(loginUser.getEmail()));
+			.andExpect(jsonPath("$.userEmail").value(loginUser.getEmail())
+			);
 	}
 
 	@DisplayName("[메인계좌에서 적금계좌로 돈을 송금한다.]")
@@ -67,7 +69,8 @@ class AccountControllerTest extends ApiTestSupport {
 			.andExpect(jsonPath("$.toAccountMoney").value(mainAccount.getAmount() - 300_000))
 			.andExpect(jsonPath("$.fromAccountId").value(savingAccount.getId()))
 			.andExpect(jsonPath("$.fromAccountType").value(savingAccount.getType().getType()))
-			.andExpect(jsonPath("$.fromAccountMoney").value(savingAccount.getAmount() + 300_000));
+			.andExpect(jsonPath("$.fromAccountMoney").value(savingAccount.getAmount() + 300_000)
+			);
 	}
 
 	@DisplayName("[자신의 모든계좌를 조회한다.]")
@@ -92,6 +95,29 @@ class AccountControllerTest extends ApiTestSupport {
 			.andExpect(jsonPath("$.[1].id").value(savingAccount.getId()))
 			.andExpect(jsonPath("$.[1].type").value(savingAccount.getType().getType()))
 			.andExpect(jsonPath("$.[1].amount").value(savingAccount.getAmount()))
-			.andExpect(jsonPath("$.[1].limitAmount").value(savingAccount.getLimitAmount()));
+			.andExpect(jsonPath("$.[1].limitAmount").value(savingAccount.getLimitAmount())
+			);
+	}
+
+	@DisplayName("[메인계좌의 충전한도 한에서 금액을 충전한다.]")
+	@Test
+	void chargeMainAccount() throws Exception {
+		// given
+		Account mainAccount = AccountFixture.accountWithTypeAndAmount(loginUser, MAIN_ACCOUNT, 600_000);
+		accountRepository.save(mainAccount);
+
+		ChargeRequestDto requestDto = new ChargeRequestDto(mainAccount.getId(), 300_000);
+
+		// when		// then
+		mockMvc.perform(post("/api/account/charge")
+				.header("Authorization", "Bearer " + token)
+				.content(toJson(requestDto))
+				.contentType(APPLICATION_JSON)
+			)
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.accountId").value(mainAccount.getId()))
+			.andExpect(jsonPath("$.amount").value(mainAccount.getAmount() + 300_000))
+			.andExpect(jsonPath("$.limitAmount").value(mainAccount.getLimitAmount() - 300_000)
+			);
 	}
 }
