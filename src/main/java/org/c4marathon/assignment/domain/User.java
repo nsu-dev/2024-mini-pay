@@ -1,9 +1,8 @@
-package org.c4marathon.assignment.entity;
+package org.c4marathon.assignment.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-import org.c4marathon.assignment.entity.Account;
 
 import java.util.ArrayList;
 import java.util.List;

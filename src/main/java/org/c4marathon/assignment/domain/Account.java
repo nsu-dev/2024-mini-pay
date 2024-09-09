@@ -1,4 +1,4 @@
-package org.c4marathon.assignment.entity;
+package org.c4marathon.assignment.domain;
 
 import jakarta.persistence.*;
 import lombok.Getter;
