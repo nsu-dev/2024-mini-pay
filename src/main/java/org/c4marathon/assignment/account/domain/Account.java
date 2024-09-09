@@ -64,4 +64,12 @@ public class Account {
 	public void increaseAmount(int amount) {
 		this.amount += amount;
 	}
+
+	public void chargeAmount(int chargeAmount) {
+		this.amount += chargeAmount;
+		this.limitAmount -= chargeAmount;
+		if (this.limitAmount <= 0) {
+			throw new BaseException(AccountErrorCode.NOT_ENOUGH_CHARGE_AMOUNT);
+		}
+	}
 }

@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.c4marathon.assignment.account.domain.Account;
 import org.c4marathon.assignment.account.dto.response.AccountResponseDto;
+import org.c4marathon.assignment.account.dto.response.ChargeResponseDto;
 import org.c4marathon.assignment.account.dto.response.SavingAccountResponseDto;
 import org.c4marathon.assignment.account.dto.response.SendResponseDto;
 
@@ -46,6 +47,14 @@ public class AccountMapper {
 			account.getType().getType(),
 			account.getAmount(),
 			account.getLimitAmount()
+		);
+	}
+
+	public static ChargeResponseDto toChargeResponseDto(Account findAccount) {
+		return new ChargeResponseDto(
+			findAccount.getId(),
+			findAccount.getAmount(),
+			findAccount.getLimitAmount()
 		);
 	}
 }

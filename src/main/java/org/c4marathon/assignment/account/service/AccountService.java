@@ -7,8 +7,10 @@ import java.util.List;
 import org.c4marathon.assignment.account.domain.Account;
 import org.c4marathon.assignment.account.domain.AccountType;
 import org.c4marathon.assignment.account.dto.AccountMapper;
+import org.c4marathon.assignment.account.dto.request.ChargeRequestDto;
 import org.c4marathon.assignment.account.dto.request.SendRequestDto;
 import org.c4marathon.assignment.account.dto.response.AccountResponseDto;
+import org.c4marathon.assignment.account.dto.response.ChargeResponseDto;
 import org.c4marathon.assignment.account.dto.response.SavingAccountResponseDto;
 import org.c4marathon.assignment.account.dto.response.SendResponseDto;
 import org.c4marathon.assignment.account.exception.AccountErrorCode;
@@ -75,4 +77,17 @@ public class AccountService {
 		return user.equals(account.getUser());
 	}
 
+	public ChargeResponseDto chargeMainAccount(User user, ChargeRequestDto requestDto) {
+
+		Account findAccount = accountRepository.findById(requestDto.accountId()).orElseThrow(
+			() -> new BaseException(AccountErrorCode.NOT_FOUND_ACCOUNT));
+
+		if (!verifyAccountByUser(user, findAccount)) {
+			throw new BaseException(AccountErrorCode.NOT_AUTHORIZED_ACCOUNT);
+		}
+
+		findAccount.chargeAmount(requestDto.chargeAmount());
+
+		return AccountMapper.toChargeResponseDto(findAccount);
+	}
 }
