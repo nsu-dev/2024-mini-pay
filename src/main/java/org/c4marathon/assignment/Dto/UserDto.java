@@ -17,5 +17,5 @@ public class UserDto {
         this.savingAccount = savingAccount;
     }
 
-    //빌더만들기
+    //빌더추가
 }
