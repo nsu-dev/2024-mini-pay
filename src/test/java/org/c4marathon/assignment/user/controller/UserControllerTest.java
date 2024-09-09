@@ -1,11 +1,11 @@
 package org.c4marathon.assignment.user.controller;
 
-import static org.c4marathon.assignment.user.domain.UserRole.*;
 import static org.springframework.http.MediaType.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import org.c4marathon.assignment.account.repository.AccountRepository;
+import org.c4marathon.assignment.common.fixture.UserFixture;
 import org.c4marathon.assignment.user.domain.User;
 import org.c4marathon.assignment.user.dto.request.JoinRequestDto;
 import org.c4marathon.assignment.user.dto.request.LoginRequestDto;
@@ -66,12 +66,7 @@ class UserControllerTest {
 	void loginApi() throws Exception {
 		// given
 		final String password = "mini1234";
-		User user = User.builder()
-			.email("abc@mini.com")
-			.name("김미니")
-			.password(passwordEncoder.encode(password))
-			.role(USER)
-			.build();
+		User user = UserFixture.userWithEncodingPassword(passwordEncoder);
 		userRepository.save(user);
 		LoginRequestDto request = new LoginRequestDto(user.getEmail(), password);
 

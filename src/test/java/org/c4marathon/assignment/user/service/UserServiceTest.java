@@ -1,7 +1,6 @@
 package org.c4marathon.assignment.user.service;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.c4marathon.assignment.user.domain.UserRole.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
@@ -9,18 +8,21 @@ import static org.mockito.BDDMockito.*;
 import java.util.Optional;
 
 import org.c4marathon.assignment.common.exception.runtime.BaseException;
+import org.c4marathon.assignment.common.fixture.UserFixture;
 import org.c4marathon.assignment.common.jwt.JwtProvider;
 import org.c4marathon.assignment.user.domain.User;
 import org.c4marathon.assignment.user.dto.request.JoinRequestDto;
 import org.c4marathon.assignment.user.dto.request.LoginRequestDto;
 import org.c4marathon.assignment.user.dto.response.LoginResponseDto;
 import org.c4marathon.assignment.user.repository.UserRepository;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,8 +37,16 @@ class UserServiceTest {
 	@Mock
 	private JwtProvider jwtProvider;
 
+	@Mock
+	private ApplicationEventPublisher eventPublisher;
+
 	@InjectMocks
 	private UserService userService;
+
+	@AfterEach
+	void tearDown() {
+		userRepository.deleteAll();
+	}
 
 	@DisplayName("회원가입 시 유저의 정보가 저장된다.")
 	@Test
@@ -57,12 +67,7 @@ class UserServiceTest {
 	void login() {
 		// given
 		LoginRequestDto request = new LoginRequestDto("abc@mini.com", "mini1234");
-		User user = User.builder()
-			.email("abc@mini.com")
-			.name("김미니")
-			.password("mini1234")
-			.role(USER)
-			.build();
+		User user = UserFixture.basicUser();
 		String expectedToken = "expectedToken123";
 
 		given(userRepository.findByEmail(anyString())).willReturn(Optional.of(user));
@@ -93,12 +98,7 @@ class UserServiceTest {
 	void loginExceptionWithPassword() {
 		// given
 		LoginRequestDto request = new LoginRequestDto("abc@mini.com", "mini1234");
-		User user = User.builder()
-			.email("abc@mini.com")
-			.name("김미니")
-			.password("mini1234")
-			.role(USER)
-			.build();
+		User user = UserFixture.basicUser();
 
 		given(userRepository.findByEmail(anyString())).willReturn(Optional.of(user));
 		given(passwordEncoder.matches(any(), any())).willReturn(Boolean.FALSE);
