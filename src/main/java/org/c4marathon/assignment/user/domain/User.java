@@ -6,6 +6,7 @@ import static lombok.AccessLevel.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.c4marathon.assignment.account.domain.Account;
 import org.c4marathon.assignment.common.domain.BaseTimeEntity;
@@ -55,5 +56,20 @@ public class User extends BaseTimeEntity {
 		this.password = password;
 		this.name = name;
 		this.role = role;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
+		User user = (User)o;
+		return Objects.equals(id, user.id);
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(id);
 	}
 }
