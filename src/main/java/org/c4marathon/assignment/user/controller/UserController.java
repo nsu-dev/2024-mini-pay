@@ -1,7 +1,9 @@
 package org.c4marathon.assignment.user.controller;
 
 import org.c4marathon.assignment.user.dto.request.JoinRequestDto;
+import org.c4marathon.assignment.user.dto.request.LoginRequestDto;
 import org.c4marathon.assignment.user.dto.response.JoinResponseDto;
+import org.c4marathon.assignment.user.dto.response.LoginResponseDto;
 import org.c4marathon.assignment.user.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,5 +26,15 @@ public class UserController {
 	) {
 		JoinResponseDto joinResponseDto = userService.join(joinRequestDto);
 		return ResponseEntity.ok(joinResponseDto);
+	}
+
+	@PostMapping("/api/user/login")
+	public ResponseEntity<LoginResponseDto> login(
+		@Valid
+		@RequestBody LoginRequestDto loginRequestDto
+	) {
+		LoginResponseDto loginResponseDto = userService.login(loginRequestDto);
+
+		return ResponseEntity.ok(loginResponseDto);
 	}
 }
