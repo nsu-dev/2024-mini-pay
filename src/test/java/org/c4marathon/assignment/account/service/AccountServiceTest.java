@@ -24,6 +24,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class AccountServiceTest {
@@ -94,6 +95,8 @@ class AccountServiceTest {
 		// given
 		User user1 = UserFixture.basicUser();
 		User user2 = UserFixture.basicUser();
+		ReflectionTestUtils.setField(user2, "id", 20L);
+
 		Account mainAccount = AccountFixture.accountWithTypeAndAmount(user1, MAIN_ACCOUNT, 600_000);
 		Account savingAccount = AccountFixture.accountWithTypeAndAmount(user1, SAVING_ACCOUNT, 0);
 
@@ -168,7 +171,7 @@ class AccountServiceTest {
 		User user = UserFixture.basicUser();
 		Account account = AccountFixture.accountWithTypeAndAmount(user, MAIN_ACCOUNT, 300_000);
 
-		ChargeRequestDto requestDto = new ChargeRequestDto(account.getId(), 3_000_000);
+		ChargeRequestDto requestDto = new ChargeRequestDto(account.getId(), 4_000_000);
 
 		given(accountRepository.findById(any())).willReturn(Optional.of(account));
 
