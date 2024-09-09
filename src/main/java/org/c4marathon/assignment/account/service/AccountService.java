@@ -3,7 +3,6 @@ package org.c4marathon.assignment.account.service;
 import static org.c4marathon.assignment.account.domain.AccountType.*;
 
 import java.util.List;
-import java.util.Objects;
 
 import org.c4marathon.assignment.account.domain.Account;
 import org.c4marathon.assignment.account.domain.AccountType;
@@ -73,7 +72,7 @@ public class AccountService {
 	}
 
 	private boolean verifyAccountByUser(User user, Account account) {
-		return Objects.equals(user, account.getUser());
+		return user.equals(account.getUser());
 	}
 
 }
