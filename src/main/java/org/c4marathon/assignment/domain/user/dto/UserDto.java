@@ -2,8 +2,10 @@ package org.c4marathon.assignment.domain.user.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
+import lombok.Getter;
 
 @Builder
+@Getter
 public class UserDto {
 	@NotBlank
 	private String userPhone;
