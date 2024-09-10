@@ -4,6 +4,7 @@ import org.c4marathon.assignment.domain.user.dto.JoinResponseDto;
 import org.c4marathon.assignment.domain.user.dto.LoginRequestDto;
 import org.c4marathon.assignment.domain.user.dto.LoginResponseDto;
 import org.c4marathon.assignment.domain.user.dto.UserDto;
+import org.c4marathon.assignment.domain.user.entity.JoinResponseMsg;
 import org.c4marathon.assignment.domain.user.entity.LoginResponseMsg;
 import org.c4marathon.assignment.domain.user.service.UserService;
 import org.springframework.http.ResponseEntity;
@@ -24,8 +25,20 @@ public class UserController {
 
 	@PostMapping("/join")
 	public ResponseEntity<JoinResponseDto> userJoin(@Valid @RequestBody UserDto userDto) {
-		JoinResponseDto joinResponseDto = userService.join(userDto);
-		return ResponseEntity.ok().body(joinResponseDto);
+		try {
+			JoinResponseDto joinResponseDto = userService.join(userDto);
+			if (joinResponseDto.responseMsg().equals(JoinResponseMsg.SUCCESS.getResponseMsg())) {
+				return ResponseEntity.ok().body(joinResponseDto);
+			} else {
+				return ResponseEntity.badRequest().body(joinResponseDto);
+			}
+		} catch (HttpClientErrorException e) {
+			JoinResponseDto joinResponseDto = JoinResponseDto.builder()
+				.responseMsg(JoinResponseMsg.DUPLICATIEDFAIL.getResponseMsg())
+				.build();
+			return ResponseEntity.status(e.getStatusCode()).body(joinResponseDto);
+		}
+
 	}
 
 	@PostMapping("/login")
@@ -33,7 +46,7 @@ public class UserController {
 		try {
 			LoginResponseDto loginResponseDto = userService.login(loginRequestDto);
 			if (loginResponseDto.responseMsg().equals(LoginResponseMsg.SUCCESS.getResponseMsg())) {
-				return ResponseEntity.ok(loginResponseDto);
+				return ResponseEntity.ok().body(loginResponseDto);
 			} else {
 				return ResponseEntity.badRequest().body(loginResponseDto);
 			}
