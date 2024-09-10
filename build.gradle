@@ -23,14 +23,51 @@ configurations {
 repositories {
     mavenCentral()
 }
+jacoco {
+    toolVersion = "0.8.9"
+}
 
+/** Jacoco start **/
+test {
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+
+        // QueryDSL Q클래스 제외
+        def Qdomains = []
+        for (qPattern in "**/QA".."**/QZ") {
+            Qdomains.add(qPattern + "*")
+        }
+
+        afterEvaluate {
+            classDirectories.setFrom(files(classDirectories.files.collect {
+                fileTree(dir: it,
+                        exclude: [] + Qdomains)
+            }))
+        }
+
+        xml.destination file("${buildDir}/jacoco/index.xml")
+        html.destination file("${buildDir}/jacoco/index.html")
+    }
+}
+/** Jacoco end **/
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.apache.commons:commons-lang3:3.13.0'
     implementation 'org.apache.commons:commons-collections4:4.4'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'mysql:mysql-connector-java:8.0.32'
+    testImplementation "org.junit.jupiter:junit-jupiter:5.8.1"
 }
 
 checkstyle {
@@ -44,11 +81,11 @@ tasks.named('test') {
     finalizedBy 'jacocoTestReport'
 }
 
-jacocoTestReport {
-    reports {
-        xml.required = true
-    }
-}
+//jacocoTestReport {
+//    reports {
+//        xml.required = true
+//    }
+//}
 
 sonar {
     properties {
