@@ -1,6 +1,11 @@
 package org.c4marathon.assignment.domain.user.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -10,29 +15,27 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Table(name = "user")
 public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    Long userId;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long userId;
 
-    @Column(name = "userPhone", unique = true, nullable = false)
-    String userPhone;
+	@Column(name = "userPhone", unique = true, nullable = false)
+	private String userPhone;
 
-    @Column(name = "userPassword", nullable = false)
-    String userPassword;
+	@Column(name = "userPassword", nullable = false)
+	private String userPassword;
 
-    @Column(name = "userName", nullable = false)
-    String userName;
+	@Column(name = "userName", nullable = false)
+	private String userName;
 
-    @Column(name = "userBirth", nullable = false)
-    String userBirth;
+	@Column(name = "userBirth", nullable = false)
+	private String userBirth;
 
-
-
-    @Builder
-    private User(String userPhone, String userPassword, String userName, String userBirth){
-        this.userPhone = userPhone;
-        this.userPassword = userPassword;
-        this.userName = userName;
-        this.userBirth = userBirth;
-    }
+	@Builder
+	private User(String userPhone, String userPassword, String userName, String userBirth) {
+		this.userPhone = userPhone;
+		this.userPassword = userPassword;
+		this.userName = userName;
+		this.userBirth = userBirth;
+	}
 }

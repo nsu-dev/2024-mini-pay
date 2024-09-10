@@ -8,11 +8,22 @@ import lombok.Getter;
 @Getter
 public class UserDto {
     @NotBlank
-    String userPhone;
+    private String userPhone;
     @NotBlank
-    String userPassword;
+    private String password;
+
     @NotBlank
-    String userName;
+    private String userName;
+
     @NotBlank
-    String userBirth;
+    private String userBirth;
+
+
+
+    public UserDto(@NotBlank String userPhone, @NotBlank String userName, @NotBlank String userBirth, @NotBlank String password) {
+        this.userPhone = userPhone;
+        this.userName = userName;
+        this.userBirth = userBirth;
+        this.password = password;
+    }
 }
