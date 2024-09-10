@@ -112,11 +112,12 @@ public class AccountService {
 	}
 
 	//메인 외 계좌 생성
-	public CreateResponseDto createAccountOther(Long userId, AccountRole createAccountRole) {
+	public CreateResponseDto createAccountOther(Long userId, String createAccountRole) {
 		User user = userRepository.findById(userId).orElseThrow(() -> new NoSuchElementException());
 		String accountNum = createRandomAccount();
+		AccountRole accountRole = determineAccountRole(createAccountRole);
 		if (duplicatedAccount(accountNum)) {
-			Account account = createAccount(user, accountNum, createAccountRole);
+			Account account = createAccount(user, accountNum, accountRole);
 			accountRepository.save(account);
 			return CreateResponseDto.builder()
 				.responseMsg(CreateResponseMsg.SUCCESS.getResponseMsg())
@@ -126,5 +127,18 @@ public class AccountService {
 				.responseMsg(CreateResponseMsg.FAIL.getResponseMsg())
 				.build();
 		}
+	}
+
+	private AccountRole determineAccountRole(String createAccountRole) {
+		AccountRole accountRole = null;
+		switch (createAccountRole) {
+			case "SAVINGS":
+				accountRole = AccountRole.SAVINGS;
+				break;
+			case "OTHERS":
+				accountRole = AccountRole.OTHERS;
+				break;
+		}
+		return accountRole;
 	}
 }

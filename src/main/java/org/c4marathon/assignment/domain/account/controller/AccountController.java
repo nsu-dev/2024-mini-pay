@@ -1,10 +1,15 @@
 package org.c4marathon.assignment.domain.account.controller;
 
+import java.util.NoSuchElementException;
+
+import org.c4marathon.assignment.domain.account.dto.CreateResponseDto;
 import org.c4marathon.assignment.domain.account.dto.RemittanceRequestDto;
 import org.c4marathon.assignment.domain.account.dto.RemittanceResponseDto;
+import org.c4marathon.assignment.domain.account.entity.CreateResponseMsg;
 import org.c4marathon.assignment.domain.account.entity.RemittanceResponseMsg;
 import org.c4marathon.assignment.domain.account.service.AccountService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,9 +42,21 @@ public class AccountController {
 
 	}
 
-	// @PostMapping("/creataccount/{accountRole}/{userId}")
-	// public ResponseEntity<CreateResponseDto> createAccount(@RequestBody @PathVariable Long userId,
-	// 	@PathVariable AccountRole createAccountRole) {
-	//
-	// }
+	@PostMapping("/creataccount/{createAccountRole}/{userId}")
+	public ResponseEntity<CreateResponseDto> createAccount(@RequestBody @PathVariable Long userId,
+		@PathVariable String createAccountRole) {
+		try {
+			CreateResponseDto createResponseDto = accountService.createAccountOther(userId, createAccountRole);
+			if (createResponseDto.responseMsg() == CreateResponseMsg.SUCCESS.getResponseMsg()) {
+				return ResponseEntity.ok().body(createResponseDto);
+			} else {
+				return ResponseEntity.badRequest().body(createResponseDto);
+			}
+		} catch (NoSuchElementException e) {
+			CreateResponseDto createResponseDto = CreateResponseDto.builder()
+				.responseMsg(CreateResponseMsg.NOUSER.getResponseMsg())
+				.build();
+			return ResponseEntity.status(400).body(createResponseDto);
+		}
+	}
 }
