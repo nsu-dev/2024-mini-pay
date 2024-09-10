@@ -9,6 +9,7 @@ import org.c4marathon.assignment.domain.account.entity.AccountStatus;
 import org.c4marathon.assignment.domain.account.entity.ScheduleCreateEvent;
 import org.c4marathon.assignment.domain.account.repository.AccountRepository;
 import org.c4marathon.assignment.domain.user.entity.User;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,7 +23,8 @@ import lombok.RequiredArgsConstructor;
 public class AccountService {
 	private final AccountRepository accountRepository;
 
-	@TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+	@EventListener
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void createMain(ScheduleCreateEvent scheduleCreateEvent) {
 		User user = scheduleCreateEvent.user();

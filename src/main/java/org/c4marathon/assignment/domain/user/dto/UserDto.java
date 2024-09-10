@@ -10,7 +10,7 @@ public class UserDto {
 	@NotBlank
 	private String userPhone;
 	@NotBlank
-	private String password;
+	private String userPassword;
 
 	@NotBlank
 	private String userName;
@@ -19,10 +19,10 @@ public class UserDto {
 	private String userBirth;
 
 	public UserDto(@NotBlank String userPhone, @NotBlank String userName, @NotBlank String userBirth,
-		@NotBlank String password) {
+		@NotBlank String userPassword) {
 		this.userPhone = userPhone;
 		this.userName = userName;
 		this.userBirth = userBirth;
-		this.password = password;
+		this.userPassword = userPassword;
 	}
 }
