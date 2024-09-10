@@ -36,4 +36,10 @@ public class AccountController {
 		}
 
 	}
+
+	// @PostMapping("/creataccount/{accountRole}/{userId}")
+	// public ResponseEntity<CreateResponseDto> createAccount(@RequestBody @PathVariable Long userId,
+	// 	@PathVariable AccountRole createAccountRole) {
+	//
+	// }
 }

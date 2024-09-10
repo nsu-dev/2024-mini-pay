@@ -1,5 +1,7 @@
 package org.c4marathon.assignment.domain.account.dto;
 
-public class CreateResponseDto {
-	public String creatMsg;
+import lombok.Builder;
+
+@Builder
+public record CreateResponseDto(String responseMsg) {
 }

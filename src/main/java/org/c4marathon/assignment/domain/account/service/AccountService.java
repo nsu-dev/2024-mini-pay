@@ -1,17 +1,21 @@
 package org.c4marathon.assignment.domain.account.service;
 
 import java.time.LocalDateTime;
+import java.util.NoSuchElementException;
 import java.util.Random;
 
+import org.c4marathon.assignment.domain.account.dto.CreateResponseDto;
 import org.c4marathon.assignment.domain.account.dto.RemittanceRequestDto;
 import org.c4marathon.assignment.domain.account.dto.RemittanceResponseDto;
 import org.c4marathon.assignment.domain.account.entity.Account;
 import org.c4marathon.assignment.domain.account.entity.AccountRole;
 import org.c4marathon.assignment.domain.account.entity.AccountStatus;
+import org.c4marathon.assignment.domain.account.entity.CreateResponseMsg;
 import org.c4marathon.assignment.domain.account.entity.RemittanceResponseMsg;
 import org.c4marathon.assignment.domain.account.entity.ScheduleCreateEvent;
 import org.c4marathon.assignment.domain.account.repository.AccountRepository;
 import org.c4marathon.assignment.domain.user.entity.User;
+import org.c4marathon.assignment.domain.user.repository.UserRepository;
 import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
@@ -28,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AccountService {
 	private final AccountRepository accountRepository;
+	private final UserRepository userRepository;
 
 	//메인계좌 생성
 	@EventListener
@@ -104,5 +109,22 @@ public class AccountService {
 				.build();
 		}
 		throw new HttpClientErrorException(HttpStatusCode.valueOf(500));
+	}
+
+	//메인 외 계좌 생성
+	public CreateResponseDto createAccountOther(Long userId, AccountRole createAccountRole) {
+		User user = userRepository.findById(userId).orElseThrow(() -> new NoSuchElementException());
+		String accountNum = createRandomAccount();
+		if (duplicatedAccount(accountNum)) {
+			Account account = createAccount(user, accountNum, createAccountRole);
+			accountRepository.save(account);
+			return CreateResponseDto.builder()
+				.responseMsg(CreateResponseMsg.SUCCESS.getResponseMsg())
+				.build();
+		} else {
+			return CreateResponseDto.builder()
+				.responseMsg(CreateResponseMsg.FAIL.getResponseMsg())
+				.build();
+		}
 	}
 }
