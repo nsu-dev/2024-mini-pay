@@ -64,4 +64,8 @@ public class Account {
 	public void updateSaving(Long accountBalance) {
 		this.accountBalance = accountBalance;
 	}
+
+	public void updateDailyChargeLimit(int dailyChargeLimit) {
+		this.dailyChargeLimit = dailyChargeLimit;
+	}
 }

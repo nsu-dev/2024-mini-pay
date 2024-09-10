@@ -1,6 +1,7 @@
 package org.c4marathon.assignment.domain.account.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Random;
 
@@ -19,6 +20,7 @@ import org.c4marathon.assignment.domain.user.entity.User;
 import org.c4marathon.assignment.domain.user.repository.UserRepository;
 import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
@@ -159,5 +161,15 @@ public class AccountService {
 		return RemittanceResponseDto.builder()
 			.responseMsg(RemittanceResponseMsg.SUCCESS.getResponseMsg())
 			.build();
+	}
+
+	@Scheduled(cron = "0 0 0 * * ?")
+	@Transactional
+	public void resetDailyChargeLimit() {
+		List<Account> accountList = accountRepository.findAll();
+		for (Account account : accountList
+		) {
+			account.updateDailyChargeLimit(0);
+		}
 	}
 }
