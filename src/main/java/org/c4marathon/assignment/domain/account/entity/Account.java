@@ -15,10 +15,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @NoArgsConstructor
+@Getter
 @Table(name = "account")
 public class Account {
 	@Id
@@ -52,5 +54,10 @@ public class Account {
 		this.accountStatus = accountStatus;
 		this.dailyChargeLimit = dailyChargeLimit;
 		this.user = user;
+	}
+
+	public void updateAccount(Long accountBalance, int dailyChargeLimit) {
+		this.accountBalance = accountBalance;
+		this.dailyChargeLimit = dailyChargeLimit;
 	}
 }
