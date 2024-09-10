@@ -77,25 +77,30 @@ public class AccountService {
 	public RemittanceResponseDto chargeMain(RemittanceRequestDto remittanceRequestDto) {
 		String accountNum = remittanceRequestDto.getAccountNum();
 		Account account = accountRepository.findByAccountNum(accountNum);
-		if ((account.getAccountStatus() == AccountStatus.AVAILABLE)
-			&& Long.parseLong(remittanceRequestDto.getRemittanceAmount()) <= 3000000
-			&& (account.getDailyChargeLimit() <= 3000000)) {
-			Long accountBalance =
-				account.getAccountBalance() + Long.parseLong(remittanceRequestDto.getRemittanceAmount());
-			int dailyChargeLimit =
-				account.getDailyChargeLimit() + Integer.parseInt(remittanceRequestDto.getRemittanceAmount());
-			account.updateAccount(accountBalance, dailyChargeLimit);
+
+		Long remittanceAmount = Long.parseLong(remittanceRequestDto.getRemittanceAmount());
+		if (remittanceAmount > 3000000 || account.getDailyChargeLimit() >= 3000000) {
 			return RemittanceResponseDto.builder()
-				.responseMsg(RemittanceResponseMsg.SUCCESS.getResponseMsg())
+				.responseMsg(RemittanceResponseMsg.DAILYCHARGELIMIT_ERR.getResponseMsg())
 				.build();
 		} else if (account.getAccountStatus() == AccountStatus.UNAVAILABLE) {
 			return RemittanceResponseDto.builder()
 				.responseMsg(AccountStatus.UNAVAILABLE.getAccountStatus())
 				.build();
-		} else if (Long.parseLong(remittanceRequestDto.getRemittanceAmount()) > 3000000
-			|| account.getDailyChargeLimit() > 3000000) {
+		} else if (account.getAccountStatus() == AccountStatus.AVAILABLE
+			&& remittanceAmount <= 3000000
+			&& account.getDailyChargeLimit() <= 3000000) {
+			Long accountBalance = account.getAccountBalance() + remittanceAmount;
+			int dailyChargeLimit = account.getDailyChargeLimit() + remittanceAmount.intValue();
+			if (dailyChargeLimit > 3000000) {
+				return RemittanceResponseDto.builder()
+					.responseMsg(RemittanceResponseMsg.DAILYCHARGELIMIT_ERR.getResponseMsg())
+					.build();
+			}
+			account.updateAccount(accountBalance, dailyChargeLimit);
+
 			return RemittanceResponseDto.builder()
-				.responseMsg(RemittanceResponseMsg.DAILYCHARGELIMIT_ERR.getResponseMsg())
+				.responseMsg(RemittanceResponseMsg.SUCCESS.getResponseMsg())
 				.build();
 		}
 		throw new HttpClientErrorException(HttpStatusCode.valueOf(500));
