@@ -7,6 +7,7 @@ import java.util.Random;
 import org.c4marathon.assignment.domain.account.dto.CreateResponseDto;
 import org.c4marathon.assignment.domain.account.dto.RemittanceRequestDto;
 import org.c4marathon.assignment.domain.account.dto.RemittanceResponseDto;
+import org.c4marathon.assignment.domain.account.dto.SavingRequestDto;
 import org.c4marathon.assignment.domain.account.entity.Account;
 import org.c4marathon.assignment.domain.account.entity.AccountRole;
 import org.c4marathon.assignment.domain.account.entity.AccountStatus;
@@ -129,6 +130,7 @@ public class AccountService {
 		}
 	}
 
+	//계좌 역할 구별
 	private AccountRole determineAccountRole(String createAccountRole) {
 		AccountRole accountRole = null;
 		switch (createAccountRole) {
@@ -140,5 +142,22 @@ public class AccountService {
 				break;
 		}
 		return accountRole;
+	}
+
+	//메인계좌에서 인출 후 적금계좌에 입금
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
+	public RemittanceResponseDto savingRemittance(Long savingId, User user, SavingRequestDto savingRequestDto) {
+		Account mainAccount = accountRepository.findMainAccount(user.getUserId(), AccountRole.MAIN);
+		Account saving = accountRepository.findById(savingId).orElseThrow(() -> new NoSuchElementException());
+
+		if (mainAccount.getAccountBalance() - savingRequestDto.getAmount() < 0) {
+			throw new HttpClientErrorException(HttpStatusCode.valueOf(400));
+		}
+		mainAccount.updateSaving(mainAccount.getAccountBalance() - savingRequestDto.getAmount());
+		saving.updateSaving(saving.getAccountBalance() + savingRequestDto.getAmount());
+
+		return RemittanceResponseDto.builder()
+			.responseMsg(RemittanceResponseMsg.SUCCESS.getResponseMsg())
+			.build();
 	}
 }

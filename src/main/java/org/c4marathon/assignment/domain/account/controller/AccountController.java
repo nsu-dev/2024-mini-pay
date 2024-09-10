@@ -5,9 +5,13 @@ import java.util.NoSuchElementException;
 import org.c4marathon.assignment.domain.account.dto.CreateResponseDto;
 import org.c4marathon.assignment.domain.account.dto.RemittanceRequestDto;
 import org.c4marathon.assignment.domain.account.dto.RemittanceResponseDto;
+import org.c4marathon.assignment.domain.account.dto.SavingRequestDto;
 import org.c4marathon.assignment.domain.account.entity.CreateResponseMsg;
 import org.c4marathon.assignment.domain.account.entity.RemittanceResponseMsg;
+import org.c4marathon.assignment.domain.account.repository.AccountRepository;
 import org.c4marathon.assignment.domain.account.service.AccountService;
+import org.c4marathon.assignment.domain.user.entity.User;
+import org.c4marathon.assignment.domain.user.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,6 +27,8 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/account")
 public class AccountController {
 	private final AccountService accountService;
+	private final AccountRepository accountRepository;
+	private final UserRepository userRepository;
 
 	@PostMapping("/remittance")
 	public ResponseEntity<RemittanceResponseDto> chargeMain(@RequestBody RemittanceRequestDto remittanceRequestDto) {
@@ -57,6 +63,27 @@ public class AccountController {
 				.responseMsg(CreateResponseMsg.NOUSER.getResponseMsg())
 				.build();
 			return ResponseEntity.status(400).body(createResponseDto);
+		}
+	}
+
+	@PostMapping("/saving/{accountId}")
+	public ResponseEntity<RemittanceResponseDto> savingRemittance(@PathVariable Long accountId, @RequestBody
+	SavingRequestDto savingRequestDto) {
+		try {
+			User user = accountRepository.findUserByAccount(accountId);
+			RemittanceResponseDto remittanceResponseDto = accountService.savingRemittance(accountId, user,
+				savingRequestDto);
+			return ResponseEntity.ok().body(remittanceResponseDto);
+		} catch (NoSuchElementException e) {
+			RemittanceResponseDto remittanceResponseDto = RemittanceResponseDto.builder()
+				.responseMsg(RemittanceResponseMsg.NOSUCHACCOUNT.getResponseMsg())
+				.build();
+			return ResponseEntity.badRequest().body(remittanceResponseDto);
+		} catch (HttpClientErrorException e) {
+			RemittanceResponseDto remittanceResponseDto = RemittanceResponseDto.builder()
+				.responseMsg(RemittanceResponseMsg.INSUFFICIENT_BALANCE.getResponseMsg())
+				.build();
+			return ResponseEntity.badRequest().body(remittanceResponseDto);
 		}
 	}
 }
