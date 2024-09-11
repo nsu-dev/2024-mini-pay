@@ -32,7 +32,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
 
     implementation 'org.springframework.boot:spring-boot-starter-security'
-    
+
     //spring bean validation
     implementation 'org.springframework.boot:spring-boot-starter-validation'
 
@@ -67,8 +67,45 @@ tasks.named('test') {
 }
 
 jacocoTestReport {
+    classDirectories.setFrom(files(classDirectories.files.collect {
+        fileTree(dir: it, excludes: [
+                '**/*Application*',
+                '**/exception/**',
+                '**/config/**',
+                '**/dto/**',
+                '**/jwt/**'
+        ])
+    }))
+
     reports {
-        xml.required = true
+        html.required.set(true)
+        xml.required.set(true)
+        csv.required.set(true)
+    }
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            enabled = true
+            element = 'CLASS'
+
+            limit {
+                counter = 'BRANCH'
+                value = 'COVERERDRATIO'
+                minimum = 0.80
+            }
+        }
+
+        rule {
+            excludes = [
+                    '**/*Application*',
+                    '**/exception/**',
+                    '**/config/**',
+                    '**/dto/**',
+                    '**/jwt/**'
+            ]
+        }
     }
 }
 
