@@ -4,7 +4,6 @@ import static org.c4marathon.assignment.account.domain.AccountType.*;
 
 import org.c4marathon.assignment.account.domain.Account;
 import org.c4marathon.assignment.account.repository.AccountRepository;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +20,6 @@ public class AccountEventHandler {
 
 	private final AccountRepository accountRepository;
 
-	@EventListener
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 	public void generateAccount(AccountEvent event) {
