@@ -1,6 +1,7 @@
 package org.c4marathon.assignment.domain;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -10,6 +11,7 @@ import java.util.List;
 
 @Entity
 @Getter
+@NoArgsConstructor // 기본 생성자 자동 추가
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,8 +29,12 @@ public class User {
     @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "user")
     private List<Account> savingAccounts = new ArrayList<>();
 
-    //기본 생성자
-    public User() {
+    //@Builer를 통해 객체 생성 시 필드 값을 초기화
+    @Builder
+    public User(String password, String name, String registrationNum) {
+        this.password = password;
+        this.name = name;
+        this.registrationNum = registrationNum;
         this.savingAccounts = new ArrayList<>();
     }
 

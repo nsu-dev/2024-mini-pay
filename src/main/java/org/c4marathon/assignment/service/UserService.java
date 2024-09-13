@@ -38,7 +38,7 @@ public class UserService {
         User savedUser = userRepository.save(user);
 
         // DTO 응답
-        return new UserResponseDto.builder()
+        return UserResponseDto.builder()
                 .userId(savedUser.getUserId())
                 .name(savedUser.getName())
                 .registrationNum(savedUser.getRegistrationNum())
