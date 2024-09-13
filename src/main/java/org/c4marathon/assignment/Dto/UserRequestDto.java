@@ -7,14 +7,14 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class UserRequestDto {
-    private String password;
-    private String name;
-    private String registrationNum;
+	private String password;
+	private String name;
+	private int registrationNum;
 
-    @Builder
-    public UserRequestDto(String password, String name, String registrationNum) {
-        this.password = password;
-        this.name = name;
-        this.registrationNum = registrationNum;
-    }
+	@Builder
+	public UserRequestDto(String password, String name, int registrationNum) {
+		this.password = password;
+		this.name = name;
+		this.registrationNum = registrationNum;
+	}
 }

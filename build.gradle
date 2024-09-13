@@ -25,23 +25,26 @@ repositories {
 }
 
 dependencies {
+    // Spring Boot 및 관련 의존성
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    // H2 Database (Development)
     runtimeOnly 'com.h2database:h2'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.apache.commons:commons-lang3:3.13.0'
     implementation 'org.apache.commons:commons-collections4:4.4'
 
-    // JUnit 5
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
-    testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
-
-    // Mockito
-    testImplementation 'org.mockito:mockito-core:4.6.1'
-
-
+    // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+
+    // JUnit 5 의존성
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+
+    // Mockito 의존성
+    testImplementation 'org.mockito:mockito-core:3.11.2'
+    testImplementation 'org.mockito:mockito-junit-jupiter:3.11.2'
+
+    // Spring Boot 테스트 지원
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
@@ -56,6 +59,9 @@ tasks.named('test') {
     finalizedBy 'jacocoTestReport'
 }
 
+test {
+    useJUnitPlatform()
+}
 
 jacocoTestReport {
     reports {

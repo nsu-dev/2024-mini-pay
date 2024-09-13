@@ -1,51 +1,57 @@
 package org.c4marathon.assignment.domain;
 
-import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
 @NoArgsConstructor // 기본 생성자 자동 추가
 public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userId;
-    private String password;
-    private String name;
-    private String registrationNum;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long userId;
+	private String password;
+	private String name;
+	private int registrationNum;
 
-    //메인 계좌는 1대1 관계
-    @OneToOne(cascade = CascadeType.REMOVE)
-    @JoinColumn(name = "mainAccountId")
-    private Account mainAccount;
+	//메인 계좌는 1대1 관계
+	@OneToOne(cascade = CascadeType.REMOVE)
+	@JoinColumn(name = "mainAccountId")
+	private Account mainAccount;
 
-    //사용자와 적금계좌는 1대 다 관계
-    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "user")
-    private List<Account> savingAccounts = new ArrayList<>();
+	//사용자와 적금계좌는 1대 다 관계
+	@OneToMany(cascade = CascadeType.REMOVE, mappedBy = "user")
+	private List<Account> savingAccounts = new ArrayList<>();
 
-    //@Builer를 통해 객체 생성 시 필드 값을 초기화
-    @Builder
-    public User(String password, String name, String registrationNum) {
-        this.password = password;
-        this.name = name;
-        this.registrationNum = registrationNum;
-        this.savingAccounts = new ArrayList<>();
-    }
+	//@Builer를 통해 객체 생성 시 필드 값을 초기화
+	@Builder
+	public User(String password, String name, int registrationNum) {
+		this.password = password;
+		this.name = name;
+		this.registrationNum = registrationNum;
+		this.savingAccounts = new ArrayList<>();
+	}
 
-    //메인 계좌 설정 메서드
-    public void setMainAccount(Account mainAccount) {
-        this.mainAccount = mainAccount;
-    }
+	//메인 계좌 설정 메서드
+	public void setMainAccount(Account mainAccount) {
+		this.mainAccount = mainAccount;
+	}
 
-    //적금 계좌 추가: Account 생성 시 User를 전달
-    public void addSavingAccount(String type, int balance) {
-        Account savingAccount = new Account(type, balance, this);  // 생성자에서 User 설정
-        this.savingAccounts.add(savingAccount); // savingAccounts 리스트에 적금 계좌 추가
-    }
+	//적금 계좌 추가: Account 생성 시 User를 전달
+	public void addSavingAccount(String type, int balance) {
+		Account savingAccount = new Account(type, balance, this);  // 생성자에서 User 설정
+		this.savingAccounts.add(savingAccount); // savingAccounts 리스트에 적금 계좌 추가
+	}
 }

@@ -7,14 +7,14 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class UserResponseDto {
-    private Long userId;
-    private String name;
-    private String registrationNum;
+	private Long userId;
+	private String name;
+	private long registrationNum;
 
-    @Builder
-    public UserResponseDto(Long userId, String name, String registrationNum) {
-        this.userId = userId;
-        this.name = name;
-        this.registrationNum = registrationNum;
-    }
+	@Builder
+	public UserResponseDto(Long userId, String name, long registrationNum) {
+		this.userId = userId;
+		this.name = name;
+		this.registrationNum = registrationNum;
+	}
 }
