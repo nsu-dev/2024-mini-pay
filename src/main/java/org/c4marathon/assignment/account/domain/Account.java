@@ -4,6 +4,9 @@ import static jakarta.persistence.EnumType.*;
 import static jakarta.persistence.GenerationType.*;
 import static lombok.AccessLevel.*;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+
 import org.c4marathon.assignment.account.exception.AccountErrorCode;
 import org.c4marathon.assignment.common.exception.runtime.BaseException;
 import org.c4marathon.assignment.user.domain.User;
@@ -46,6 +49,9 @@ public class Account {
 	@JoinColumn(name = "users_id")
 	private User user;
 
+	@Column(name = "last_charge_date")
+	private LocalDate lastChargeDate;
+
 	@Builder
 	private Account(AccountType type, int amount, int limitAmount, User user) {
 		this.type = type;
@@ -68,8 +74,14 @@ public class Account {
 	public void chargeAmount(int chargeAmount) {
 		this.amount += chargeAmount;
 		this.limitAmount -= chargeAmount;
+		this.lastChargeDate = LocalDate.now(ZoneId.of("Asia/Seoul"));
 		if (this.limitAmount < 0) {
 			throw new BaseException(AccountErrorCode.NOT_ENOUGH_CHARGE_AMOUNT);
 		}
+	}
+
+	public void resetLimitAmount() {
+		this.limitAmount = 0;
+		this.lastChargeDate = LocalDate.now(ZoneId.of("Asia/Seoul"));
 	}
 }
