@@ -91,6 +91,10 @@ public class AccountService {
 			throw new BaseException(AccountErrorCode.NOT_AUTHORIZED_ACCOUNT);
 		}
 
+		if (!verifyMainAccount(findAccount)) {
+			throw new BaseException(AccountErrorCode.NOT_ACCESS_CHARGE);
+		}
+
 		verifyLastChargeDate(findAccount);
 
 		findAccount.chargeAmount(requestDto.chargeAmount());
@@ -98,9 +102,13 @@ public class AccountService {
 		return AccountMapper.toChargeResponseDto(findAccount);
 	}
 
-	private void verifyLastChargeDate(Account findAccount) {
-		if (!Objects.equals(findAccount.getLastChargeDate(), LocalDate.now(ZoneId.of(TIME_ZONE)))) {
-			findAccount.resetLimitAmount();
+	private void verifyLastChargeDate(Account account) {
+		if (!Objects.equals(account.getLastChargeDate(), LocalDate.now(ZoneId.of(TIME_ZONE)))) {
+			account.resetLimitAmount();
 		}
+	}
+
+	private boolean verifyMainAccount(Account account) {
+		return Objects.equals(account.getType().getType(), MAIN_ACCOUNT.getType());
 	}
 }
