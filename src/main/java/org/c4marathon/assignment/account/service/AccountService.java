@@ -2,7 +2,10 @@ package org.c4marathon.assignment.account.service;
 
 import static org.c4marathon.assignment.account.domain.AccountType.*;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
+import java.util.Objects;
 
 import org.c4marathon.assignment.account.domain.Account;
 import org.c4marathon.assignment.account.domain.AccountType;
@@ -28,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 public class AccountService {
 
 	private final AccountRepository accountRepository;
+	public static final String TIME_ZONE = "Asia/Seoul";
 
 	@Transactional
 	public SavingAccountResponseDto generateSavingAccount(User user) {
@@ -87,8 +91,16 @@ public class AccountService {
 			throw new BaseException(AccountErrorCode.NOT_AUTHORIZED_ACCOUNT);
 		}
 
+		verifyLastChargeDate(findAccount);
+
 		findAccount.chargeAmount(requestDto.chargeAmount());
 
 		return AccountMapper.toChargeResponseDto(findAccount);
+	}
+
+	private void verifyLastChargeDate(Account findAccount) {
+		if (!Objects.equals(findAccount.getLastChargeDate(), LocalDate.now(ZoneId.of(TIME_ZONE)))) {
+			findAccount.resetLimitAmount();
+		}
 	}
 }
