@@ -59,4 +59,9 @@ public class Account {
         todayWithdrawnAmount += money;
 
     }
+
+    //입금 로직
+    public void deposit(int money){
+        balance += money;
+    }
 }
