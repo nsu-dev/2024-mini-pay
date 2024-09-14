@@ -9,10 +9,10 @@ import lombok.NoArgsConstructor;
 public class UserResponseDto {
 	private Long userId;
 	private String name;
-	private long registrationNum;
+	private String registrationNum;
 
 	@Builder
-	public UserResponseDto(Long userId, String name, long registrationNum) {
+	public UserResponseDto(Long userId, String name, String registrationNum) {
 		this.userId = userId;
 		this.name = name;
 		this.registrationNum = registrationNum;

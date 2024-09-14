@@ -11,8 +11,10 @@ import org.c4marathon.assignment.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+@Getter
 @Service
 @RequiredArgsConstructor //@Autowired 말고 생성자 주입을 임의의 코드 없이 자동으로 설정
 public class UserService {
@@ -34,11 +36,11 @@ public class UserService {
 		user.setMainAccount(mainAccount);
 
 		// 저장
-		User savedUser = userRepository.save(user);
+		User savedUser = userRepository.save(user);    // userId는 save() 후 자동 할당됨
 
 		// DTO 응답
 		return UserResponseDto.builder()
-			.userId(savedUser.getUserId())
+			.userId(savedUser.getUserId())    // 저장된 객체에서 userId 가져오기
 			.name(savedUser.getName())
 			.registrationNum(savedUser.getRegistrationNum())
 			.build();
@@ -52,6 +54,9 @@ public class UserService {
 
 		//적금 계좌 생성
 		Account savingsAccount = new Account(type, balance, user);
+
+		//적금 계좌를 User 객체에 추가
+		user.addSavingAccount(savingsAccount);
 
 		//적금 계좌 저장
 		accountRepository.save(savingsAccount);

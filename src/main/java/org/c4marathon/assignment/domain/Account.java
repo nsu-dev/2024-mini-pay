@@ -37,6 +37,7 @@ public class Account {
 		this.type = type;
 		this.balance = initialBalance;
 		this.lastWithdrawalDate = LocalDate.now(); // 계좌 생성 시 초기화
+		this.user = user;
 	}
 
 	// 충전 로직
@@ -67,5 +68,20 @@ public class Account {
 	//입금 로직
 	public void deposit(int money) {
 		balance += money;
+	}
+
+	// 계좌 타입 반환
+	public String getAccountType() {
+		return type;
+	}
+
+	// 금액 반환
+	public int getBalance() {
+		return balance;
+	}
+
+	// 사용자 반환
+	public User getUser() {
+		return user;
 	}
 }

@@ -32,20 +32,15 @@ dependencies {
     implementation 'org.apache.commons:commons-lang3:3.13.0'
     implementation 'org.apache.commons:commons-collections4:4.4'
 
+    // Spring Boot 테스트 지원
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
-    // JUnit 5 의존성
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
-
-    // Mockito 의존성
-    testImplementation 'org.mockito:mockito-core:3.11.2'
-    testImplementation 'org.mockito:mockito-junit-jupiter:3.11.2'
-
-    // Spring Boot 테스트 지원
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.mockito:mockito-core'
+    testImplementation 'org.mockito:mockito-junit-jupiter'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
 }
 
 checkstyle {

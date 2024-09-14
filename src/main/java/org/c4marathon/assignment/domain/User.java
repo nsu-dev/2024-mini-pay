@@ -24,7 +24,7 @@ public class User {
 	private Long userId;
 	private String password;
 	private String name;
-	private int registrationNum;
+	private String registrationNum;
 
 	//메인 계좌는 1대1 관계
 	@OneToOne(cascade = CascadeType.REMOVE)
@@ -37,7 +37,8 @@ public class User {
 
 	//@Builer를 통해 객체 생성 시 필드 값을 초기화
 	@Builder
-	public User(String password, String name, int registrationNum) {
+	public User(Long userId, String password, String name, String registrationNum) {
+		this.userId = userId;
 		this.password = password;
 		this.name = name;
 		this.registrationNum = registrationNum;
@@ -50,8 +51,11 @@ public class User {
 	}
 
 	//적금 계좌 추가: Account 생성 시 User를 전달
-	public void addSavingAccount(String type, int balance) {
-		Account savingAccount = new Account(type, balance, this);  // 생성자에서 User 설정
-		this.savingAccounts.add(savingAccount); // savingAccounts 리스트에 적금 계좌 추가
+	public void addSavingAccount(Account account) {
+		this.savingAccounts.add(account);
+	}
+
+	public List<Account> getSavingAccounts() {
+		return savingAccounts;
 	}
 }
