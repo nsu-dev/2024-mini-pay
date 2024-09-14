@@ -10,8 +10,6 @@ import org.c4marathon.assignment.domain.account.entity.CreateResponseMsg;
 import org.c4marathon.assignment.domain.account.entity.RemittanceResponseMsg;
 import org.c4marathon.assignment.domain.account.repository.AccountRepository;
 import org.c4marathon.assignment.domain.account.service.AccountService;
-import org.c4marathon.assignment.domain.user.entity.User;
-import org.c4marathon.assignment.domain.user.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,13 +25,12 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/account")
 public class AccountController {
 	private final AccountService accountService;
-	private final AccountRepository accountRepository;
 
 	@PostMapping("/remittance")
 	public ResponseEntity<RemittanceResponseDto> chargeMain(@RequestBody RemittanceRequestDto remittanceRequestDto) {
 		try {
 			RemittanceResponseDto remittanceResponseDto = accountService.chargeMain(remittanceRequestDto);
-			if (remittanceResponseDto.responseMsg() == RemittanceResponseMsg.SUCCESS.getResponseMsg()) {
+			if (remittanceResponseDto.responseMsg().equals(RemittanceResponseMsg.SUCCESS.getResponseMsg())) {
 				return ResponseEntity.ok().body(remittanceResponseDto);
 			} else {
 				return ResponseEntity.badRequest().body(remittanceResponseDto);

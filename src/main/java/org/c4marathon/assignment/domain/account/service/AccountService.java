@@ -85,7 +85,7 @@ public class AccountService {
 		String accountNum = remittanceRequestDto.getAccountNum();
 		Account account = accountRepository.findByAccountNum(accountNum);
 
-		Long remittanceAmount = Long.parseLong(remittanceRequestDto.getRemittanceAmount());
+		Long remittanceAmount = remittanceRequestDto.getRemittanceAmount();
 		if (remittanceAmount > 3000000 || account.getDailyChargeLimit() >= 3000000) {
 			return RemittanceResponseDto.builder()
 				.responseMsg(RemittanceResponseMsg.DAILYCHARGELIMIT_ERR.getResponseMsg())
