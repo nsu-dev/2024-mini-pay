@@ -69,9 +69,7 @@ public class AccountController {
 	public ResponseEntity<RemittanceResponseDto> savingRemittance(@PathVariable Long accountId, @RequestBody
 	SavingRequestDto savingRequestDto) {
 		try {
-			User user = accountRepository.findUserByAccount(accountId);
-			RemittanceResponseDto remittanceResponseDto = accountService.savingRemittance(accountId, user,
-				savingRequestDto);
+			RemittanceResponseDto remittanceResponseDto = accountService.savingRemittance(accountId, savingRequestDto);
 			return ResponseEntity.ok().body(remittanceResponseDto);
 		} catch (NoSuchElementException e) {
 			RemittanceResponseDto remittanceResponseDto = RemittanceResponseDto.builder()
