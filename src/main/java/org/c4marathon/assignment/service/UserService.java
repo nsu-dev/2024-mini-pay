@@ -9,6 +9,7 @@ import org.c4marathon.assignment.domain.User;
 import org.c4marathon.assignment.repository.AccountRepository;
 import org.c4marathon.assignment.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.Getter;
@@ -22,7 +23,7 @@ public class UserService {
 	private final AccountRepository accountRepository;
 
 	//사용자 회원가입(메인 계좌 생성)
-	@Transactional
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public UserResponseDto registerUser(UserRequestDto userRequestDto) {
 		// User 객체를 빌더 패턴으로 생성
 		User user = User.builder()
@@ -47,7 +48,7 @@ public class UserService {
 	}
 
 	//적금 계좌 추가
-	@Transactional
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public void addSavingsAccount(Long userId, String type, int balance) {
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
@@ -63,7 +64,7 @@ public class UserService {
 	}
 
 	// 메인 계좌에서 적금 계좌로 송금
-	@Transactional
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public boolean transferToSavings(Long userId, Long savingsAccountId, int money) {
 		User user = userRepository.findById(userId)
 			.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
