@@ -28,7 +28,6 @@ import lombok.RequiredArgsConstructor;
 public class AccountController {
 	private final AccountService accountService;
 	private final AccountRepository accountRepository;
-	private final UserRepository userRepository;
 
 	@PostMapping("/remittance")
 	public ResponseEntity<RemittanceResponseDto> chargeMain(@RequestBody RemittanceRequestDto remittanceRequestDto) {
