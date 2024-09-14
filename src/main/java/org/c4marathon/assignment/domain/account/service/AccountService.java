@@ -43,17 +43,17 @@ public class AccountService {
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void createMain(ScheduleCreateEvent scheduleCreateEvent) {
 		User user = scheduleCreateEvent.user();
-		String accountNum = createRandomAccount();
+		Long accountNum = createRandomAccount();
 		Account account = createAccount(user, accountNum, AccountRole.MAIN);
 		accountRepository.save(account);
 	}
 
 	//계좌번호 생성
-	private String createRandomAccount() {
+	private Long createRandomAccount() {
 		long min = 3000000000000L;
 		long max = 3999999999999L;
 		Random random = new Random();
-		String accountNum = String.valueOf(min + (long)(random.nextDouble() * (max - min + 1)));
+		Long accountNum = min + (long)(random.nextDouble() * (max - min + 1));
 
 		if(duplicatedAccount(accountNum)){
 			return createRandomAccount();
@@ -62,7 +62,7 @@ public class AccountService {
 	}
 
 	//계좌 Entity 생성
-	private Account createAccount(User user, String accountNum, AccountRole accountRole) {
+	private Account createAccount(User user, Long accountNum, AccountRole accountRole) {
 		return Account.builder()
 			.accountNum(accountNum)
 			.accountRole(accountRole)
@@ -75,14 +75,14 @@ public class AccountService {
 	}
 
 	//계좌 중복 검사
-	private boolean duplicatedAccount(String accountNum) {
+	private boolean duplicatedAccount(Long accountNum) {
 		return !(accountRepository.existsByAccountNum(accountNum));
 	}
 
 	//메인계좌 충전
 	@Transactional(isolation = Isolation.READ_COMMITTED)
 	public RemittanceResponseDto chargeMain(RemittanceRequestDto remittanceRequestDto) {
-		String accountNum = remittanceRequestDto.getAccountNum();
+		Long accountNum = remittanceRequestDto.getAccountNum();
 		Account account = accountRepository.findByAccountNum(accountNum);
 
 		Long remittanceAmount = remittanceRequestDto.getRemittanceAmount();
@@ -116,7 +116,7 @@ public class AccountService {
 	//메인 외 계좌 생성
 	public CreateResponseDto createAccountOther(Long userId, String createAccountRole) {
 		User user = userRepository.findById(userId).orElseThrow(() -> new NoSuchElementException());
-		String accountNum = createRandomAccount();
+		Long accountNum = createRandomAccount();
 		AccountRole accountRole = determineAccountRole(createAccountRole);
 		if (duplicatedAccount(accountNum)) {
 			Account account = createAccount(user, accountNum, accountRole);

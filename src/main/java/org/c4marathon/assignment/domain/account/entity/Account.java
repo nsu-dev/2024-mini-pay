@@ -27,7 +27,7 @@ public class Account {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long accountId;
 	@Column(name = "accountNum", unique = true, nullable = false)
-	private String accountNum;
+	private Long accountNum;
 	@Enumerated(EnumType.STRING)
 	@Column(name = "role", nullable = false)
 	private AccountRole accountRole;
@@ -45,7 +45,7 @@ public class Account {
 	private User user;
 
 	@Builder
-	private Account(String accountNum, AccountRole accountRole, LocalDateTime registeredAt, Long accountBalance,
+	private Account(Long accountNum, AccountRole accountRole, LocalDateTime registeredAt, Long accountBalance,
 		AccountStatus accountStatus, int dailyChargeLimit, User user) {
 		this.accountNum = accountNum;
 		this.accountRole = accountRole;

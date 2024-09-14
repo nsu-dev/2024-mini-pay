@@ -6,6 +6,6 @@ import lombok.Getter;
 @Getter
 @Builder
 public class RemittanceRequestDto {
-	private String accountNum;
+	private Long accountNum;
 	private Long remittanceAmount;
 }

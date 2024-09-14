@@ -11,10 +11,10 @@ import org.springframework.data.repository.query.Param;
 import jakarta.persistence.LockModeType;
 
 public interface AccountRepository extends JpaRepository<Account, Long> {
-	boolean existsByAccountNum(String accountNum);
+	boolean existsByAccountNum(Long accountNum);
 
 	@Lock(LockModeType.PESSIMISTIC_READ)
-	Account findByAccountNum(String accountNum);
+	Account findByAccountNum(Long accountNum);
 
 	@Query("SELECT a FROM Account a WHERE a.user.userId = :userId and a.accountRole = :accountRole")
 	@Lock(LockModeType.PESSIMISTIC_READ)
