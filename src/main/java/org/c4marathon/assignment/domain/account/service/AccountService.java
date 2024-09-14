@@ -86,7 +86,7 @@ public class AccountService {
 		Account account = accountRepository.findByAccountNum(accountNum);
 
 		Long remittanceAmount = remittanceRequestDto.getRemittanceAmount();
-		if (remittanceAmount > 3000000 || account.getDailyChargeLimit() >= 3000000) {
+		if (remittanceAmount > 3_000_000 || account.getDailyChargeLimit() >= 3_000_000) {
 			return RemittanceResponseDto.builder()
 				.responseMsg(RemittanceResponseMsg.DAILYCHARGELIMIT_ERR.getResponseMsg())
 				.build();
@@ -95,11 +95,11 @@ public class AccountService {
 				.responseMsg(AccountStatus.UNAVAILABLE.getAccountStatus())
 				.build();
 		} else if (account.getAccountStatus() == AccountStatus.AVAILABLE
-			&& remittanceAmount <= 3000000
-			&& account.getDailyChargeLimit() <= 3000000) {
+			&& remittanceAmount <= 3_000_000
+			&& account.getDailyChargeLimit() <= 3_000_000) {
 			Long accountBalance = account.getAccountBalance() + remittanceAmount;
 			int dailyChargeLimit = account.getDailyChargeLimit() + remittanceAmount.intValue();
-			if (dailyChargeLimit > 3000000) {
+			if (dailyChargeLimit > 3_000_000) {
 				return RemittanceResponseDto.builder()
 					.responseMsg(RemittanceResponseMsg.DAILYCHARGELIMIT_ERR.getResponseMsg())
 					.build();
