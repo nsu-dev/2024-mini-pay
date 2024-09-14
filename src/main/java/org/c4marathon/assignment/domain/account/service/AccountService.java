@@ -148,7 +148,8 @@ public class AccountService {
 
 	//메인계좌에서 인출 후 적금계좌에 입금
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
-	public RemittanceResponseDto savingRemittance(Long savingId, User user, SavingRequestDto savingRequestDto) {
+	public RemittanceResponseDto savingRemittance(Long savingId, SavingRequestDto savingRequestDto) {
+		User user = accountRepository.findUserByAccount(savingId);
 		Account mainAccount = accountRepository.findMainAccount(user.getUserId(), AccountRole.MAIN);
 		Account saving = accountRepository.findById(savingId).orElseThrow(() -> new NoSuchElementException());
 

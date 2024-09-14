@@ -1,14 +1,13 @@
 package org.c4marathon.assignment.domain.user.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.c4marathon.assignment.domain.account.entity.Account;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -30,6 +29,9 @@ public class User {
 
 	@Column(name = "userBirth", nullable = false)
 	private String userBirth;
+
+	@OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
+	private List<Account> accountList = new ArrayList<>();
 
 	@Builder
 	private User(String userPhone, String userPassword, String userName, String userBirth) {
