@@ -44,12 +44,8 @@ public class AccountService {
 	public void createMain(ScheduleCreateEvent scheduleCreateEvent) {
 		User user = scheduleCreateEvent.user();
 		String accountNum = createRandomAccount();
-		if (duplicatedAccount(accountNum)) {
-			Account account = createAccount(user, accountNum, AccountRole.MAIN);
-			accountRepository.save(account);
-		} else {
-			createMain(scheduleCreateEvent);
-		}
+		Account account = createAccount(user, accountNum, AccountRole.MAIN);
+		accountRepository.save(account);
 	}
 
 	//계좌번호 생성
@@ -59,6 +55,9 @@ public class AccountService {
 		Random random = new Random();
 		String accountNum = String.valueOf(min + (long)(random.nextDouble() * (max - min + 1)));
 
+		if(duplicatedAccount(accountNum)){
+			return createRandomAccount();
+		}
 		return accountNum;
 	}
 
