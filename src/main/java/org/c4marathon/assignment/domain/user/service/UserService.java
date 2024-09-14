@@ -33,10 +33,9 @@ public class UserService {
 			userRepository.save(user);
 			eventPublisher.publishEvent(new ScheduleCreateEvent(user));
 
-			JoinResponseDto joinResponseDto = JoinResponseDto.builder()
+            return JoinResponseDto.builder()
 				.responseMsg(JoinResponseMsg.SUCCESS.getResponseMsg())
 				.build();
-			return joinResponseDto;
 		} else {
 			throw new HttpClientErrorException(HttpStatusCode.valueOf(400));
 		}
