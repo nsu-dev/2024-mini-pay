@@ -7,7 +7,7 @@ import lombok.Getter;
 @Getter
 public enum UserErrCode {
 	USER_INVALID_FAIL(400, JoinResponseMsg.INVALID_FAIL.getResponseMsg()),
-	USER_DUPLICATED_FAIL(400, JoinResponseMsg.DUPLICATIEDFAIL.getResponseMsg()),
+	USER_DUPLICATED_FAIL(400, JoinResponseMsg.DUPLICATEDFAIL.getResponseMsg()),
 	USER_LOGIN_FAIL(400, LoginResponseMsg.FAIL.getResponseMsg()),
 
 	USER_NOT_FOUND(404, LoginResponseMsg.USER_NOT_FOUND.getResponseMsg()),

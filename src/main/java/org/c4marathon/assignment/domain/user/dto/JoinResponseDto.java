@@ -4,8 +4,5 @@ import lombok.Builder;
 
 @Builder
 public record JoinResponseDto(String responseMsg) {
-    @Override
-    public String toString(){
-        return responseMsg;
-    }
+    
 }
