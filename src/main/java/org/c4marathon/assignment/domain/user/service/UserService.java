@@ -14,6 +14,7 @@ import org.c4marathon.assignment.domain.user.entity.User;
 import org.c4marathon.assignment.domain.user.exception.UserException;
 import org.c4marathon.assignment.domain.user.repository.UserRepository;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 public class UserService {
 	private final UserRepository userRepository;
 	private final ApplicationEventPublisher eventPublisher;
+	private final PasswordEncoder passwordEncoder;
 
 	//회원가입
 	@Transactional
@@ -33,7 +35,7 @@ public class UserService {
 			throw new UserException(USER_DUPLICATED_FAIL);
 
 		}
-		User user = UserMapper.toUser(userDto);
+		User user = UserMapper.toUser(userDto, passwordEncoder);
 		userRepository.save(user);
 		eventPublisher.publishEvent(new ScheduleCreateEvent(user));
 
