@@ -19,7 +19,7 @@ public class UserExceptionHandler {
 	}
 
 	@ExceptionHandler({MethodArgumentNotValidException.class})
-	protected ResponseEntity<UserErrDto> handleUserInvalidException(MethodArgumentNotValidException ex) {
+	protected ResponseEntity<UserErrDto> handleUserInvalidException() {
 		return getUserErrDto(USER_INVALID_FAIL);
 	}
 

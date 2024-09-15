@@ -7,15 +7,15 @@ import lombok.Getter;
 @Builder
 @Getter
 public class UserDto {
-	@NotBlank(message = "공백이 들어갈 수 없습니다.")
+	@NotBlank
 	private String userPhone;
-	@NotBlank(message = "공백이 들어갈 수 없습니다.")
+	@NotBlank
 	private String userPassword;
 
-	@NotBlank(message = "공백이 들어갈 수 없습니다.")
+	@NotBlank
 	private String userName;
 
-	@NotBlank(message = "공백이 들어갈 수 없습니다.")
+	@NotBlank
 	private String userBirth;
 
 	public UserDto(@NotBlank String userPhone, @NotBlank String userName, @NotBlank String userBirth,
