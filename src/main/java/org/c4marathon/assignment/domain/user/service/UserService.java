@@ -48,7 +48,7 @@ public class UserService {
 	public LoginResponseDto login(LoginRequestDto loginRequestDto) {
 		User user = userRepository.findByUserPhone(loginRequestDto.getUserPhone())
 			.orElseThrow(() -> new UserException(USER_NOT_FOUND));
-		if (!loginRequestDto.getUserPassword().equals(user.getUserPassword())) {
+		if (!passwordEncoder.matches(loginRequestDto.getUserPassword(), user.getUserPassword())) {
 			throw new UserException(USER_LOGIN_FAIL);
 		}
 		return LoginResponseDto.builder()
