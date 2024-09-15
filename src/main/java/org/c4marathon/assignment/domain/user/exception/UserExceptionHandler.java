@@ -4,13 +4,23 @@ import org.c4marathon.assignment.domain.user.controller.UserController;
 import org.c4marathon.assignment.domain.user.dto.UserErrDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice(basePackageClasses = UserController.class)
 public class UserExceptionHandler {
 	@ExceptionHandler({UserException.class})
-	protected ResponseEntity<UserErrDto> handleAccountException(UserException ex) {
+	protected ResponseEntity<UserErrDto> handleUserException(UserException ex) {
+		return getUserErrDto(ex);
+	}
+
+	@ExceptionHandler({MethodArgumentNotValidException.class})
+	protected ResponseEntity<UserErrDto> handleUserInvalidException(UserException ex) {
+		return getUserErrDto(ex);
+	}
+
+	private ResponseEntity<UserErrDto> getUserErrDto(UserException ex) {
 		HttpStatus httpStatus;
 		try {
 			httpStatus = HttpStatus.valueOf(ex.getUserErrCode().getStatus());

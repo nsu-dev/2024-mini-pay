@@ -27,6 +27,7 @@ public class UserController {
 	public ResponseEntity<JoinResponseDto> userJoin(@Valid @RequestBody UserDto userDto) {
 		try {
 			JoinResponseDto joinResponseDto = userService.join(userDto);
+
 			if (joinResponseDto.responseMsg().equals(JoinResponseMsg.SUCCESS.getResponseMsg())) {
 				return ResponseEntity.ok().body(joinResponseDto);
 			} else {
