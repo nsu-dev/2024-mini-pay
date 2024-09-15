@@ -1,5 +1,7 @@
 package org.c4marathon.assignment.domain.account.service;
 
+import static org.c4marathon.assignment.domain.user.entity.UserErrCode.*;
+
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -19,6 +21,7 @@ import org.c4marathon.assignment.domain.account.entity.ScheduleCreateEvent;
 import org.c4marathon.assignment.domain.account.exception.AccountException;
 import org.c4marathon.assignment.domain.account.repository.AccountRepository;
 import org.c4marathon.assignment.domain.user.entity.User;
+import org.c4marathon.assignment.domain.user.exception.UserException;
 import org.c4marathon.assignment.domain.user.repository.UserRepository;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -29,6 +32,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -81,7 +86,11 @@ public class AccountService {
 
 	//메인계좌 충전
 	@Transactional(isolation = Isolation.READ_COMMITTED)
-	public RemittanceResponseDto chargeMain(RemittanceRequestDto remittanceRequestDto) {
+	public RemittanceResponseDto chargeMain(RemittanceRequestDto remittanceRequestDto, Long userId,
+		HttpServletRequest httpServletRequest) {
+		Long sessionId = getSessionId(httpServletRequest);
+		validateUser(sessionId, userId);
+
 		Long accountNum = remittanceRequestDto.getAccountNum();
 		Account account = accountRepository.findByAccountNum(accountNum);
 		Long remittanceAmount = remittanceRequestDto.getRemittanceAmount();
@@ -90,6 +99,20 @@ public class AccountService {
 		return RemittanceResponseDto.builder()
 			.responseMsg(RemittanceResponseMsg.SUCCESS.getResponseMsg())
 			.build();
+	}
+
+	private Long getSessionId(HttpServletRequest httpServletRequest) {
+		HttpSession session = httpServletRequest.getSession(false);
+		if (session == null || session.getAttribute("userId") == null) {
+			throw new UserException(USER_SESSION_ERR);
+		}
+		return (Long)session.getAttribute("userId");
+	}
+
+	private void validateUser(Long sessionId, Long requestUserId) {
+		if (!sessionId.equals(requestUserId)) {
+			throw new UserException(USER_SESSION_ERR);
+		}
 	}
 
 	//한도 및 계좌 상태 검사

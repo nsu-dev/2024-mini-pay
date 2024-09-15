@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -23,10 +24,12 @@ import lombok.RequiredArgsConstructor;
 public class AccountController {
 	private final AccountService accountService;
 
-	@PostMapping("/remittance")
-	public ResponseEntity<RemittanceResponseDto> chargeMain(@RequestBody RemittanceRequestDto remittanceRequestDto) {
+	@PostMapping("/remittance/{userId}")
+	public ResponseEntity<RemittanceResponseDto> chargeMain(@RequestBody RemittanceRequestDto remittanceRequestDto,
+		@PathVariable Long userId, HttpServletRequest httpServletRequest) {
 		try {
-			RemittanceResponseDto remittanceResponseDto = accountService.chargeMain(remittanceRequestDto);
+			RemittanceResponseDto remittanceResponseDto = accountService.chargeMain(remittanceRequestDto, userId,
+				httpServletRequest);
 			return ResponseEntity.ok().body(remittanceResponseDto);
 		} catch (RuntimeException e) {
 			throw new AccountException(ACCOUNT_SERVER_ERROR);
