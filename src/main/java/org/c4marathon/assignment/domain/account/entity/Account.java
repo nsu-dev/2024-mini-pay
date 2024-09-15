@@ -56,9 +56,9 @@ public class Account {
 		this.user = user;
 	}
 
-	public void updateAccount(Long accountBalance, int dailyChargeLimit) {
-		this.accountBalance = accountBalance;
-		this.dailyChargeLimit = dailyChargeLimit;
+	public void updateChargeAccount(Long remittanceAmount) {
+		this.accountBalance += remittanceAmount;
+		this.dailyChargeLimit += remittanceAmount.intValue();
 	}
 
 	public void updateSaving(Long accountBalance) {
