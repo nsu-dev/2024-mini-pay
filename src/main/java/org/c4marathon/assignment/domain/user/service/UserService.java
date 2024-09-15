@@ -30,16 +30,16 @@ public class UserService {
 	public JoinResponseDto join(UserDto userDto) {
 		String userPhone = userDto.getUserPhone();
 		if (duplicatedUser(userPhone)) {
-			User user = UserMapper.toUser(userDto);
-			userRepository.save(user);
-			eventPublisher.publishEvent(new ScheduleCreateEvent(user));
-
-			return JoinResponseDto.builder()
-				.responseMsg(JoinResponseMsg.SUCCESS.getResponseMsg())
-				.build();
-		} else {
 			throw new UserException(USER_DUPLICATED_FAIL);
+
 		}
+		User user = UserMapper.toUser(userDto);
+		userRepository.save(user);
+		eventPublisher.publishEvent(new ScheduleCreateEvent(user));
+
+		return JoinResponseDto.builder()
+			.responseMsg(JoinResponseMsg.SUCCESS.getResponseMsg())
+			.build();
 	}
 
 	//로그인
