@@ -52,7 +52,7 @@ public class UserController {
 			}
 		} catch (HttpClientErrorException e) {
 			LoginResponseDto loginResponseDto = LoginResponseDto.builder()
-				.responseMsg(LoginResponseMsg.NOTUSER.getResponseMsg())
+				.responseMsg(LoginResponseMsg.USER_NOT_FOUND.getResponseMsg())
 				.build();
 			return ResponseEntity.status(e.getStatusCode()).body(loginResponseDto);
 		}

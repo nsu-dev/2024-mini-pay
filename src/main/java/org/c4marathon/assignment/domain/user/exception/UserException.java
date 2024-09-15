@@ -1,4 +1,12 @@
 package org.c4marathon.assignment.domain.user.exception;
 
-public class UserException {
+import org.c4marathon.assignment.domain.user.entity.UserErrCode;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@AllArgsConstructor
+@Getter
+public class UserException extends RuntimeException {
+	private final UserErrCode userErrCode;
 }
