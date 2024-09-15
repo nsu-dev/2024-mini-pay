@@ -10,17 +10,17 @@ import org.c4marathon.assignment.domain.account.dto.RemittanceRequestDto;
 import org.c4marathon.assignment.domain.account.dto.RemittanceResponseDto;
 import org.c4marathon.assignment.domain.account.dto.SavingRequestDto;
 import org.c4marathon.assignment.domain.account.entity.Account;
+import org.c4marathon.assignment.domain.account.entity.AccountErrCode;
 import org.c4marathon.assignment.domain.account.entity.AccountRole;
 import org.c4marathon.assignment.domain.account.entity.AccountStatus;
 import org.c4marathon.assignment.domain.account.entity.CreateResponseMsg;
 import org.c4marathon.assignment.domain.account.entity.RemittanceResponseMsg;
 import org.c4marathon.assignment.domain.account.entity.ScheduleCreateEvent;
+import org.c4marathon.assignment.domain.account.exception.AccountException;
 import org.c4marathon.assignment.domain.account.repository.AccountRepository;
 import org.c4marathon.assignment.domain.user.entity.User;
 import org.c4marathon.assignment.domain.user.repository.UserRepository;
 import org.springframework.context.event.EventListener;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -28,7 +28,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
-import org.springframework.web.client.HttpClientErrorException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -86,13 +85,7 @@ public class AccountService {
 		Long accountNum = remittanceRequestDto.getAccountNum();
 		Account account = accountRepository.findByAccountNum(accountNum);
 		Long remittanceAmount = remittanceRequestDto.getRemittanceAmount();
-
-		String validMsg = validateCharge(account, remittanceAmount);
-		if (validMsg != null) {
-			return RemittanceResponseDto.builder()
-				.responseMsg(validMsg)
-				.build();
-		}
+		validateCharge(account, remittanceAmount);
 		account.updateChargeAccount(remittanceAmount);
 		return RemittanceResponseDto.builder()
 			.responseMsg(RemittanceResponseMsg.SUCCESS.getResponseMsg())
@@ -100,15 +93,14 @@ public class AccountService {
 	}
 
 	//한도 및 계좌 상태 검사
-	private String validateCharge(Account account, Long remittanceAmount) {
+	private void validateCharge(Account account, Long remittanceAmount) {
 		if (remittanceAmount > 3_000_000 || account.getDailyChargeLimit() >= 3_000_000) {
-			return RemittanceResponseMsg.DAILYCHARGELIMIT_ERR.getResponseMsg();
+			throw new AccountException(AccountErrCode.ACCOUNT_DALIYCHARGELIMIT_ERR);
 		} else if (account.getAccountStatus() == AccountStatus.UNAVAILABLE) {
-			return AccountStatus.UNAVAILABLE.getAccountStatus();
+			throw new AccountException(AccountErrCode.ACCOUNT_UNAVAILABLE);
 		} else if (account.getDailyChargeLimit() + remittanceAmount > 3_000_000) {
-			return RemittanceResponseMsg.DAILYCHARGELIMIT_ERR.getResponseMsg();
+			throw new AccountException(AccountErrCode.ACCOUNT_DALIYCHARGELIMIT_ERR);
 		}
-		return null;
 	}
 
 	//메인 외 계좌 생성
@@ -117,16 +109,13 @@ public class AccountService {
 		Long accountNum = createRandomAccount();
 		AccountRole accountRole = determineAccountRole(createAccountRole);
 		if (duplicatedAccount(accountNum)) {
-			Account account = createAccount(user, accountNum, accountRole);
-			accountRepository.save(account);
-			return CreateResponseDto.builder()
-				.responseMsg(CreateResponseMsg.SUCCESS.getResponseMsg())
-				.build();
-		} else {
-			return CreateResponseDto.builder()
-				.responseMsg(CreateResponseMsg.FAIL.getResponseMsg())
-				.build();
+			throw new AccountException(AccountErrCode.ACCOUNT_CREATE_FAIL);
 		}
+		Account account = createAccount(user, accountNum, accountRole);
+		accountRepository.save(account);
+		return CreateResponseDto.builder()
+			.responseMsg(CreateResponseMsg.SUCCESS.getResponseMsg())
+			.build();
 	}
 
 	//계좌 역할 구별
@@ -134,7 +123,7 @@ public class AccountService {
 		return switch (createAccountRole) {
 			case "SAVINGS" -> AccountRole.SAVINGS;
 			case "OTHERS" -> AccountRole.OTHERS;
-			default -> throw new HttpClientErrorException(HttpStatus.BAD_REQUEST);
+			default -> throw new AccountException(AccountErrCode.INVALID_ACCOUNT_TYPE);
 		};
 	}
 
@@ -144,13 +133,11 @@ public class AccountService {
 		User user = accountRepository.findUserByAccount(savingId);
 		Account mainAccount = accountRepository.findMainAccount(user.getUserId(), AccountRole.MAIN);
 		Account saving = accountRepository.findById(savingId).orElseThrow(NoSuchElementException::new);
-
 		if (mainAccount.getAccountBalance() - savingRequestDto.getAmount() < 0) {
-			throw new HttpClientErrorException(HttpStatusCode.valueOf(400));
+			throw new AccountException(AccountErrCode.ACCOUNT_INSUFFICIENT_BALANCE);
 		}
 		mainAccount.updateSaving(mainAccount.getAccountBalance() - savingRequestDto.getAmount());
 		saving.updateSaving(saving.getAccountBalance() + savingRequestDto.getAmount());
-
 		return RemittanceResponseDto.builder()
 			.responseMsg(RemittanceResponseMsg.SUCCESS.getResponseMsg())
 			.build();
