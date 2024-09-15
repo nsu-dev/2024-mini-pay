@@ -9,6 +9,7 @@ public enum AccountErrCode {
 	ACCOUNT_UNAVAILABLE(400, AccountStatus.UNAVAILABLE.getAccountStatus()),
 	ACCOUNT_DALIYCHARGELIMIT_ERR(400, RemittanceResponseMsg.DAILYCHARGELIMIT_ERR.getResponseMsg()),
 	ACCOUNT_INSUFFICIENT_BALANCE(400, RemittanceResponseMsg.INSUFFICIENT_BALANCE.getResponseMsg()),
+	INVALID_ACCOUNT_TYPE(400, "잘못된 계좌타입 입니다."),
 
 	ACCOUNT_USER_NOT_FOUND(404, CreateResponseMsg.NOUSER.getResponseMsg()),
 	ACCOUNT_NOT_FOUND(404, RemittanceResponseMsg.NOSUCHACCOUNT.getResponseMsg()),
