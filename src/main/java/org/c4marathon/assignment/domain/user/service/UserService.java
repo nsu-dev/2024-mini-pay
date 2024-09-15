@@ -18,6 +18,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -45,15 +47,24 @@ public class UserService {
 	}
 
 	//로그인
-	public LoginResponseDto login(LoginRequestDto loginRequestDto) {
+	public LoginResponseDto login(LoginRequestDto loginRequestDto, HttpServletRequest httpServletRequest) {
 		User user = userRepository.findByUserPhone(loginRequestDto.getUserPhone())
 			.orElseThrow(() -> new UserException(USER_NOT_FOUND));
 		if (!passwordEncoder.matches(loginRequestDto.getUserPassword(), user.getUserPassword())) {
 			throw new UserException(USER_LOGIN_FAIL);
 		}
+		registerSession(user, httpServletRequest);
 		return LoginResponseDto.builder()
 			.responseMsg(LoginResponseMsg.SUCCESS.getResponseMsg())
 			.build();
+	}
+
+	//로그인 한 사용자 세션 등록
+	private void registerSession(User user, HttpServletRequest httpServletRequest) {
+		httpServletRequest.getSession().invalidate();
+		HttpSession session = httpServletRequest.getSession(true);
+		session.setAttribute("userId", user.getUserId());
+		session.setMaxInactiveInterval(1800); //30분
 	}
 
 	private boolean duplicatedUser(String userPhone) {

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -34,9 +35,10 @@ public class UserController {
 	}
 
 	@PostMapping("/login")
-	public ResponseEntity<LoginResponseDto> userLogin(@Valid @RequestBody LoginRequestDto loginRequestDto) {
+	public ResponseEntity<LoginResponseDto> userLogin(@Valid @RequestBody LoginRequestDto loginRequestDto,
+		HttpServletRequest httpServletRequest) {
 		try {
-			LoginResponseDto loginResponseDto = userService.login(loginRequestDto);
+			LoginResponseDto loginResponseDto = userService.login(loginRequestDto, httpServletRequest);
 			return ResponseEntity.ok().body(loginResponseDto);
 		} catch (RuntimeException e) {
 			throw new UserException(USER_SERVER_ERROR);
