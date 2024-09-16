@@ -127,7 +127,10 @@ public class AccountService {
 	}
 
 	//메인 외 계좌 생성
-	public CreateResponseDto createAccountOther(Long userId, String createAccountRole) {
+	public CreateResponseDto createAccountOther(Long userId, String createAccountRole, HttpServletRequest httpServletRequest) {
+		Long sessionId = getSessionId(httpServletRequest);
+		validateUser(sessionId, userId);
+
 		User user = userRepository.findById(userId).orElseThrow(NoSuchElementException::new);
 		Long accountNum = createRandomAccount();
 		AccountRole accountRole = determineAccountRole(createAccountRole);
@@ -152,7 +155,10 @@ public class AccountService {
 
 	//메인계좌에서 인출 후 적금계좌에 입금
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
-	public RemittanceResponseDto savingRemittance(Long savingId, SavingRequestDto savingRequestDto) {
+	public RemittanceResponseDto savingRemittance(Long savingId, SavingRequestDto savingRequestDto, HttpServletRequest httpServletRequest) {
+		Long sessionId = getSessionId(httpServletRequest);
+		validateUser(sessionId, savingId);
+
 		User user = accountRepository.findUserByAccount(savingId);
 		Account mainAccount = accountRepository.findMainAccount(user.getUserId(), AccountRole.MAIN);
 		Account saving = accountRepository.findById(savingId).orElseThrow(NoSuchElementException::new);
