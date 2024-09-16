@@ -38,9 +38,9 @@ public class AccountController {
 
 	@PostMapping("/creataccount/{createAccountRole}/{userId}")
 	public ResponseEntity<CreateResponseDto> createAccount(@RequestBody @PathVariable Long userId,
-		@PathVariable String createAccountRole) {
+		@PathVariable String createAccountRole, HttpServletRequest httpServletRequest) {
 		try {
-			CreateResponseDto createResponseDto = accountService.createAccountOther(userId, createAccountRole);
+			CreateResponseDto createResponseDto = accountService.createAccountOther(userId, createAccountRole, httpServletRequest);
 			return ResponseEntity.ok().body(createResponseDto);
 		} catch (RuntimeException e) {
 			throw new AccountException(ACCOUNT_SERVER_ERROR);
@@ -49,9 +49,9 @@ public class AccountController {
 
 	@PostMapping("/saving/{accountId}")
 	public ResponseEntity<RemittanceResponseDto> savingRemittance(@PathVariable Long accountId, @RequestBody
-	SavingRequestDto savingRequestDto) {
+	SavingRequestDto savingRequestDto, HttpServletRequest httpServletRequest) {
 		try {
-			RemittanceResponseDto remittanceResponseDto = accountService.savingRemittance(accountId, savingRequestDto);
+			RemittanceResponseDto remittanceResponseDto = accountService.savingRemittance(accountId, savingRequestDto, httpServletRequest);
 			return ResponseEntity.ok().body(remittanceResponseDto);
 		} catch (RuntimeException e) {
 			throw new AccountException(ACCOUNT_SERVER_ERROR);
