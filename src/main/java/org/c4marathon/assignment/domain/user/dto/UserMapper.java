@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @RequiredArgsConstructor
 public class UserMapper {
-	private final PasswordEncoder passwordEncoder;
 
 	public static User toUser(UserDto userDto, PasswordEncoder passwordEncoder) {
 		return User.builder()
