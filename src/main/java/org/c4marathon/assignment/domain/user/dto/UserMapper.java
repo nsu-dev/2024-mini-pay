@@ -4,12 +4,9 @@ import org.c4marathon.assignment.domain.user.entity.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
-@RequiredArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class UserMapper {
 
 	public static User toUser(UserDto userDto, PasswordEncoder passwordEncoder) {
