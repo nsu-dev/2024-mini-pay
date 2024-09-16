@@ -1,9 +1,10 @@
 package org.c4marathon.assignment.domain.user.entity;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 @Getter
 public enum JoinResponseMsg {
 	SUCCESS("회원가입 성공!"),

@@ -1,9 +1,10 @@
 package org.c4marathon.assignment.domain.user.entity;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public enum LoginResponseMsg {
 	FAIL("아이디 혹은 비밀번호가 다릅니다."),

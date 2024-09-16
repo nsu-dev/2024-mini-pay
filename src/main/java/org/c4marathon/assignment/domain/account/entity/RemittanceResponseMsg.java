@@ -1,9 +1,10 @@
 package org.c4marathon.assignment.domain.account.entity;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public enum RemittanceResponseMsg {
 	DAILYCHARGELIMIT_ERR("충전 한도 초과!"),

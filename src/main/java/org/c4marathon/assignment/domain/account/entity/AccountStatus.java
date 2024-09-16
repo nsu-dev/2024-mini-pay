@@ -1,9 +1,10 @@
 package org.c4marathon.assignment.domain.account.entity;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-@AllArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 public enum AccountStatus {
 	AVAILABLE("거래가능"),
