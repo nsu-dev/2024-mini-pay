@@ -47,8 +47,6 @@ public class UserServiceTest {
 
 	@Mock
 	private HttpSession httpSession;
-	@Mock
-	private UserMapper userMapper;
 
 	@AfterEach
 	void tearDown() {

@@ -7,21 +7,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.c4marathon.assignment.domain.user.controller.UserController;
 import org.c4marathon.assignment.domain.user.dto.JoinResponseDto;
 import org.c4marathon.assignment.domain.user.dto.LoginRequestDto;
-import org.c4marathon.assignment.domain.user.dto.LoginResponseDto;
 import org.c4marathon.assignment.domain.user.dto.UserDto;
 import org.c4marathon.assignment.domain.user.entity.JoinResponseMsg;
-import org.c4marathon.assignment.domain.user.entity.User;
 import org.c4marathon.assignment.domain.user.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.BDDMockito;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,8 +32,6 @@ public class UserControllerTest {
 	@MockBean
 	private UserService userService; // UserService를 @MockBean으로 설정
 
-	@Mock
-	PasswordEncoder passwordEncoder;
 	@Test
 	@DisplayName("회원가입 API 테스트")
 	void userJoin() throws Exception {
