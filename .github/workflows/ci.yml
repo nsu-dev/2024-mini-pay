@@ -9,7 +9,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      -
       - name: 테스트 커버리지를 PR에 코멘트로 등록합니다
         id: jacoco
         uses: madrapps/jacoco-report@v1.2
