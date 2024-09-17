@@ -81,7 +81,7 @@ public class Account {
 	}
 
 	public void resetLimitAmount() {
-		this.limitAmount = 0;
+		this.limitAmount = 3_000_000;
 		this.lastChargeDate = LocalDate.now(ZoneId.of("Asia/Seoul"));
 	}
 }
