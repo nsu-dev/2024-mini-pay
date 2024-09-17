@@ -30,8 +30,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AccountService {
 
-	private final AccountRepository accountRepository;
 	public static final String TIME_ZONE = "Asia/Seoul";
+	private final AccountRepository accountRepository;
 
 	@Transactional
 	public SavingAccountResponseDto generateSavingAccount(User user) {
