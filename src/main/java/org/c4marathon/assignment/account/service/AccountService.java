@@ -84,8 +84,8 @@ public class AccountService {
 	@Transactional(isolation = Isolation.SERIALIZABLE)
 	public ChargeResponseDto chargeMainAccount(User user, ChargeRequestDto requestDto) {
 
-		Account findAccount = accountRepository.findById(requestDto.accountId()).orElseThrow(
-			() -> new BaseException(AccountErrorCode.NOT_FOUND_ACCOUNT));
+		Account findAccount = accountRepository.findById(requestDto.accountId())
+			.orElseThrow(() -> new BaseException(AccountErrorCode.NOT_FOUND_ACCOUNT));
 
 		if (!verifyAccountByUser(user, findAccount)) {
 			throw new BaseException(AccountErrorCode.NOT_AUTHORIZED_ACCOUNT);
