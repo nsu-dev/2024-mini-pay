@@ -72,12 +72,12 @@ public class Account {
 	}
 
 	public void chargeAmount(int chargeAmount) {
+		if (this.limitAmount < chargeAmount) {
+			throw new BaseException(AccountErrorCode.NOT_ENOUGH_CHARGE_AMOUNT);
+		}
 		this.amount += chargeAmount;
 		this.limitAmount -= chargeAmount;
 		this.lastChargeDate = LocalDate.now(ZoneId.of("Asia/Seoul"));
-		if (this.limitAmount < 0) {
-			throw new BaseException(AccountErrorCode.NOT_ENOUGH_CHARGE_AMOUNT);
-		}
 	}
 
 	public void resetLimitAmount() {
