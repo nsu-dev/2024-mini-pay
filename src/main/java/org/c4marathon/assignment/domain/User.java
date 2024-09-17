@@ -37,8 +37,7 @@ public class User {
 
 	//@Builer를 통해 객체 생성 시 필드 값을 초기화
 	@Builder
-	public User(Long userId, String password, String name, String registrationNum) {
-		this.userId = userId;
+	public User(String password, String name, String registrationNum) {
 		this.password = password;
 		this.name = name;
 		this.registrationNum = registrationNum;
@@ -57,5 +56,14 @@ public class User {
 
 	public List<Account> getSavingAccounts() {
 		return savingAccounts;
+	}
+
+	// 테스트용 생성자: userId 포함!
+	public User(Long userId, String password, String name, String registrationNum) {
+		this.userId = userId;
+		this.password = password;
+		this.name = name;
+		this.registrationNum = registrationNum;
+		this.savingAccounts = new ArrayList<>();
 	}
 }

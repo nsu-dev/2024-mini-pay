@@ -20,7 +20,7 @@ public class Account {
 	private Long accountId;
 	private int balance;
 
-	//계좌 유형을 추가하여 메인 계쫘와 적금 계좌를 구분
+	//계좌 유형을 추가하여 메인 계좌와 적금 계좌를 구분
 	private String type;
 	private int dailyWithdrawalLimit = 3000000; // 1일 출금 한도 3백만원
 
@@ -70,18 +70,4 @@ public class Account {
 		balance += money;
 	}
 
-	// 계좌 타입 반환
-	public String getAccountType() {
-		return type;
-	}
-
-	// 금액 반환
-	public int getBalance() {
-		return balance;
-	}
-
-	// 사용자 반환
-	public User getUser() {
-		return user;
-	}
 }
