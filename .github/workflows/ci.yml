@@ -15,12 +15,24 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Gradle 명령 실행을 위한 권한을 부여합니다
-        run: chmod +x gradlew
+      - name: gradle 권한 부여
+        run: chmod +x ./gradlew
+        shell: bash
 
-      - name: Gradle build를 수행합니다
+      - name: 빌드 시 캐시 적용
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: 빌드
         run: ./gradlew build
-        
+
+
       - name: 테스트 커버리지를 PR에 코멘트로 등록합니다
         id: jacoco
         uses: madrapps/jacoco-report@v1.2
