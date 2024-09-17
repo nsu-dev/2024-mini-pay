@@ -103,7 +103,7 @@ class AccountControllerTest extends ApiTestSupport {
 	@Test
 	void chargeMainAccount() throws Exception {
 		// given
-		Account mainAccount = AccountFixture.accountWithTypeAndAmount(loginUser, MAIN_ACCOUNT, 600_000);
+		Account mainAccount = AccountFixture.accountWithTypeAndAmount(loginUser, MAIN_ACCOUNT, 300_000);
 		accountRepository.save(mainAccount);
 
 		ChargeRequestDto requestDto = new ChargeRequestDto(mainAccount.getId(), 300_000);
