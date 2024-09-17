@@ -15,8 +15,12 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: gradle 권한 부여
-        run: chmod +x ./gradlew
+      - name: Gradle Wrapper 파일 및 권한 확인
+        run: |
+          echo "Listing files in the directory:"
+          ls -al
+          echo "Setting execute permissions for gradlew"
+          chmod +x gradlew
 
       - name: 빌드 시 캐시 적용
         uses: actions/cache@v3
