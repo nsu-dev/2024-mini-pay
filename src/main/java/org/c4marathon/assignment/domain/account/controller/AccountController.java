@@ -32,7 +32,7 @@ public class AccountController {
 	}
 
 	@PostMapping("/creataccount/{createAccountRole}/{userId}")
-	public ResponseEntity<CreateResponseDto> createAccount(@RequestBody @PathVariable Long userId,
+	public ResponseEntity<CreateResponseDto> createAccount(@PathVariable Long userId,
 		@PathVariable String createAccountRole, HttpServletRequest httpServletRequest) {
 		CreateResponseDto createResponseDto = accountService.createAccountOther(userId, createAccountRole, httpServletRequest);
 		return ResponseEntity.ok().body(createResponseDto);
