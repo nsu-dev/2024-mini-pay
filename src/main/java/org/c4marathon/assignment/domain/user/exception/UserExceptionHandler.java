@@ -22,7 +22,10 @@ public class UserExceptionHandler {
 	protected ResponseEntity<UserErrDto> handleUserInvalidException() {
 		return getUserErrDto(USER_INVALID_FAIL);
 	}
-
+	@ExceptionHandler({RuntimeException.class})
+	protected ResponseEntity<UserErrDto> handleUserRuntimeException(){
+		return getUserErrDto(USER_SERVER_ERROR);
+	}
 	private ResponseEntity<UserErrDto> getUserErrDto(UserErrCode errCode) {
 		HttpStatus httpStatus;
 		try {
