@@ -6,8 +6,5 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Getter
-@Builder
-public class SavingRequestDto {
-	private int amount;
+public record SavingRequestDto(int amount) {
 }
