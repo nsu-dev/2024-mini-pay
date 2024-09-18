@@ -43,7 +43,6 @@ public class AccountService {
 	private final UserRepository userRepository;
 
 	//메인계좌 생성
-	@EventListener
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void createMain(ScheduleCreateEvent scheduleCreateEvent) {
