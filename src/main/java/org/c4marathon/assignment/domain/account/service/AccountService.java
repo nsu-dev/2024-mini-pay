@@ -91,14 +91,12 @@ public class AccountService {
 		Long sessionId = getSessionId(httpServletRequest);
 		validateUser(sessionId, userId);
 
-		Long accountNum = remittanceRequestDto.getAccountNum();
+		Long accountNum = remittanceRequestDto.accountNum();
 		Account account = accountRepository.findByAccountNum(accountNum);
-		Long remittanceAmount = remittanceRequestDto.getRemittanceAmount();
+		Long remittanceAmount = remittanceRequestDto.remittanceAmount();
 		validateCharge(account, remittanceAmount);
 		account.updateChargeAccount(remittanceAmount);
-		return RemittanceResponseDto.builder()
-			.responseMsg(RemittanceResponseMsg.SUCCESS.getResponseMsg())
-			.build();
+		return new RemittanceResponseDto(RemittanceResponseMsg.SUCCESS.getResponseMsg());
 	}
 
 	private Long getSessionId(HttpServletRequest httpServletRequest) {
@@ -139,9 +137,7 @@ public class AccountService {
 		}
 		Account account = createAccount(user, accountNum, accountRole);
 		accountRepository.save(account);
-		return CreateResponseDto.builder()
-			.responseMsg(CreateResponseMsg.SUCCESS.getResponseMsg())
-			.build();
+		return new CreateResponseDto(CreateResponseMsg.SUCCESS.getResponseMsg());
 	}
 
 	//계좌 역할 구별
@@ -162,14 +158,12 @@ public class AccountService {
 		User user = accountRepository.findUserByAccount(savingId);
 		Account mainAccount = accountRepository.findMainAccount(user.getUserId(), AccountRole.MAIN);
 		Account saving = accountRepository.findById(savingId).orElseThrow(NoSuchElementException::new);
-		if (mainAccount.getAccountBalance() - savingRequestDto.getAmount() < 0) {
+		if (mainAccount.getAccountBalance() - savingRequestDto.amount() < 0) {
 			throw new AccountException(AccountErrCode.ACCOUNT_INSUFFICIENT_BALANCE);
 		}
-		mainAccount.updateSaving(mainAccount.getAccountBalance() - savingRequestDto.getAmount());
-		saving.updateSaving(saving.getAccountBalance() + savingRequestDto.getAmount());
-		return RemittanceResponseDto.builder()
-			.responseMsg(RemittanceResponseMsg.SUCCESS.getResponseMsg())
-			.build();
+		mainAccount.updateSaving(mainAccount.getAccountBalance() - savingRequestDto.amount());
+		saving.updateSaving(saving.getAccountBalance() + savingRequestDto.amount());
+		return new RemittanceResponseDto(RemittanceResponseMsg.SUCCESS.getResponseMsg());
 	}
 
 	@Scheduled(cron = "0 0 0 * * ?")
