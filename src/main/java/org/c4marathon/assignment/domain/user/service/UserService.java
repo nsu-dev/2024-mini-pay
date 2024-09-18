@@ -32,7 +32,7 @@ public class UserService {
 	//회원가입
 	@Transactional
 	public JoinResponseDto join(UserDto userDto) {
-		String userPhone = userDto.getUserPhone();
+		String userPhone = userDto.userPhone();
 		if (duplicatedUser(userPhone)) {
 			throw new UserException(USER_DUPLICATED_FAIL);
 
@@ -41,22 +41,18 @@ public class UserService {
 		userRepository.save(user);
 		eventPublisher.publishEvent(new ScheduleCreateEvent(user));
 
-		return JoinResponseDto.builder()
-			.responseMsg(JoinResponseMsg.SUCCESS.getResponseMsg())
-			.build();
+		return new JoinResponseDto(JoinResponseMsg.SUCCESS.getResponseMsg());
 	}
 
 	//로그인
 	public LoginResponseDto login(LoginRequestDto loginRequestDto, HttpServletRequest httpServletRequest) {
-		User user = userRepository.findByUserPhone(loginRequestDto.getUserPhone())
+		User user = userRepository.findByUserPhone(loginRequestDto.userPhone())
 			.orElseThrow(() -> new UserException(USER_NOT_FOUND));
-		if (!passwordEncoder.matches(loginRequestDto.getUserPassword(), user.getUserPassword())) {
+		if (!passwordEncoder.matches(loginRequestDto.userPassword(), user.getUserPassword())) {
 			throw new UserException(USER_LOGIN_FAIL);
 		}
 		registerSession(user, httpServletRequest);
-		return LoginResponseDto.builder()
-			.responseMsg(LoginResponseMsg.SUCCESS.getResponseMsg())
-			.build();
+		return new LoginResponseDto(LoginResponseMsg.SUCCESS.getResponseMsg());
 	}
 
 	//로그인 한 사용자 세션 등록
