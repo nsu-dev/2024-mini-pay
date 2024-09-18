@@ -54,8 +54,8 @@ public class AccountService {
 
 	//계좌번호 생성
 	private Long createRandomAccount() {
-		long min = 3000000000000L;
-		long max = 3999999999999L;
+		long min = 300_0000_0000_00L;
+		long max = 399_9999_9999_99L;
 		Random random = new Random();
 		Long accountNum = min + (long)(random.nextDouble() * (max - min + 1));
 
