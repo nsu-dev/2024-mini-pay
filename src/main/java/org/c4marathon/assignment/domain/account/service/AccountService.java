@@ -115,7 +115,7 @@ public class AccountService {
 
 	//한도 및 계좌 상태 검사
 	private void validateCharge(Account account, Long remittanceAmount) {
-		if (remittanceAmount > 3_000_000 || account.getDailyChargeLimit() >= 3_000_000) {
+		if (account.getDailyChargeLimit() >= 3_000_000) {
 			throw new AccountException(AccountErrCode.ACCOUNT_DALIYCHARGELIMIT_ERR);
 		} else if (account.getAccountStatus() == AccountStatus.UNAVAILABLE) {
 			throw new AccountException(AccountErrCode.ACCOUNT_UNAVAILABLE);
