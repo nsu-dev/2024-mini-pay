@@ -26,22 +26,14 @@ public class UserController {
 
 	@PostMapping("/join")
 	public ResponseEntity<JoinResponseDto> userJoin(@Valid @RequestBody UserDto userDto) {
-		try {
-			JoinResponseDto joinResponseDto = userService.join(userDto);
-			return ResponseEntity.ok().body(joinResponseDto);
-		} catch (RuntimeException e) {
-			throw new UserException(USER_SERVER_ERROR);
-		}
+		JoinResponseDto joinResponseDto = userService.join(userDto);
+		return ResponseEntity.ok().body(joinResponseDto);
 	}
 
 	@PostMapping("/login")
 	public ResponseEntity<LoginResponseDto> userLogin(@Valid @RequestBody LoginRequestDto loginRequestDto,
 		HttpServletRequest httpServletRequest) {
-		try {
-			LoginResponseDto loginResponseDto = userService.login(loginRequestDto, httpServletRequest);
-			return ResponseEntity.ok().body(loginResponseDto);
-		} catch (RuntimeException e) {
-			throw new UserException(USER_SERVER_ERROR);
-		}
+		LoginResponseDto loginResponseDto = userService.login(loginRequestDto, httpServletRequest);
+		return ResponseEntity.ok().body(loginResponseDto);
 	}
 }
