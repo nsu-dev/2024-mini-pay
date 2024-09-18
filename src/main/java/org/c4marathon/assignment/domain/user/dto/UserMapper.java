@@ -11,10 +11,10 @@ public class UserMapper {
 
 	public static User toUser(UserDto userDto, PasswordEncoder passwordEncoder) {
 		return User.builder()
-			.userPhone(userDto.getUserPhone())
-			.userPassword(passwordEncoder.encode(userDto.getUserPassword()))
-			.userName(userDto.getUserName())
-			.userBirth(userDto.getUserBirth())
+			.userPhone(userDto.userPhone())
+			.userPassword(passwordEncoder.encode(userDto.userPassword()))
+			.userName(userDto.userName())
+			.userBirth(userDto.userBirth())
 			.build();
 	}
 }

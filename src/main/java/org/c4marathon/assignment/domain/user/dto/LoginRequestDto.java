@@ -5,11 +5,6 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-@Getter
-@AllArgsConstructor
-public class LoginRequestDto {
-	@NotBlank
-	private String userPhone;
-	@NotBlank
-	private String userPassword;
-}
+public record LoginRequestDto(
+	@NotBlank String userPhone,
+	@NotBlank String userPassword) {}
