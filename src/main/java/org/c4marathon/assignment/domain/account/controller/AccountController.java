@@ -27,34 +27,21 @@ public class AccountController {
 	@PostMapping("/remittance/{userId}")
 	public ResponseEntity<RemittanceResponseDto> chargeMain(@RequestBody RemittanceRequestDto remittanceRequestDto,
 		@PathVariable Long userId, HttpServletRequest httpServletRequest) {
-		try {
-			RemittanceResponseDto remittanceResponseDto = accountService.chargeMain(remittanceRequestDto, userId,
-				httpServletRequest);
-			return ResponseEntity.ok().body(remittanceResponseDto);
-		} catch (RuntimeException e) {
-			throw new AccountException(ACCOUNT_SERVER_ERROR);
-		}
+		RemittanceResponseDto remittanceResponseDto = accountService.chargeMain(remittanceRequestDto, userId, httpServletRequest);
+		return ResponseEntity.ok().body(remittanceResponseDto);
 	}
 
 	@PostMapping("/creataccount/{createAccountRole}/{userId}")
 	public ResponseEntity<CreateResponseDto> createAccount(@RequestBody @PathVariable Long userId,
 		@PathVariable String createAccountRole, HttpServletRequest httpServletRequest) {
-		try {
-			CreateResponseDto createResponseDto = accountService.createAccountOther(userId, createAccountRole, httpServletRequest);
-			return ResponseEntity.ok().body(createResponseDto);
-		} catch (RuntimeException e) {
-			throw new AccountException(ACCOUNT_SERVER_ERROR);
-		}
+		CreateResponseDto createResponseDto = accountService.createAccountOther(userId, createAccountRole, httpServletRequest);
+		return ResponseEntity.ok().body(createResponseDto);
 	}
 
 	@PostMapping("/saving/{accountId}")
 	public ResponseEntity<RemittanceResponseDto> savingRemittance(@PathVariable Long accountId, @RequestBody
 	SavingRequestDto savingRequestDto, HttpServletRequest httpServletRequest) {
-		try {
-			RemittanceResponseDto remittanceResponseDto = accountService.savingRemittance(accountId, savingRequestDto, httpServletRequest);
-			return ResponseEntity.ok().body(remittanceResponseDto);
-		} catch (RuntimeException e) {
-			throw new AccountException(ACCOUNT_SERVER_ERROR);
-		}
+		RemittanceResponseDto remittanceResponseDto = accountService.savingRemittance(accountId, savingRequestDto, httpServletRequest);
+		return ResponseEntity.ok().body(remittanceResponseDto);
 	}
 }
