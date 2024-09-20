@@ -5,11 +5,13 @@ import static org.c4marathon.assignment.account.domain.AccountType.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.c4marathon.assignment.account.domain.Account;
 import org.c4marathon.assignment.account.dto.request.ChargeRequestDto;
 import org.c4marathon.assignment.account.dto.request.SendRequestDto;
+import org.c4marathon.assignment.account.dto.response.AccountResponseDto;
 import org.c4marathon.assignment.account.dto.response.ChargeResponseDto;
 import org.c4marathon.assignment.account.dto.response.SavingAccountResponseDto;
 import org.c4marathon.assignment.account.dto.response.SendResponseDto;
@@ -39,32 +41,32 @@ class AccountServiceTest {
 	@Test
 	void generateSavingAccount() {
 		// given
-		User user = UserFixture.basicUser();
+		User owner = UserFixture.basicUser();
 
 		// when
-		SavingAccountResponseDto response = accountService.generateSavingAccount(user);
+		SavingAccountResponseDto response = accountService.generateSavingAccount(owner);
 
 		// then
 		verify(accountRepository).save(argThat(account ->
-			account.getUser().equals(user) &&
+			account.getUser().equals(owner) &&
 				account.getType().equals(SAVING_ACCOUNT) &&
 				account.getAmount() == 0 &&
 				account.getLimitAmount() == 3_000_000
 		));
 
 		assertAll(
-			() -> assertThat(response.userName()).isEqualTo(user.getName()),
-			() -> assertThat(response.userEmail()).isEqualTo(user.getEmail())
+			() -> assertThat(response.userName()).isEqualTo(owner.getName()),
+			() -> assertThat(response.userEmail()).isEqualTo(owner.getEmail())
 		);
 	}
 
-	@DisplayName("[메인계좌에서 적금계좌로 송금한다.]")
+	@DisplayName("[메인 계좌에서 적금 계좌로 송금한다.]")
 	@Test
 	void sendMoney() {
 		// given
-		User user = UserFixture.basicUser();
-		Account mainAccount = AccountFixture.accountWithTypeAndAmount(user, MAIN_ACCOUNT, 600_000);
-		Account savingAccount = AccountFixture.accountWithTypeAndAmount(user, SAVING_ACCOUNT, 0);
+		User owner = UserFixture.basicUser();
+		Account mainAccount = AccountFixture.accountWithTypeAndAmount(owner, MAIN_ACCOUNT, 600_000);
+		Account savingAccount = AccountFixture.accountWithTypeAndAmount(owner, SAVING_ACCOUNT, 0);
 
 		SendRequestDto requestDto = new SendRequestDto(
 			mainAccount.getId(),
@@ -80,7 +82,7 @@ class AccountServiceTest {
 			Optional.of(savingAccount));
 
 		// when
-		SendResponseDto responseDto = accountService.sendMoney(user, requestDto);
+		SendResponseDto responseDto = accountService.sendMoney(owner, requestDto);
 
 		// then
 		assertAll(
@@ -89,16 +91,16 @@ class AccountServiceTest {
 		);
 	}
 
-	@DisplayName("[다른 회원 계좌를 인출하면 예외가 발생한다.]")
+	@DisplayName("[다른 회원 계좌를 인출 하면 예외가 발생한다.]")
 	@Test
 	void sendMoneyByUser() {
 		// given
-		User user1 = UserFixture.basicUser();
-		User user2 = UserFixture.basicUser();
-		ReflectionTestUtils.setField(user2, "id", 20L);
+		User owner = UserFixture.basicUser();
+		User others = UserFixture.basicUser();
+		ReflectionTestUtils.setField(others, "id", 20L);
 
-		Account mainAccount = AccountFixture.accountWithTypeAndAmount(user1, MAIN_ACCOUNT, 600_000);
-		Account savingAccount = AccountFixture.accountWithTypeAndAmount(user1, SAVING_ACCOUNT, 0);
+		Account mainAccount = AccountFixture.accountWithTypeAndAmount(owner, MAIN_ACCOUNT, 600_000);
+		Account savingAccount = AccountFixture.accountWithTypeAndAmount(owner, SAVING_ACCOUNT, 0);
 
 		SendRequestDto requestDto = new SendRequestDto(
 			mainAccount.getId(),
@@ -113,17 +115,22 @@ class AccountServiceTest {
 		given(accountRepository.findByIdAndType(savingAccount.getId(), SAVING_ACCOUNT)).willReturn(
 			Optional.of(savingAccount));
 
-		// when  // then
-		assertThrows(BaseException.class, () -> accountService.sendMoney(user2, requestDto));
+		// when
+		BaseException baseException = assertThrows(
+			BaseException.class, () -> accountService.sendMoney(others, requestDto)
+		);
+
+		// then
+		assertThat(baseException.getMessage()).isEqualTo("계좌 인출 권한이 없습니다.");
 	}
 
-	@DisplayName("[메인계좌 금액보다 큰 금액을 인출하면 예외가 발생한다.]")
+	@DisplayName("[메인 계좌 금액보다 큰 금액을 인출 할 때 예외가 발생한다.]")
 	@Test
 	void SendToMoneyWithIsNotEnoughMoney() {
 		// given
-		User user1 = UserFixture.basicUser();
-		Account mainAccount = AccountFixture.accountWithTypeAndAmount(user1, MAIN_ACCOUNT, 200_000);
-		Account savingAccount = AccountFixture.accountWithTypeAndAmount(user1, SAVING_ACCOUNT, 0);
+		User owner = UserFixture.basicUser();
+		Account mainAccount = AccountFixture.accountWithTypeAndAmount(owner, MAIN_ACCOUNT, 200_000);
+		Account savingAccount = AccountFixture.accountWithTypeAndAmount(owner, SAVING_ACCOUNT, 0);
 
 		SendRequestDto requestDto = new SendRequestDto(
 			mainAccount.getId(),
@@ -138,23 +145,27 @@ class AccountServiceTest {
 		given(accountRepository.findByIdAndType(savingAccount.getId(), SAVING_ACCOUNT)).willReturn(
 			Optional.of(savingAccount));
 
-		// when  // then
-		assertThrows(BaseException.class, () -> accountService.sendMoney(user1, requestDto));
+		// when
+		BaseException baseException = assertThrows(BaseException.class,
+			() -> accountService.sendMoney(owner, requestDto));
+
+		// then
+		assertThat(baseException.getMessage()).isEqualTo("계좌 금액이 충분하지 않습니다.");
 	}
 
-	@DisplayName("[메인계좌에 금액을 충전한다.]")
+	@DisplayName("[메인 계좌에 금액을 충전한다.]")
 	@Test
 	void chargeMainAccount() {
 		// given
-		User user = UserFixture.basicUser();
-		Account account = AccountFixture.accountWithTypeAndAmount(user, MAIN_ACCOUNT, 300_000);
+		User owner = UserFixture.basicUser();
+		Account account = AccountFixture.accountWithTypeAndAmount(owner, MAIN_ACCOUNT, 300_000);
 
 		ChargeRequestDto requestDto = new ChargeRequestDto(account.getId(), 300_000);
 
 		given(accountRepository.findById(any())).willReturn(Optional.of(account));
 
 		// when
-		ChargeResponseDto responseDto = accountService.chargeMainAccount(user, requestDto);
+		ChargeResponseDto responseDto = accountService.chargeMainAccount(owner, requestDto);
 
 		// then
 		assertAll(
@@ -164,18 +175,99 @@ class AccountServiceTest {
 		);
 	}
 
-	@DisplayName("[메인계좌에 금액을 충전 시 충전금액을 초과하면 예외가 발생한다.]")
+	@DisplayName("[메인 계좌에 금액 충전 시 충전 금액을 초과하면 예외가 발생한다.]")
 	@Test
 	void chargeMainAccountWithNotEnoughLimitAmount() {
 		// given
-		User user = UserFixture.basicUser();
-		Account account = AccountFixture.accountWithTypeAndAmount(user, MAIN_ACCOUNT, 300_000);
+		User owner = UserFixture.basicUser();
+		Account account = AccountFixture.accountWithTypeAndAmount(owner, MAIN_ACCOUNT, 300_000);
 
 		ChargeRequestDto requestDto = new ChargeRequestDto(account.getId(), 4_000_000);
 
 		given(accountRepository.findById(any())).willReturn(Optional.of(account));
 
-		// when		// then
-		assertThrows(BaseException.class, () -> accountService.chargeMainAccount(user, requestDto));
+		// when
+		BaseException baseException = assertThrows(
+			BaseException.class, () -> accountService.chargeMainAccount(owner, requestDto)
+		);
+
+		// then
+		assertThat(baseException.getMessage()).isEqualTo("충전 한도를 초과했습니다.");
+	}
+
+	@DisplayName("[타인의 메인 계좌에 금액 충전 시 예외가 발생한다.]")
+	@Test
+	void chargeMainAccountWithNotOwner() {
+		// given
+		User owner = UserFixture.basicUser();
+		User others = UserFixture.basicUser();
+		ReflectionTestUtils.setField(owner, "id", 1L);
+		ReflectionTestUtils.setField(others, "id", 2L);
+		Account account = AccountFixture.accountWithTypeAndAmount(owner, MAIN_ACCOUNT, 300_000);
+
+		ChargeRequestDto requestDto = new ChargeRequestDto(account.getId(), 4_000_000);
+
+		given(accountRepository.findById(any())).willReturn(Optional.of(account));
+
+		// when
+		BaseException baseException = assertThrows(
+			BaseException.class, () -> accountService.chargeMainAccount(others, requestDto)
+		);
+
+		// then
+		assertThat(baseException.getMessage()).isEqualTo("계좌 인출 권한이 없습니다.");
+	}
+
+	@DisplayName("[적금 계좌에 금액 충전 시 예외가 발생한다.]")
+	@Test
+	void chargeMainAccountWithSavingAccount() {
+		// given
+		User owner = UserFixture.basicUser();
+		Account account = AccountFixture.accountWithTypeAndAmount(owner, SAVING_ACCOUNT, 300_000);
+
+		ChargeRequestDto requestDto = new ChargeRequestDto(account.getId(), 4_000_000);
+
+		given(accountRepository.findById(any())).willReturn(Optional.of(account));
+
+		// when
+		BaseException baseException = assertThrows(
+			BaseException.class, () -> accountService.chargeMainAccount(owner, requestDto)
+		);
+
+		// then
+		assertThat(baseException.getMessage()).isEqualTo("계좌 금액 충전에 접근할 수 없는 계좌입니다.");
+	}
+
+	@DisplayName("[회원의 모든 계좌를 읽어온다.]")
+	@Test
+	void getAccounts() {
+		// given
+		User owner = UserFixture.basicUser();
+		Account mainAccount = AccountFixture.accountWithTypeAndAmount(owner, MAIN_ACCOUNT, 300_000);
+		Account savingAccount1 = AccountFixture.accountWithTypeAndAmount(owner, SAVING_ACCOUNT, 100_000);
+		Account savingAccount2 = AccountFixture.accountWithTypeAndAmount(owner, SAVING_ACCOUNT, 200_000);
+
+		List<Account> accounts = List.of(mainAccount, savingAccount1, savingAccount2);
+
+		given(accountRepository.findAllByUser(any(User.class))).willReturn(accounts);
+
+		// when
+		List<AccountResponseDto> accountResponseDto = accountService.getAccounts(owner);
+
+		// then
+		assertAll(
+			() -> assertThat(accountResponseDto).extracting(AccountResponseDto::type)
+				.containsExactly(
+					MAIN_ACCOUNT.getType(),
+					SAVING_ACCOUNT.getType(),
+					SAVING_ACCOUNT.getType()
+				),
+			() -> assertThat(accountResponseDto).extracting(AccountResponseDto::amount)
+				.containsExactly(
+					300_000,
+					100_000,
+					200_000
+				)
+		);
 	}
 }
