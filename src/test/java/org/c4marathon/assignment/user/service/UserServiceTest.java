@@ -62,6 +62,20 @@ class UserServiceTest {
 		verify(userRepository).save(any(User.class));
 	}
 
+	@DisplayName("회원가입 시 중복된 이메일이 존재한다면 예외가 발생한다.")
+	@Test
+	void joinWithDuplicatedEmail() {
+		// given
+		JoinRequestDto request = new JoinRequestDto("abc@mini.com", "mini1234", "미니페이");
+		given(userRepository.existsByEmail(anyString())).willReturn(Boolean.TRUE);
+
+		// when
+		BaseException baseException = assertThrows(BaseException.class, () -> userService.join(request));
+
+		// then
+		assertThat(baseException.getMessage()).isEqualTo("중복된 이메일 회원이 존재합니다.");
+	}
+
 	@DisplayName("회원가입 정보와 일치하는 이메일과 비밀번호를 통해 로그인한다.")
 	@Test
 	void login() {
