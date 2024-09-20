@@ -80,7 +80,7 @@ public class AccountService {
 
 	//계좌 중복 검사
 	private boolean duplicatedAccount(Long accountNum) {
-		return !(accountRepository.existsByAccountNum(accountNum));
+		return accountRepository.existsByAccountNum(accountNum);
 	}
 
 	//메인계좌 충전
