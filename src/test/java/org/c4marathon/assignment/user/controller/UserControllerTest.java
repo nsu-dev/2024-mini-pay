@@ -1,5 +1,6 @@
 package org.c4marathon.assignment.user.controller;
 
+import static org.mockito.BDDMockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -16,19 +17,21 @@ import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-@WebMvcTest(UserController.class)
-@AutoConfigureMockMvc(addFilters = false)
+@SpringBootTest
+@AutoConfigureMockMvc
 public class UserControllerTest {
 
 	@Autowired
 	private MockMvc mockMvc;
-
+	@Autowired
+	private ObjectMapper objectMapper;
 	@MockBean
 	private UserService userService; // UserService를 @MockBean으로 설정
 
@@ -40,13 +43,12 @@ public class UserControllerTest {
 		JoinResponseDto joinResponseDto = new JoinResponseDto(JoinResponseMsg.SUCCESS.getResponseMsg());
 
 		// userService.join 호출 시 응답값을 미리 지정
-		BDDMockito.given(userService.join(BDDMockito.any(UserDto.class))).willReturn(joinResponseDto);
+		given(userService.join(any(UserDto.class))).willReturn(joinResponseDto);
 
 		// when & then
 		mockMvc.perform(post("/user/join")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(new ObjectMapper().writeValueAsString(userDto))
-			)
+				.content(objectMapper.writeValueAsString(userDto)))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.responseMsg").value(JoinResponseMsg.SUCCESS.getResponseMsg())); // 응답 메시지를 확인
 	}
