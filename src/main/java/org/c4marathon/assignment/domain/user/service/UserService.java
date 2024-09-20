@@ -35,7 +35,6 @@ public class UserService {
 		String userPhone = userDto.userPhone();
 		if (duplicatedUser(userPhone)) {
 			throw new UserException(USER_DUPLICATED_FAIL);
-
 		}
 		User user = UserMapper.toUser(userDto, passwordEncoder);
 		userRepository.save(user);
@@ -64,6 +63,6 @@ public class UserService {
 	}
 
 	private boolean duplicatedUser(String userPhone) {
-		return !userRepository.existsByUserPhone(userPhone);
+		return userRepository.existsByUserPhone(userPhone);
 	}
 }
