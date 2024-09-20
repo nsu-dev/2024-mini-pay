@@ -32,17 +32,17 @@ test {
     finalizedBy jacocoTestReport
 }
 
-jacocoTestReport {
-    dependsOn test
-
-    reports {
-        xml.required.set(true)
-        html.required.set(true)
-
-        xml.destination file("${buildDir}/jacoco/index.xml")
-        html.destination file("${buildDir}/jacoco/index.html")
-    }
-}
+//jacocoTestReport {
+//    dependsOn test
+//
+//    reports {
+//        xml.required.set(true)
+//        html.required.set(true)
+//
+//        xml.destination file("${buildDir}/jacoco/index.xml")
+//        html.destination file("${buildDir}/jacoco/index.html")
+//    }
+//}
 /** Jacoco end **/
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -69,11 +69,11 @@ tasks.named('test') {
     finalizedBy 'jacocoTestReport'
 }
 
-//jacocoTestReport {
-//    reports {
-//        xml.required = true
-//    }
-//}
+jacocoTestReport {
+    reports {
+        html.required = true
+    }
+}
 
 sonar {
     properties {
