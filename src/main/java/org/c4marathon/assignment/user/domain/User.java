@@ -1,15 +1,22 @@
 package org.c4marathon.assignment.user.domain;
 
+import java.util.ArrayList;
+import java.util.List;
 
-import jakarta.persistence.*;
+import org.c4marathon.assignment.account.domain.Account;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.c4marathon.assignment.account.domain.Account;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @NoArgsConstructor
@@ -18,21 +25,21 @@ import java.util.List;
 @Builder
 @Getter
 public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "users_id")
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "users_id")
+	private Long id;
 
-    @Column(name = "userId", nullable = false)
-    private String userId;
+	@Column(name = "userId", nullable = false, unique = true)
+	private String userId;
 
-    @Column(name = "userPw", nullable = false)
-    private String userPw;
+	@Column(name = "userPw", nullable = false)
+	private String userPw;
 
-    @Column(name = "name", nullable = false)
-    private String name;
+	@Column(name = "name", nullable = false)
+	private String name;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
-    private List<Account> accountList = new ArrayList<>();
+	@OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
+	private List<Account> accountList = new ArrayList<>();
 
 }
