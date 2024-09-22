@@ -24,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 public class AccountController {
 	private final AccountService accountService;
 
+	//메인계좌 충전 api
 	@PostMapping("/remittance/{userId}")
 	public ResponseEntity<RemittanceResponseDto> chargeMain(@RequestBody RemittanceRequestDto remittanceRequestDto,
 		@PathVariable Long userId, HttpServletRequest httpServletRequest) {
@@ -31,6 +32,7 @@ public class AccountController {
 		return ResponseEntity.ok().body(remittanceResponseDto);
 	}
 
+	//메인계좌 외 계좌 생성 api
 	@PostMapping("/creataccount/{createAccountRole}/{userId}")
 	public ResponseEntity<CreateResponseDto> createAccount(@PathVariable Long userId,
 		@PathVariable String createAccountRole, HttpServletRequest httpServletRequest) {
@@ -38,6 +40,7 @@ public class AccountController {
 		return ResponseEntity.ok().body(createResponseDto);
 	}
 
+	//적금계좌 <- 메인계좌로의 송금 api
 	@PostMapping("/saving/{accountId}")
 	public ResponseEntity<RemittanceResponseDto> savingRemittance(@PathVariable Long accountId,
 		@RequestBody SavingRequestDto savingRequestDto, HttpServletRequest httpServletRequest) {
@@ -45,6 +48,7 @@ public class AccountController {
 		return ResponseEntity.ok().body(remittanceResponseDto);
 	}
 
+	//메인계좌간의 송금api
 	@PostMapping("/remittance")
 	public ResponseEntity<RemittanceResponseDto> remittanceMain(@RequestBody RemittanceRequestDto remittanceRequestDto,
 		HttpServletRequest httpServletRequest){
