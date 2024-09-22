@@ -26,9 +26,8 @@ public class AccountController {
 
 	//메인계좌 충전 api
 	@PostMapping("/remittance")
-	public ResponseEntity<RemittanceResponseDto> chargeMain(@RequestBody RemittanceRequestDto remittanceRequestDto,
-		HttpServletRequest httpServletRequest) {
-		RemittanceResponseDto remittanceResponseDto = accountService.chargeMain(remittanceRequestDto, httpServletRequest);
+	public ResponseEntity<RemittanceResponseDto> chargeMain(@RequestBody RemittanceRequestDto remittanceRequestDto) {
+		RemittanceResponseDto remittanceResponseDto = accountService.chargeMain(remittanceRequestDto);
 		return ResponseEntity.ok().body(remittanceResponseDto);
 	}
 
