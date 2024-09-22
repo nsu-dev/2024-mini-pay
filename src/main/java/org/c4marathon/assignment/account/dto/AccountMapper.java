@@ -8,6 +8,8 @@ import org.c4marathon.assignment.account.dto.response.AccountResponseDto;
 import org.c4marathon.assignment.account.dto.response.ChargeResponseDto;
 import org.c4marathon.assignment.account.dto.response.SavingAccountResponseDto;
 import org.c4marathon.assignment.account.dto.response.SendResponseDto;
+import org.c4marathon.assignment.account.dto.response.SendToOthersResponseDto;
+import org.c4marathon.assignment.user.domain.User;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -55,6 +57,13 @@ public class AccountMapper {
 			findAccount.getId(),
 			findAccount.getAmount(),
 			findAccount.getLimitAmount()
+		);
+	}
+
+	public static SendToOthersResponseDto sendToOthersResponseDto(User user, int sentAmount) {
+		return new SendToOthersResponseDto(
+			user.getName(),
+			sentAmount
 		);
 	}
 }
