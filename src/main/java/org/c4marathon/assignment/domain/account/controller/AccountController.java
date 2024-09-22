@@ -44,4 +44,11 @@ public class AccountController {
 		RemittanceResponseDto remittanceResponseDto = accountService.savingRemittance(accountId, savingRequestDto, httpServletRequest);
 		return ResponseEntity.ok().body(remittanceResponseDto);
 	}
+
+	@PostMapping("/remittance")
+	public ResponseEntity<RemittanceResponseDto> remittanceMain(@RequestBody RemittanceRequestDto remittanceRequestDto,
+		HttpServletRequest httpServletRequest){
+		RemittanceResponseDto remittanceResponseDto = accountService.remittanceOtherMain(remittanceRequestDto, httpServletRequest);
+		return ResponseEntity.ok().body(remittanceResponseDto);
+	}
 }
