@@ -23,7 +23,6 @@ import org.c4marathon.assignment.domain.account.repository.AccountRepository;
 import org.c4marathon.assignment.domain.user.entity.User;
 import org.c4marathon.assignment.domain.user.exception.UserException;
 import org.c4marathon.assignment.domain.user.repository.UserRepository;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -158,11 +157,39 @@ public class AccountService {
 		Account mainAccount = accountRepository.findMainAccount(user.getUserId(), AccountRole.MAIN);
 		Account saving = accountRepository.findById(savingId).orElseThrow(NoSuchElementException::new);
 		if (mainAccount.getAccountBalance() - savingRequestDto.amount() < 0) {
-			throw new AccountException(AccountErrCode.ACCOUNT_INSUFFICIENT_BALANCE);
+			long chargeBalance;
+			chargeBalance = calculateChargeBalance(mainAccount.getAccountBalance(), (long)savingRequestDto.amount());
+			RemittanceRequestDto chargeRemittanceDto = new RemittanceRequestDto(mainAccount.getAccountNum(), chargeBalance);
+			chargeMain(chargeRemittanceDto, sessionId, httpServletRequest);
 		}
 		mainAccount.updateSaving(mainAccount.getAccountBalance() - savingRequestDto.amount());
 		saving.updateSaving(saving.getAccountBalance() + savingRequestDto.amount());
 		return new RemittanceResponseDto(RemittanceResponseMsg.SUCCESS.getResponseMsg());
+	}
+
+	//메인계좌 간의 송금
+	@Transactional(isolation = Isolation.REPEATABLE_READ, timeout = 60)
+	public RemittanceResponseDto remittanceOtherMain(RemittanceRequestDto remittanceRequestDto, HttpServletRequest httpServletRequest){
+		Long userId = getSessionId(httpServletRequest);
+		Account mainAccount = accountRepository.findMainAccount(userId, AccountRole.MAIN);
+
+		Long receiveAccountNum = remittanceRequestDto.accountNum();
+		Account receiveAccount = accountRepository.findByAccountNum(receiveAccountNum);
+		Long remittanceAmount = remittanceRequestDto.remittanceAmount();
+		validateCharge(receiveAccount, remittanceAmount);
+		if (mainAccount.getAccountBalance() - remittanceAmount < 0) {
+			long chargeBalance;
+			chargeBalance = calculateChargeBalance(mainAccount.getAccountBalance(), remittanceAmount);
+			RemittanceRequestDto chargeRemittanceDto = new RemittanceRequestDto(mainAccount.getAccountNum(), chargeBalance);
+			chargeMain(chargeRemittanceDto, userId, httpServletRequest);
+		}
+		mainAccount.updateSaving(mainAccount.getAccountBalance() - remittanceAmount);
+		receiveAccount.updateSaving(remittanceAmount);
+		return new RemittanceResponseDto(RemittanceResponseMsg.SUCCESS.getResponseMsg());
+	}
+
+	private Long calculateChargeBalance(Long balance, Long remittanceAmount){
+		return ((long)Math.ceil((double)Math.abs(balance - remittanceAmount) / 10000)) * 10000;
 	}
 
 	@Scheduled(cron = "0 0 0 * * ?")
