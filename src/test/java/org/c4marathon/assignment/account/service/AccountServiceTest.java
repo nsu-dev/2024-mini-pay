@@ -11,6 +11,7 @@ import java.util.Optional;
 import org.c4marathon.assignment.account.domain.Account;
 import org.c4marathon.assignment.account.dto.request.ChargeRequestDto;
 import org.c4marathon.assignment.account.dto.request.SendRequestDto;
+import org.c4marathon.assignment.account.dto.request.SendToOthersRequestDto;
 import org.c4marathon.assignment.account.dto.response.AccountResponseDto;
 import org.c4marathon.assignment.account.dto.response.ChargeResponseDto;
 import org.c4marathon.assignment.account.dto.response.SavingAccountResponseDto;
@@ -19,6 +20,7 @@ import org.c4marathon.assignment.account.repository.AccountRepository;
 import org.c4marathon.assignment.common.exception.runtime.BaseException;
 import org.c4marathon.assignment.common.fixture.AccountFixture;
 import org.c4marathon.assignment.common.fixture.UserFixture;
+import org.c4marathon.assignment.event.account.WithdrawalFailEvent;
 import org.c4marathon.assignment.user.domain.User;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,6 +28,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -33,6 +36,9 @@ class AccountServiceTest {
 
 	@Mock
 	private AccountRepository accountRepository;
+
+	@Mock
+	private ApplicationEventPublisher eventPublisher;
 
 	@InjectMocks
 	private AccountService accountService;
@@ -268,6 +274,109 @@ class AccountServiceTest {
 					100_000,
 					200_000
 				)
+		);
+	}
+
+	@DisplayName("[메인 계좌에서 요청 금액만큼 출금한다.]")
+	@Test
+	void withdrawal() {
+		// given
+		User owner = UserFixture.basicUser();
+		Account mainAccount = AccountFixture.accountWithTypeAndAmount(owner, MAIN_ACCOUNT, 300_000);
+		SendToOthersRequestDto requestDto = new SendToOthersRequestDto(
+			mainAccount.getId(),
+			MAIN_ACCOUNT.getType(),
+			100_000
+		);
+
+		given(accountRepository.findByIdAndType(mainAccount.getId(), MAIN_ACCOUNT))
+			.willReturn(Optional.of(mainAccount));
+
+		// when
+		accountService.withdrawal(owner, requestDto);
+
+		// then
+		assertThat(mainAccount.getAmount()).isEqualTo(200_000);
+	}
+
+	@DisplayName("[요청 금액만큼 메인 계좌에 입금한다.]")
+	@Test
+	void deposit() {
+		// given
+		User owner = UserFixture.basicUser();
+		Account mainAccount = AccountFixture.accountWithTypeAndAmount(owner, MAIN_ACCOUNT, 300_000);
+		SendToOthersRequestDto requestDto = new SendToOthersRequestDto(
+			mainAccount.getId(),
+			MAIN_ACCOUNT.getType(),
+			100_000
+		);
+
+		given(accountRepository.findByIdAndType(mainAccount.getId(), MAIN_ACCOUNT))
+			.willReturn(Optional.of(mainAccount));
+
+		// when
+		accountService.deposit(owner.getId(), MAIN_ACCOUNT.getType(), 200_000, requestDto);
+
+		// then
+		assertThat(mainAccount.getAmount()).isEqualTo(500_000);
+	}
+
+	@DisplayName("[요청 금액만큼 계좌에 입금할 때 오류가 발생하면 출금 취소 이벤트가 발행된다.]")
+	@Test
+	void depositThrowExceptionThenEventPublish() {
+		// given
+		User owner = UserFixture.basicUser();
+		Account mainAccount = AccountFixture.accountWithTypeAndAmount(owner, SAVING_ACCOUNT, 300_000);
+		SendToOthersRequestDto requestDto = new SendToOthersRequestDto(
+			mainAccount.getId(),
+			MAIN_ACCOUNT.getType(),
+			100_000
+		);
+
+		given(accountRepository.findByIdAndType(any(), any()))
+			.willReturn(Optional.of(mainAccount));
+
+		// when
+		BaseException baseException = assertThrows(BaseException.class,
+			() -> accountService.deposit(owner.getId(), mainAccount.getType().getType(), 200_000, requestDto));
+
+		// then
+		verify(eventPublisher).publishEvent(any(WithdrawalFailEvent.class));
+		assertThat(baseException.getMessage()).isEqualTo("해당 계좌에 입금을 실패했습니다.");
+	}
+
+	@DisplayName("[요청자의 계좌에서 요청 금액만큼 출금하고 출금 금액을 상대방 메인 계좌에 입금한다.]")
+	@Test
+	void sendToOthers() {
+		// given
+		User owner = UserFixture.basicUser();
+		User others = UserFixture.basicUser();
+		ReflectionTestUtils.setField(owner, "id", 1L);
+		ReflectionTestUtils.setField(others, "id", 2L);
+
+		Account mainAccountByOwner = AccountFixture.accountWithTypeAndAmount(owner, MAIN_ACCOUNT, 300_000);
+		Account mainAccountByOthers = AccountFixture.accountWithTypeAndAmount(others, MAIN_ACCOUNT, 100_000);
+		ReflectionTestUtils.setField(mainAccountByOwner, "id", 1L);
+		ReflectionTestUtils.setField(mainAccountByOthers, "id", 2L);
+
+		SendToOthersRequestDto requestDto = new SendToOthersRequestDto(
+			mainAccountByOwner.getId(),
+			MAIN_ACCOUNT.getType(),
+			100_000
+		);
+
+		given(accountRepository.findByIdAndType(mainAccountByOwner.getId(), MAIN_ACCOUNT))
+			.willReturn(Optional.of(mainAccountByOwner));
+		given(accountRepository.findByIdAndType(mainAccountByOthers.getId(), MAIN_ACCOUNT))
+			.willReturn(Optional.of(mainAccountByOthers));
+
+		// when
+		accountService.sendToOthers(others.getId(), mainAccountByOthers.getType().getType(), owner, requestDto);
+
+		// then
+		assertAll(
+			() -> assertThat(mainAccountByOwner.getAmount()).isEqualTo(200_000),
+			() -> assertThat(mainAccountByOthers.getAmount()).isEqualTo(200_000)
 		);
 	}
 }
