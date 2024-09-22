@@ -120,13 +120,10 @@ public class AccountService {
 
 	//메인 외 계좌 생성
 	public CreateResponseDto createAccountOther(String createAccountRole, HttpServletRequest httpServletRequest) {
-		Long sessionId = getSessionId(httpServletRequest);
-		User user = userRepository.findById(sessionId).orElseThrow(NoSuchElementException::new);
-		Long accountNum = createRandomAccount();
+		Long userId = getSessionId(httpServletRequest);
+		User user = userRepository.findById(userId).orElseThrow(NoSuchElementException::new);
+		Long accountNum = getAccountNum();
 		AccountRole accountRole = determineAccountRole(createAccountRole);
-		if (duplicatedAccount(accountNum)) {
-			throw new AccountException(AccountErrCode.ACCOUNT_CREATE_FAIL);
-		}
 		Account account = createAccount(user, accountNum, accountRole);
 		accountRepository.save(account);
 		return new CreateResponseDto(CreateResponseMsg.SUCCESS.getResponseMsg());
@@ -173,7 +170,7 @@ public class AccountService {
 			long chargeBalance;
 			chargeBalance = calculateChargeBalance(mainAccount.getAccountBalance(), remittanceAmount);
 			RemittanceRequestDto chargeRemittanceDto = new RemittanceRequestDto(mainAccount.getAccountNum(), chargeBalance);
-			chargeMain(chargeRemittanceDto );
+			chargeMain(chargeRemittanceDto);
 		}
 		mainAccount.updateSaving(mainAccount.getAccountBalance() - remittanceAmount);
 		receiveAccount.updateSaving(remittanceAmount);
