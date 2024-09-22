@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/minipay
+    username: root
+    password: sky0421!
+
+  jpa:
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+    open-in-view: false
+
+jwt:
+  key: dsaofno432542334ewnfgioeq4325wngoewqng643653245oewnognewion2ipj1po4j9023h105th32t6b91423bh5923biufbewijflkalkdskv
