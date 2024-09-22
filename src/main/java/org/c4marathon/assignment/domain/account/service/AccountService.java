@@ -87,7 +87,6 @@ public class AccountService {
 	public RemittanceResponseDto chargeMain(RemittanceRequestDto remittanceRequestDto, Long userId,
 		HttpServletRequest httpServletRequest) {
 		Long sessionId = getSessionId(httpServletRequest);
-		validateUser(sessionId, userId);
 
 		Long accountNum = remittanceRequestDto.accountNum();
 		Account account = accountRepository.findByAccountNum(accountNum);
@@ -105,12 +104,6 @@ public class AccountService {
 		return (Long)session.getAttribute("userId");
 	}
 
-	private void validateUser(Long sessionId, Long requestUserId) {
-		if (!sessionId.equals(requestUserId)) {
-			throw new UserException(USER_SESSION_ERR);
-		}
-	}
-
 	//한도 및 계좌 상태 검사
 	private void validateCharge(Account account, Long remittanceAmount) {
 		if (account.getDailyChargeLimit() >= 3_000_000) {
@@ -125,7 +118,6 @@ public class AccountService {
 	//메인 외 계좌 생성
 	public CreateResponseDto createAccountOther(Long userId, String createAccountRole, HttpServletRequest httpServletRequest) {
 		Long sessionId = getSessionId(httpServletRequest);
-		validateUser(sessionId, userId);
 
 		User user = userRepository.findById(userId).orElseThrow(NoSuchElementException::new);
 		Long accountNum = createRandomAccount();
@@ -151,7 +143,6 @@ public class AccountService {
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public RemittanceResponseDto savingRemittance(Long savingId, SavingRequestDto savingRequestDto, HttpServletRequest httpServletRequest) {
 		Long sessionId = getSessionId(httpServletRequest);
-		validateUser(sessionId, savingId);
 
 		User user = accountRepository.findUserByAccount(savingId);
 		Account mainAccount = accountRepository.findMainAccount(user.getUserId(), AccountRole.MAIN);
