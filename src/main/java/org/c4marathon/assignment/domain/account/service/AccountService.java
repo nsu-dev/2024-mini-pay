@@ -38,10 +38,10 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class AccountService {
-	private final long MIX_ACCOUNT_NUM = 300_0000_0000_00L;
-	private final long MAX_ACCOUNT_NUM = 399_9999_9999_99L;
-	private final long MAX_DAILY_CHARGE_LIMIT = 3_000_000L;
-	private final int BALANCE_UNIT = 10000;
+	private static final long MIN_ACCOUNT_NUM = 300_0000_0000_00L;
+	private static final long MAX_ACCOUNT_NUM = 399_9999_9999_99L;
+	private static final long MAX_DAILY_CHARGE_LIMIT = 3_000_000L;
+	private static final int BALANCE_UNIT = 10000;
 
 	private final AccountRepository accountRepository;
 	private final UserRepository userRepository;
@@ -51,22 +51,23 @@ public class AccountService {
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void createMain(ScheduleCreateEvent scheduleCreateEvent) {
 		User user = scheduleCreateEvent.user();
-		Long accountNum = createRandomAccount();
+		Long accountNum = getAccountNum();
 		Account account = createAccount(user, accountNum, AccountRole.MAIN);
 		accountRepository.save(account);
 	}
 
 	//계좌번호 생성
-	private Long createRandomAccount() {
-		long min = MIX_ACCOUNT_NUM;
-		long max = MAX_ACCOUNT_NUM;
-		Random random = new Random();
-		Long accountNum = min + (long)(random.nextDouble() * (max - min + 1));
-
-		if (duplicatedAccount(accountNum)) {
-			return createRandomAccount();
-		}
+	private Long getAccountNum() {
+		Long accountNum;
+		do {
+			accountNum = createRandomAccount();
+		} while (duplicatedAccount(accountNum));
 		return accountNum;
+	}
+
+	private Long createRandomAccount() {
+		Random random = new Random();
+		return MIN_ACCOUNT_NUM + (long)(random.nextDouble() * (MAX_ACCOUNT_NUM - MIN_ACCOUNT_NUM + 1));
 	}
 
 	//계좌 Entity 생성
