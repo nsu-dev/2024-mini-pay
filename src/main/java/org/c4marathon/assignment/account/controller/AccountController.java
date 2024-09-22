@@ -4,15 +4,18 @@ import java.util.List;
 
 import org.c4marathon.assignment.account.dto.request.ChargeRequestDto;
 import org.c4marathon.assignment.account.dto.request.SendRequestDto;
+import org.c4marathon.assignment.account.dto.request.SendToOthersRequestDto;
 import org.c4marathon.assignment.account.dto.response.AccountResponseDto;
 import org.c4marathon.assignment.account.dto.response.ChargeResponseDto;
 import org.c4marathon.assignment.account.dto.response.SavingAccountResponseDto;
 import org.c4marathon.assignment.account.dto.response.SendResponseDto;
+import org.c4marathon.assignment.account.dto.response.SendToOthersResponseDto;
 import org.c4marathon.assignment.account.service.AccountService;
 import org.c4marathon.assignment.user.domain.User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -60,4 +63,19 @@ public class AccountController {
 		return ResponseEntity.ok(chargeResponseDto);
 	}
 
+	@PostMapping("/api/send/{othersAccountId}/{othersAccountType}")
+	public ResponseEntity<SendToOthersResponseDto> sendToOthers(
+		@PathVariable("othersAccountId") Long othersAccountId,
+		@PathVariable("othersAccountType") String othersAccountType,
+		@AuthenticationPrincipal User user,
+		@Valid @RequestBody SendToOthersRequestDto requestDto
+	) {
+		SendToOthersResponseDto sendToOthersResponseDto = accountService.sendToOthers(
+			othersAccountId,
+			othersAccountType,
+			user,
+			requestDto
+		);
+		return ResponseEntity.ok(sendToOthersResponseDto);
+	}
 }
