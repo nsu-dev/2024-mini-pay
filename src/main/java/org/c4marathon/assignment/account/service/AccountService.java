@@ -12,14 +12,18 @@ import org.c4marathon.assignment.account.domain.AccountType;
 import org.c4marathon.assignment.account.dto.AccountMapper;
 import org.c4marathon.assignment.account.dto.request.ChargeRequestDto;
 import org.c4marathon.assignment.account.dto.request.SendRequestDto;
+import org.c4marathon.assignment.account.dto.request.SendToOthersRequestDto;
 import org.c4marathon.assignment.account.dto.response.AccountResponseDto;
 import org.c4marathon.assignment.account.dto.response.ChargeResponseDto;
 import org.c4marathon.assignment.account.dto.response.SavingAccountResponseDto;
 import org.c4marathon.assignment.account.dto.response.SendResponseDto;
+import org.c4marathon.assignment.account.dto.response.SendToOthersResponseDto;
 import org.c4marathon.assignment.account.exception.AccountErrorCode;
 import org.c4marathon.assignment.account.repository.AccountRepository;
 import org.c4marathon.assignment.common.exception.runtime.BaseException;
+import org.c4marathon.assignment.event.account.WithdrawalFailEvent;
 import org.c4marathon.assignment.user.domain.User;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +36,7 @@ public class AccountService {
 
 	public static final String TIME_ZONE = "Asia/Seoul";
 	private final AccountRepository accountRepository;
+	private final ApplicationEventPublisher eventPublisher;
 
 	@Transactional
 	public SavingAccountResponseDto generateSavingAccount(User user) {
@@ -110,5 +115,45 @@ public class AccountService {
 
 	private boolean verifyMainAccount(Account account) {
 		return Objects.equals(account.getType().getType(), MAIN_ACCOUNT.getType());
+	}
+
+	public SendToOthersResponseDto sendToOthers(
+		Long othersAccountId,
+		String othersAccountType,
+		User user,
+		SendToOthersRequestDto requestDto
+	) {
+		int sendToMoney = withdrawal(user, requestDto);
+		return deposit(othersAccountId, othersAccountType, sendToMoney, requestDto);
+	}
+
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
+	public int withdrawal(User user, SendToOthersRequestDto requestDto) {
+		Account userAccount = findAccount(requestDto.accountId(), requestDto.accountType());
+
+		if (!verifyAccountByUser(user, userAccount)) {
+			throw new BaseException(AccountErrorCode.NOT_AUTHORIZED_ACCOUNT);
+		}
+
+		return userAccount.decreaseAmount(requestDto.sendAmount());
+	}
+
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
+	public SendToOthersResponseDto deposit(
+		Long othersAccountId,
+		String othersAccountType,
+		int sendToMoney,
+		SendToOthersRequestDto requestDto
+	) {
+		try {
+			Account othersAccount = findAccount(othersAccountId, othersAccountType);
+			othersAccount.increaseAmount(sendToMoney);
+
+			return AccountMapper.sendToOthersResponseDto(othersAccount.getUser(), sendToMoney);
+		} catch (Exception e) {
+			Account userAccount = findAccount(requestDto.accountId(), requestDto.accountType());
+			eventPublisher.publishEvent(new WithdrawalFailEvent(userAccount, requestDto.sendAmount()));
+			throw new BaseException(AccountErrorCode.FAILED_ACCOUNT_DEPOSIT);
+		}
 	}
 }
