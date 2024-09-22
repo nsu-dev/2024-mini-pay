@@ -41,10 +41,10 @@ public class AccountController {
 	}
 
 	//적금계좌 <- 메인계좌로의 송금 api
-	@PostMapping("/saving")
-	public ResponseEntity<RemittanceResponseDto> savingRemittance(@RequestBody SavingRequestDto savingRequestDto,
-		HttpServletRequest httpServletRequest) {
-		RemittanceResponseDto remittanceResponseDto = accountService.savingRemittance(savingRequestDto, httpServletRequest);
+	@PostMapping("/saving/{accountId}")
+	public ResponseEntity<RemittanceResponseDto> savingRemittance(@PathVariable Long accountId,
+		@RequestBody SavingRequestDto savingRequestDto, HttpServletRequest httpServletRequest) {
+		RemittanceResponseDto remittanceResponseDto = accountService.savingRemittance(accountId, savingRequestDto, httpServletRequest);
 		return ResponseEntity.ok().body(remittanceResponseDto);
 	}
 
