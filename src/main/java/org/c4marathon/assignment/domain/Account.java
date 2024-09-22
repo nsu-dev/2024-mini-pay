@@ -8,6 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Version;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -19,6 +20,10 @@ public class Account {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long accountId;
 	private int balance;
+
+	//낙관적 잠금을 위한 버전 필드
+	@Version
+	private int version;
 
 	//계좌 유형을 추가하여 메인 계좌와 적금 계좌를 구분
 	private String type;
