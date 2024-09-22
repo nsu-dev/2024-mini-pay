@@ -138,6 +138,16 @@ public class AccountService {
 		};
 	}
 
+	private void chargeAccountBalance(Account account, Long amount){
+		if(account.getAccountBalance() < amount){
+			Long requiredAmount = calculateChargeBalance(account.getAccountBalance(), amount);
+			RemittanceRequestDto chargeRequest = new RemittanceRequestDto(account.getAccountNum(), requiredAmount);
+			chargeMain(chargeRequest);
+		}
+	}
+	private Long calculateChargeBalance(Long balance, Long remittanceAmount){
+		return ((long)Math.ceil((double)Math.abs(balance - remittanceAmount) / BALANCE_UNIT)) * BALANCE_UNIT;
+	}
 	//메인계좌에서 인출 후 적금계좌에 입금
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public RemittanceResponseDto savingRemittance(Long savingId, SavingRequestDto savingRequestDto, HttpServletRequest httpServletRequest) {
@@ -145,12 +155,7 @@ public class AccountService {
 		User user = userRepository.findById(userId).orElseThrow(()->new UserException(USER_NOT_FOUND));
 		Account mainAccount = accountRepository.findMainAccount(user.getUserId(), AccountRole.MAIN);
 		Account saving = accountRepository.findById(savingId).orElseThrow(NoSuchElementException::new);
-		if (mainAccount.getAccountBalance() - savingRequestDto.amount() < 0) {
-			long chargeBalance;
-			chargeBalance = calculateChargeBalance(mainAccount.getAccountBalance(), (long)savingRequestDto.amount());
-			RemittanceRequestDto chargeRemittanceDto = new RemittanceRequestDto(mainAccount.getAccountNum(), chargeBalance);
-			chargeMain(chargeRemittanceDto);
-		}
+		chargeAccountBalance(mainAccount, (long)savingRequestDto.amount());
 		mainAccount.updateSaving(mainAccount.getAccountBalance() - savingRequestDto.amount());
 		saving.updateSaving(saving.getAccountBalance() + savingRequestDto.amount());
 		return new RemittanceResponseDto(RemittanceResponseMsg.SUCCESS.getResponseMsg());
@@ -166,19 +171,10 @@ public class AccountService {
 		Account receiveAccount = accountRepository.findByAccountNum(receiveAccountNum);
 		Long remittanceAmount = remittanceRequestDto.remittanceAmount();
 		validateCharge(receiveAccount, remittanceAmount);
-		if (mainAccount.getAccountBalance() - remittanceAmount < 0) {
-			long chargeBalance;
-			chargeBalance = calculateChargeBalance(mainAccount.getAccountBalance(), remittanceAmount);
-			RemittanceRequestDto chargeRemittanceDto = new RemittanceRequestDto(mainAccount.getAccountNum(), chargeBalance);
-			chargeMain(chargeRemittanceDto);
-		}
+		chargeAccountBalance(mainAccount, remittanceAmount);
 		mainAccount.updateSaving(mainAccount.getAccountBalance() - remittanceAmount);
-		receiveAccount.updateSaving(remittanceAmount);
+		receiveAccount.updateChargeAccount(remittanceAmount);
 		return new RemittanceResponseDto(RemittanceResponseMsg.SUCCESS.getResponseMsg());
-	}
-
-	private Long calculateChargeBalance(Long balance, Long remittanceAmount){
-		return ((long)Math.ceil((double)Math.abs(balance - remittanceAmount) / BALANCE_UNIT)) * BALANCE_UNIT;
 	}
 
 	@Scheduled(cron = "0 0 0 * * ?")
