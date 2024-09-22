@@ -88,7 +88,6 @@ public class UserServiceTest {
 		assertThat(responseDto.responseMsg()).isEqualTo(LoginResponseMsg.SUCCESS.getResponseMsg());
 		verify(httpSession).setAttribute("userId", mockUser.getUserId());
 		verify(httpSession).setMaxInactiveInterval(1800);
-		System.out.println(responseDto.responseMsg());
 	}
 
 	@DisplayName("로그인 시 일치하는 전화번호가 없다면 로그인 실패 예외가 발생한다.")
