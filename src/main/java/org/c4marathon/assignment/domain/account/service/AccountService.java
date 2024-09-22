@@ -38,6 +38,11 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class AccountService {
+	private final long MIX_ACCOUNT_NUM = 300_0000_0000_00L;
+	private final long MAX_ACCOUNT_NUM = 399_9999_9999_99L;
+	private final long MAX_DAILY_CHARGE_LIMIT = 3_000_000L;
+	private final int BALANCE_UNIT = 10000;
+
 	private final AccountRepository accountRepository;
 	private final UserRepository userRepository;
 
@@ -53,8 +58,8 @@ public class AccountService {
 
 	//계좌번호 생성
 	private Long createRandomAccount() {
-		long min = 300_0000_0000_00L;
-		long max = 399_9999_9999_99L;
+		long min = MIX_ACCOUNT_NUM;
+		long max = MAX_ACCOUNT_NUM;
 		Random random = new Random();
 		Long accountNum = min + (long)(random.nextDouble() * (max - min + 1));
 
@@ -106,11 +111,11 @@ public class AccountService {
 
 	//한도 및 계좌 상태 검사
 	private void validateCharge(Account account, Long remittanceAmount) {
-		if (account.getDailyChargeLimit() >= 3_000_000) {
+		if (account.getDailyChargeLimit() >= MAX_DAILY_CHARGE_LIMIT) {
 			throw new AccountException(AccountErrCode.ACCOUNT_DALIYCHARGELIMIT_ERR);
 		} else if (account.getAccountStatus() == AccountStatus.UNAVAILABLE) {
 			throw new AccountException(AccountErrCode.ACCOUNT_UNAVAILABLE);
-		} else if (account.getDailyChargeLimit() + remittanceAmount > 3_000_000) {
+		} else if (account.getDailyChargeLimit() + remittanceAmount > MAX_DAILY_CHARGE_LIMIT) {
 			throw new AccountException(AccountErrCode.ACCOUNT_DALIYCHARGELIMIT_ERR);
 		}
 	}
@@ -178,7 +183,7 @@ public class AccountService {
 	}
 
 	private Long calculateChargeBalance(Long balance, Long remittanceAmount){
-		return ((long)Math.ceil((double)Math.abs(balance - remittanceAmount) / 10000)) * 10000;
+		return ((long)Math.ceil((double)Math.abs(balance - remittanceAmount) / BALANCE_UNIT)) * BALANCE_UNIT;
 	}
 
 	@Scheduled(cron = "0 0 0 * * ?")
