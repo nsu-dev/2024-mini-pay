@@ -48,10 +48,6 @@ public class UserServiceTest {
 	void setup(){
 		userRepository.deleteAll();
 	}
-	@AfterEach
-	void tearDown() {
-		userRepository.deleteAll();
-	}
 
 	@DisplayName("회원가입 시 회원 정보 저장")
 	@Test
