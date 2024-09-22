@@ -147,6 +147,11 @@ public class AccountService {
 	) {
 		try {
 			Account othersAccount = findAccount(othersAccountId, othersAccountType);
+
+			if (!verifyMainAccount(othersAccount)) {
+				throw new BaseException(AccountErrorCode.NOT_MAIN_ACCOUNT);
+			}
+
 			othersAccount.increaseAmount(sendToMoney);
 
 			return AccountMapper.sendToOthersResponseDto(othersAccount.getUser(), sendToMoney);
