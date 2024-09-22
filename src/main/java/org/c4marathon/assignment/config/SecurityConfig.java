@@ -20,7 +20,7 @@ public class SecurityConfig {
 		http
 			.csrf(AbstractHttpConfigurer::disable)
 			.authorizeHttpRequests(auth -> auth
-				.requestMatchers("/", "/user/join,", "/user/login").permitAll()
+				.requestMatchers("/", "/user/join", "/user/login").permitAll()
 				.anyRequest().authenticated()
 			)
 			.formLogin(AbstractHttpConfigurer::disable)
