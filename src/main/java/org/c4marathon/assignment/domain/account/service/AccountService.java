@@ -84,7 +84,7 @@ public class AccountService {
 	}
 
 	//메인계좌 충전
-	@Transactional(isolation = Isolation.READ_COMMITTED)
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public RemittanceResponseDto chargeMain(RemittanceRequestDto remittanceRequestDto, Long userId,
 		HttpServletRequest httpServletRequest) {
 		Long sessionId = getSessionId(httpServletRequest);
