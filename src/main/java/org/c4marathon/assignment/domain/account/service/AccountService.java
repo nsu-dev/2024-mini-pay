@@ -84,7 +84,7 @@ public class AccountService {
 
 	//메인계좌 충전
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
-	public RemittanceResponseDto chargeMain(RemittanceRequestDto remittanceRequestDto, Long userId,
+	public RemittanceResponseDto chargeMain(RemittanceRequestDto remittanceRequestDto,
 		HttpServletRequest httpServletRequest) {
 		Long sessionId = getSessionId(httpServletRequest);
 
@@ -116,10 +116,9 @@ public class AccountService {
 	}
 
 	//메인 외 계좌 생성
-	public CreateResponseDto createAccountOther(Long userId, String createAccountRole, HttpServletRequest httpServletRequest) {
+	public CreateResponseDto createAccountOther(String createAccountRole, HttpServletRequest httpServletRequest) {
 		Long sessionId = getSessionId(httpServletRequest);
-
-		User user = userRepository.findById(userId).orElseThrow(NoSuchElementException::new);
+		User user = userRepository.findById(sessionId).orElseThrow(NoSuchElementException::new);
 		Long accountNum = createRandomAccount();
 		AccountRole accountRole = determineAccountRole(createAccountRole);
 		if (duplicatedAccount(accountNum)) {
@@ -142,16 +141,15 @@ public class AccountService {
 	//메인계좌에서 인출 후 적금계좌에 입금
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public RemittanceResponseDto savingRemittance(Long savingId, SavingRequestDto savingRequestDto, HttpServletRequest httpServletRequest) {
-		Long sessionId = getSessionId(httpServletRequest);
-
-		User user = accountRepository.findUserByAccount(savingId);
+		Long userId = getSessionId(httpServletRequest);
+		User user = userRepository.findById(userId).orElseThrow(()->new UserException(USER_NOT_FOUND));
 		Account mainAccount = accountRepository.findMainAccount(user.getUserId(), AccountRole.MAIN);
 		Account saving = accountRepository.findById(savingId).orElseThrow(NoSuchElementException::new);
 		if (mainAccount.getAccountBalance() - savingRequestDto.amount() < 0) {
 			long chargeBalance;
 			chargeBalance = calculateChargeBalance(mainAccount.getAccountBalance(), (long)savingRequestDto.amount());
 			RemittanceRequestDto chargeRemittanceDto = new RemittanceRequestDto(mainAccount.getAccountNum(), chargeBalance);
-			chargeMain(chargeRemittanceDto, sessionId, httpServletRequest);
+			chargeMain(chargeRemittanceDto, httpServletRequest);
 		}
 		mainAccount.updateSaving(mainAccount.getAccountBalance() - savingRequestDto.amount());
 		saving.updateSaving(saving.getAccountBalance() + savingRequestDto.amount());
@@ -172,7 +170,7 @@ public class AccountService {
 			long chargeBalance;
 			chargeBalance = calculateChargeBalance(mainAccount.getAccountBalance(), remittanceAmount);
 			RemittanceRequestDto chargeRemittanceDto = new RemittanceRequestDto(mainAccount.getAccountNum(), chargeBalance);
-			chargeMain(chargeRemittanceDto, userId, httpServletRequest);
+			chargeMain(chargeRemittanceDto, httpServletRequest);
 		}
 		mainAccount.updateSaving(mainAccount.getAccountBalance() - remittanceAmount);
 		receiveAccount.updateSaving(remittanceAmount);
