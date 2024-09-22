@@ -34,4 +34,11 @@ public class AccountEventHandler {
 
 		log.info("{} 회원 메인 계좌 생성 완료", event.getUser().getName());
 	}
+
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+	public void cancelWithdrawal(WithdrawalFailEvent event) {
+		Account withdrawnAccount = event.getAccount();
+		withdrawnAccount.increaseAmount(event.getWithdrawnAmount());
+	}
 }
