@@ -90,10 +90,7 @@ public class AccountService {
 
 	//메인계좌 충전
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
-	public RemittanceResponseDto chargeMain(RemittanceRequestDto remittanceRequestDto,
-		HttpServletRequest httpServletRequest) {
-		Long sessionId = getSessionId(httpServletRequest);
-
+	public RemittanceResponseDto chargeMain(RemittanceRequestDto remittanceRequestDto) {
 		Long accountNum = remittanceRequestDto.accountNum();
 		Account account = accountRepository.findByAccountNum(accountNum);
 		Long remittanceAmount = remittanceRequestDto.remittanceAmount();
