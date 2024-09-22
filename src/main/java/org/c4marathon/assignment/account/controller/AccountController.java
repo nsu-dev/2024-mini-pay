@@ -48,8 +48,8 @@ public class AccountController {
 	@PostMapping("/api/send")
 	public ResponseEntity<SendResponseDto> sendMoney(
 		@AuthenticationPrincipal User user,
-		@Valid @RequestBody SendRequestDto requestDto) {
-
+		@Valid @RequestBody SendRequestDto requestDto
+	) {
 		SendResponseDto sendResponseDto = accountService.sendMoney(user, requestDto);
 		return ResponseEntity.ok(sendResponseDto);
 	}
@@ -57,8 +57,8 @@ public class AccountController {
 	@PostMapping("/api/account/charge")
 	public ResponseEntity<ChargeResponseDto> chargeMainAccount(
 		@AuthenticationPrincipal User user,
-		@Valid @RequestBody ChargeRequestDto requestDto) {
-
+		@Valid @RequestBody ChargeRequestDto requestDto
+	) {
 		ChargeResponseDto chargeResponseDto = accountService.chargeMainAccount(user, requestDto);
 		return ResponseEntity.ok(chargeResponseDto);
 	}
