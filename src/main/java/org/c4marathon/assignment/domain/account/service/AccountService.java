@@ -152,7 +152,7 @@ public class AccountService {
 			long chargeBalance;
 			chargeBalance = calculateChargeBalance(mainAccount.getAccountBalance(), (long)savingRequestDto.amount());
 			RemittanceRequestDto chargeRemittanceDto = new RemittanceRequestDto(mainAccount.getAccountNum(), chargeBalance);
-			chargeMain(chargeRemittanceDto, httpServletRequest);
+			chargeMain(chargeRemittanceDto);
 		}
 		mainAccount.updateSaving(mainAccount.getAccountBalance() - savingRequestDto.amount());
 		saving.updateSaving(saving.getAccountBalance() + savingRequestDto.amount());
@@ -173,7 +173,7 @@ public class AccountService {
 			long chargeBalance;
 			chargeBalance = calculateChargeBalance(mainAccount.getAccountBalance(), remittanceAmount);
 			RemittanceRequestDto chargeRemittanceDto = new RemittanceRequestDto(mainAccount.getAccountNum(), chargeBalance);
-			chargeMain(chargeRemittanceDto, httpServletRequest);
+			chargeMain(chargeRemittanceDto );
 		}
 		mainAccount.updateSaving(mainAccount.getAccountBalance() - remittanceAmount);
 		receiveAccount.updateSaving(remittanceAmount);
