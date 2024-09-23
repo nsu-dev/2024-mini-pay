@@ -21,7 +21,7 @@ public class UserService {
 	private final AccountRepository accountRepository;
 
 	//사용자 회원가입(메인 계좌 생성)
-	@Transactional(isolation = Isolation.REPEATABLE_READ)
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	public UserResponseDto registerUser(UserRequestDto userRequestDto) {
 		// User 객체를 빌더 패턴으로 생성
 		User user = User.builder()

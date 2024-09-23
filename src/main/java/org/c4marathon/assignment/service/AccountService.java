@@ -14,13 +14,13 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(isolation = Isolation.REPEATABLE_READ)
 public class AccountService {
 
 	private final AccountRepository accountRepository;
 	private final UserRepository userRepository;
 
 	// 적금 계좌 추가
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public boolean addSavingsAccount(Long userId, String type, int balance) {
 		try {
 			User user = userRepository.findById(userId)
@@ -56,10 +56,6 @@ public class AccountService {
 
 			// 적금 계좌로 입금
 			savingsAccount.deposit(money);
-
-			// 더티 체킹에 의해 자동 저장되므로 따로 save()를 호출할 필요 없음
-			// accountRepository.save(mainAccount);
-			// accountRepository.save(savingsAccount);
 			return true;
 		} catch (IllegalArgumentException e) {
 			throw new IllegalArgumentException("송금 중 오류가 발생했습니다: " + e.getMessage());
