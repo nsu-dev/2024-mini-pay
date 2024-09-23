@@ -91,59 +91,29 @@ class AccountServiceTest {
 		//given
 		Long userId = 1L;
 		RemittanceRequestDto remittanceRequestDto = new RemittanceRequestDto(3288494829384L, 1000000L);
-
-		given(httpServletRequest.getSession(false)).willReturn(httpSession);
-		given(httpSession.getAttribute("userId")).willReturn(userId);
 		given(accountRepository.findByAccountNum(anyLong())).willReturn(mainAccount);
 
 		// when
-		RemittanceResponseDto response = accountService.chargeMain(remittanceRequestDto, userId, httpServletRequest);
+		RemittanceResponseDto response = accountService.chargeMain(remittanceRequestDto);
 
 		// then
 		assertThat(response.responseMsg()).isEqualTo(RemittanceResponseMsg.SUCCESS.getResponseMsg());
 		verify(accountRepository).findByAccountNum(anyLong());
 	}
 
-	@DisplayName("세션정보가 없을 시 계좌 충전은 실패한다.")
-	@Test
-	void chargeMainNoSessionErr(){
-		//given
-		RemittanceRequestDto remittanceRequestDto = new RemittanceRequestDto(3288494829384L, 1000000L);
-
-		given(httpServletRequest.getSession(false)).willReturn(null);
-		// when // then
-		assertThrows(UserException.class, () -> accountService.chargeMain(remittanceRequestDto, 1L, httpServletRequest));
-	}
-
-	@DisplayName("계좌 충전 시 세션에 등록된 유저와 요청한 유저가 다르다면 충전은 실패한다.")
-	@Test
-	void chargeMainInvalidSessionId(){
-		// given
-		RemittanceRequestDto remittanceRequestDto = new RemittanceRequestDto(3288494829384L, 1000000L);
-
-		given(httpServletRequest.getSession(false)).willReturn(httpSession);
-		given(httpSession.getAttribute("userId")).willReturn(2L); // 세션의 userId와 다름
-
-		// when // then
-		assertThrows(UserException.class, () -> accountService.chargeMain(remittanceRequestDto, user.getUserId(), httpServletRequest));
-	}
-
 	@DisplayName("계좌가 비활성화 상태이면 충전은 실패한다.")
 	@Test
 	void chargeMainAccountUnavailable(){
 		//given
-		Long userId = 1L;
 		RemittanceRequestDto remittanceRequestDto = new RemittanceRequestDto(3288494829384L, 1000000L);
 		mainAccount = Account.
 			builder()
 			.accountStatus(AccountStatus.UNAVAILABLE)
 			.build();
-		given(httpServletRequest.getSession(false)).willReturn(httpSession);
-		given(httpSession.getAttribute("userId")).willReturn(userId);
 		given(accountRepository.findByAccountNum(anyLong())).willReturn(mainAccount);
 
 		// when // then
-		assertThrows(AccountException.class, () -> accountService.chargeMain(remittanceRequestDto, userId, httpServletRequest));
+		assertThrows(AccountException.class, () -> accountService.chargeMain(remittanceRequestDto));
 	}
 
 	@DisplayName("일일 한도 초과 시 충전은 실패한다.")
@@ -154,13 +124,10 @@ class AccountServiceTest {
 			.dailyChargeLimit(3000000)
 			.build();
 		RemittanceRequestDto remittanceRequestDto = new RemittanceRequestDto(3288494829384L, 1000000L);
-
-		given(httpServletRequest.getSession(false)).willReturn(httpSession);
-		given(httpSession.getAttribute("userId")).willReturn(userId);
 		given(accountRepository.findByAccountNum(anyLong())).willReturn(mainAccount);
 
 		//when //then
-		assertThrows(AccountException.class, () -> accountService.chargeMain(remittanceRequestDto, userId, httpServletRequest));
+		assertThrows(AccountException.class, () -> accountService.chargeMain(remittanceRequestDto));
 	}
 	@DisplayName("송금액이 일일한도 초과 시 충전은 실패한다.")
 	@Test
@@ -173,7 +140,13 @@ class AccountServiceTest {
 	void createAccountSavings(){
 		// given
 		Long userId = 1L;
-
+		user = User.builder()
+			.userId(1L)
+			.userPhone("010-8337-6023")
+			.userName("조아빈")
+			.userBirth("20000604")
+			.userPassword("pw123")
+			.build();
 		// 모킹: 세션에서 userId가 반환되도록 설정
 		given(httpServletRequest.getSession(false)).willReturn(httpSession);
 		given(httpSession.getAttribute("userId")).willReturn(userId);
@@ -186,7 +159,7 @@ class AccountServiceTest {
 		given(accountRepository.save(any(Account.class))).willAnswer(invocation -> invocation.getArgument(0)); // 전달된 계좌 객체를 반환
 
 		// when
-		accountService.createAccountOther(userId, "SAVINGS", httpServletRequest);
+		accountService.createAccountOther("SAVINGS", httpServletRequest);
 
 		// then
 		then(accountRepository).should(times(1)).save(any(Account.class)); // 계좌 저장이 호출되었는지 검증
@@ -210,7 +183,7 @@ class AccountServiceTest {
 		given(accountRepository.save(any(Account.class))).willAnswer(invocation -> invocation.getArgument(0)); // 전달된 계좌 객체를 반환
 
 		// when
-		accountService.createAccountOther(userId, "OTHERS", httpServletRequest);
+		accountService.createAccountOther("OTHERS", httpServletRequest);
 
 		// then
 		then(accountRepository).should(times(1)).save(any(Account.class)); // 계좌 저장이 호출되었는지 검증
@@ -233,59 +206,17 @@ class AccountServiceTest {
 		given(accountRepository.existsByAccountNum(anyLong())).willReturn(false); // 계좌 중복 검사에서 중복이 없다고 설정
 
 		// when
-		assertThrows(AccountException.class, ()-> accountService.createAccountOther(userId, "울랄라", httpServletRequest));
+		assertThrows(AccountException.class, ()-> accountService.createAccountOther("울랄라", httpServletRequest));
 	}
 	@DisplayName("메인 계좌에서 적금 계좌로 송금 테스트")
 	@Test
 	void savingRemittance() {
 		// given
 		Long savingId = 1L;
-		Long userId = 1L;  // userId를 세션에 저장할 값과 동일하게 설정
-
-		int remittanceAmount = 100000;
-
-		Account savingAccount = Account.builder()
-			.accountNum(4288494829384L)
-			.accountRole(AccountRole.SAVINGS)
-			.accountBalance(0L)
-			.accountStatus(AccountStatus.AVAILABLE)
-			.dailyChargeLimit(0)
-			.user(user)
-			.build();
-
-		SavingRequestDto savingRequestDto = new SavingRequestDto(remittanceAmount);
-
-		// Mock 설정: 세션에 userId를 저장 (세션에 저장된 ID와 requestUserId를 동일하게 설정)
-		given(httpServletRequest.getSession(false)).willReturn(httpSession);
-		given(httpSession.getAttribute("userId")).willReturn(userId);  // 세션에서 userId 반환
-
-		// Mock 설정: 사용자와 계좌 조회
-		given(accountRepository.findUserByAccount(savingId)).willReturn(user);
-		given(accountRepository.findMainAccount(user.getUserId(), AccountRole.MAIN)).willReturn(mainAccount);
-		given(accountRepository.findById(savingId)).willReturn(Optional.of(savingAccount));
-
-		// when
-		RemittanceResponseDto response = accountService.savingRemittance(savingId, savingRequestDto, httpServletRequest);
-
-		// then
-		then(accountRepository).should(times(1)).findUserByAccount(savingId);
-		then(accountRepository).should(times(1)).findMainAccount(user.getUserId(), AccountRole.MAIN);
-		then(accountRepository).should(times(1)).findById(savingId);
-
-		// 잔액 차감 및 입금 확인
-		assertThat(mainAccount.getAccountBalance()).isEqualTo(5000000L - remittanceAmount);
-		assertThat(savingAccount.getAccountBalance()).isEqualTo(remittanceAmount);
-
-		assertThat(response.responseMsg()).isEqualTo(RemittanceResponseMsg.SUCCESS.getResponseMsg());
-	}
-	@DisplayName("잔액 부족으로 적금 송금 실패 테스트")
-	@Test
-	void savingRemittanceErr() {
-		// given
-		Long savingId = 1L;
 		Long userId = 1L;
-		int remittanceAmount = 6000000; // 송금하려는 금액이 잔액보다 큼
+		int remittanceAmount = 100000;  // 송금 금액
 
+		// 적금 계좌 및 메인 계좌 설정
 		Account savingAccount = Account.builder()
 			.accountNum(4288494829384L)
 			.accountRole(AccountRole.SAVINGS)
@@ -297,21 +228,193 @@ class AccountServiceTest {
 
 		SavingRequestDto savingRequestDto = new SavingRequestDto(remittanceAmount);
 
-		// Mock 설정: 세션에 userId를 저장
+		// Mock 설정: 세션에서 userId 반환
 		given(httpServletRequest.getSession(false)).willReturn(httpSession);
 		given(httpSession.getAttribute("userId")).willReturn(userId);
 
 		// Mock 설정: 사용자와 계좌 조회
-		given(accountRepository.findUserByAccount(savingId)).willReturn(user);
-		given(accountRepository.findMainAccount(user.getUserId(), AccountRole.MAIN)).willReturn(mainAccount);
-		given(accountRepository.findById(savingId)).willReturn(Optional.of(savingAccount));
+		given(userRepository.findById(userId)).willReturn(Optional.of(user)); // user 조회
+		given(accountRepository.findMainAccount(user.getUserId(), AccountRole.MAIN)).willReturn(
+			mainAccount); // 메인 계좌 조회
+		given(accountRepository.findById(savingId)).willReturn(Optional.of(savingAccount)); // 적금 계좌 조회
 
-		// when & then
-		AccountException thrownException = assertThrows(AccountException.class,
-			() -> accountService.savingRemittance(savingId, savingRequestDto, httpServletRequest));
+		// when
+		RemittanceResponseDto response = accountService.savingRemittance(savingId, savingRequestDto,
+			httpServletRequest);
 
-		// 예외 메시지 확인
-		assertThat(thrownException.getAccountErrCode()).isEqualTo(AccountErrCode.ACCOUNT_INSUFFICIENT_BALANCE);
+		// then
+		// 메인 계좌에서 송금한 금액만큼 차감되었는지 확인
+		assertThat(mainAccount.getAccountBalance()).isEqualTo(5000000L - remittanceAmount);
+
+		// 적금 계좌에 금액이 입금되었는지 확인
+		assertThat(savingAccount.getAccountBalance()).isEqualTo(remittanceAmount);
+
+		// 송금 성공 메시지 확인
+		assertThat(response.responseMsg()).isEqualTo(RemittanceResponseMsg.SUCCESS.getResponseMsg());
+
+		// Mock 메서드 호출 검증
+		then(accountRepository).should(times(1)).findMainAccount(user.getUserId(), AccountRole.MAIN);
+		then(accountRepository).should(times(1)).findById(savingId);
 	}
+	@DisplayName("메인 계좌에서 적금 계좌로 송금 시 잔액 부족할 경우 충전 후 송금 처리 테스트")
+	@Test
+	void savingRemittanceWithInsufficientBalance() {
+		// given
+		Long savingId = 1L;
+		Long userId = 1L;
+		int remittanceAmount = 23000;  // 송금 금액
+		Long initialMainAccountBalance = 5000L;  // 메인 계좌의 초기 잔액 (부족함)
 
+		// 예상 충전 금액: 10000원 단위로 충전 (23000원 - 5000원 = 18000원 -> 20000원 충전 필요)
+		Long expectedChargeAmount = 20000L;  // 충전해야 할 금액
+
+		// 메인 계좌 설정 (초기 잔액이 송금 금액보다 적음)
+		mainAccount = Account.builder().accountBalance(initialMainAccountBalance).build();
+
+		// 적금 계좌 설정
+		Account savingAccount = Account.builder()
+			.accountNum(4288494829384L)
+			.accountRole(AccountRole.SAVINGS)
+			.accountBalance(0L)
+			.accountStatus(AccountStatus.AVAILABLE)
+			.dailyChargeLimit(0)
+			.user(user)
+			.build();
+
+		SavingRequestDto savingRequestDto = new SavingRequestDto(remittanceAmount);
+
+		// Mock 설정: 세션에서 userId를 반환하도록 설정
+		given(httpServletRequest.getSession(false)).willReturn(httpSession);
+		given(httpSession.getAttribute("userId")).willReturn(userId);
+
+		// Mock 설정: 사용자 및 계좌 조회
+		given(userRepository.findById(userId)).willReturn(Optional.of(user));  // user 조회
+		given(accountRepository.findMainAccount(user.getUserId(), AccountRole.MAIN)).willReturn(
+			mainAccount);  // 메인 계좌 조회
+		given(accountRepository.findById(savingId)).willReturn(Optional.of(savingAccount));  // 적금 계좌 조회
+
+		// Mock 설정: 충전 로직에서 충전 금액 처리
+		given(accountRepository.findByAccountNum(mainAccount.getAccountNum())).willReturn(mainAccount);
+
+		// when
+		RemittanceResponseDto response = accountService.savingRemittance(savingId, savingRequestDto,
+			httpServletRequest);
+
+		// then
+		// 메인 계좌의 잔액이 충전 후 송금되었는지 확인
+		Long newMainAccountBalance = initialMainAccountBalance + expectedChargeAmount - remittanceAmount;
+		assertThat(mainAccount.getAccountBalance()).isEqualTo(newMainAccountBalance);
+
+		// 적금 계좌에 금액이 입금되었는지 확인
+		assertThat(savingAccount.getAccountBalance()).isEqualTo(remittanceAmount);
+
+		// 송금 성공 메시지 확인
+		assertThat(response.responseMsg()).isEqualTo(RemittanceResponseMsg.SUCCESS.getResponseMsg());
+
+		// Mock 메서드 호출 검증
+		then(accountRepository).should(times(1)).findByAccountNum(mainAccount.getAccountNum());
+		then(accountRepository).should(times(1)).findMainAccount(user.getUserId(), AccountRole.MAIN);
+		then(accountRepository).should(times(1)).findById(savingId);
+	}
+	@DisplayName("메인계좌간의 거래")
+	@Test
+	void remittanceMainOther(){
+		// given
+		Long userId = 1L;
+		Long remittanceAmount = 100000L;
+		Long receiveAccountBalance = 200000L;
+
+		// 송금 요청 DTO 설정
+		RemittanceRequestDto remittanceRequestDto = new RemittanceRequestDto(3288494829385L, remittanceAmount); // 수신 계좌 번호와 송금 금액
+
+		// 송금하는 메인 계좌 설정
+		// mainAccount = Account.builder().accountBalance(initialMainAccountBalance).build();
+
+		// 수신 메인 계좌 설정
+		Account receiveAccount = Account.builder()
+			.accountNum(3288494829385L)
+			.accountRole(AccountRole.MAIN)
+			.accountBalance(receiveAccountBalance)
+			.accountStatus(AccountStatus.AVAILABLE)
+			.dailyChargeLimit(0)
+			.build();
+
+		// Mock 설정: 세션에서 userId 반환
+		given(httpServletRequest.getSession(false)).willReturn(httpSession);
+		given(httpSession.getAttribute("userId")).willReturn(userId);
+
+		// Mock 설정: 메인 계좌 조회 및 수신 계좌 조회
+		given(accountRepository.findMainAccount(userId, AccountRole.MAIN)).willReturn(mainAccount); // 송금하는 메인 계좌 조회
+		given(accountRepository.findByAccountNum(remittanceRequestDto.accountNum())).willReturn(receiveAccount); // 수신 메인 계좌 조회
+
+		// when
+		RemittanceResponseDto response = accountService.remittanceOtherMain(remittanceRequestDto, httpServletRequest);
+
+		// then
+		// 송금 후 메인 계좌 잔액 확인
+		assertThat(mainAccount.getAccountBalance()).isEqualTo(5000000L - remittanceAmount);
+
+		// 수신 계좌에 송금 금액이 입금되었는지 확인
+		assertThat(receiveAccount.getAccountBalance()).isEqualTo(receiveAccountBalance + remittanceAmount);
+
+		// 송금 성공 메시지 확인
+		assertThat(response.responseMsg()).isEqualTo(RemittanceResponseMsg.SUCCESS.getResponseMsg());
+
+		// Mock 메서드 호출 확인
+		then(accountRepository).should(times(1)).findMainAccount(userId, AccountRole.MAIN);
+		then(accountRepository).should(times(1)).findByAccountNum(remittanceRequestDto.accountNum());
+	}
+	@DisplayName("메인계좌간의 거래에서 잔액이 부족한 경우 잔액 충전 후 다시 진행")
+	@Test
+	void remittanceMainOtherWithInsufficientBalance(){
+		// given
+		Long userId = 1L;
+		Long remittanceAmount = 100000L;
+		Long receiveAccountBalance = 200000L;
+		Long initialMainAccountBalance = 88000L;
+		Long expectedChargeAmount = 20000L; // 충전해야할 금액
+		// 송금 요청 DTO 설정
+		RemittanceRequestDto remittanceRequestDto = new RemittanceRequestDto(3288494829385L, remittanceAmount); // 수신 계좌 번호와 송금 금액
+
+		mainAccount = Account.builder().accountBalance(initialMainAccountBalance).build();
+
+		// 수신 메인 계좌 설정
+		Account receiveAccount = Account.builder()
+			.accountNum(3288494829385L)
+			.accountRole(AccountRole.MAIN)
+			.accountBalance(receiveAccountBalance)
+			.accountStatus(AccountStatus.AVAILABLE)
+			.dailyChargeLimit(0)
+			.build();
+
+		// Mock 설정: 세션에서 userId 반환
+		given(httpServletRequest.getSession(false)).willReturn(httpSession);
+		given(httpSession.getAttribute("userId")).willReturn(userId);
+
+		// Mock 설정: 메인 계좌 및 수신 계좌 조회
+		given(accountRepository.findMainAccount(userId, AccountRole.MAIN)).willReturn(mainAccount);  // 송금하는 메인 계좌 조회
+		given(accountRepository.findByAccountNum(remittanceRequestDto.accountNum())).willReturn(receiveAccount);  // 수신 계좌 조회
+
+		// 충전 로직 Mock 설정
+		given(accountRepository.findByAccountNum(mainAccount.getAccountNum())).willReturn(mainAccount);  // 충전 시 계좌 조회
+
+		// when
+		RemittanceResponseDto response = accountService.remittanceOtherMain(remittanceRequestDto, httpServletRequest);
+
+		// then
+		// 메인 계좌의 잔액이 충전 후 송금되었는지 확인
+		Long newMainAccountBalance = initialMainAccountBalance + expectedChargeAmount - remittanceAmount;
+		assertThat(mainAccount.getAccountBalance()).isEqualTo(newMainAccountBalance);
+
+		// 수신 계좌에 송금 금액이 입금되었는지 확인
+		assertThat(receiveAccount.getAccountBalance()).isEqualTo(receiveAccountBalance + remittanceAmount);
+
+		// 송금 성공 메시지 확인
+		assertThat(response.responseMsg()).isEqualTo(RemittanceResponseMsg.SUCCESS.getResponseMsg());
+
+		// Mock 메서드 호출 확인
+		then(accountRepository).should(times(1)).findMainAccount(userId, AccountRole.MAIN);
+		then(accountRepository).should(times(1)).findByAccountNum(remittanceRequestDto.accountNum());
+		then(accountRepository).should(times(1)).findByAccountNum(mainAccount.getAccountNum());  // 충전 시 호출 여부 확인
+	}
 }
