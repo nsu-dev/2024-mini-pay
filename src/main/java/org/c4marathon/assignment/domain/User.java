@@ -44,6 +44,15 @@ public class User {
 		this.savingAccounts = new ArrayList<>();
 	}
 
+	// 테스트용 생성자: userId 포함!
+	public User(Long userId, String password, String name, String registrationNum) {
+		this.userId = userId;
+		this.password = password;
+		this.name = name;
+		this.registrationNum = registrationNum;
+		this.savingAccounts = new ArrayList<>();
+	}
+
 	//메인 계좌 설정 메서드
 	public void setMainAccount(Account mainAccount) {
 		this.mainAccount = mainAccount;
@@ -58,12 +67,4 @@ public class User {
 		return savingAccounts;
 	}
 
-	// 테스트용 생성자: userId 포함!
-	public User(Long userId, String password, String name, String registrationNum) {
-		this.userId = userId;
-		this.password = password;
-		this.name = name;
-		this.registrationNum = registrationNum;
-		this.savingAccounts = new ArrayList<>();
-	}
 }

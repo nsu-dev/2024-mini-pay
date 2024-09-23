@@ -42,7 +42,7 @@ public class AccountService {
 	}
 
 	// 메인 계좌에서 적금 계좌로 송금
-	@Transactional(isolation = Isolation.REPEATABLE_READ)
+	@Transactional(isolation = Isolation.SERIALIZABLE)
 	public boolean transferToSavings(Long userId, Long savingsAccountId, int money) {
 		try {
 			User user = userRepository.findById(userId)
