@@ -3,6 +3,7 @@ package org.c4marathon.assignment.account.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.c4marathon.assignment.account.dto.ChargeDto;
+import org.c4marathon.assignment.account.dto.SavingAccountPwDto;
 import org.c4marathon.assignment.account.dto.SendDto;
 import org.c4marathon.assignment.account.service.AccountService;
 import org.c4marathon.assignment.config.CommonResponse;
@@ -25,7 +26,7 @@ public class AccountController {
 
         boolean checkCharge = accountService.chargeMainAccount(chargeDto);
 
-        if (checkCharge == true){
+        if (checkCharge){
             CommonResponse res = new CommonResponse(
                     200,
                     HttpStatus.OK,
@@ -46,10 +47,10 @@ public class AccountController {
 
     // 적금 계좌 생성
     @PostMapping("/account/create/{userId}")
-    public ResponseEntity<CommonResponse> CreateSavingsAccount(@PathVariable @RequestBody Long userId ){
-        boolean checkSaving = accountService.craeteSavingAccount(userId);
+    public ResponseEntity<CommonResponse> CreateSavingsAccount(@PathVariable @RequestBody Long userId, @Valid @RequestBody SavingAccountPwDto savingAccountPwDto ){
+        boolean checkSaving = accountService.craeteSavingAccount(userId, savingAccountPwDto);
 
-        if(checkSaving == true){
+        if(checkSaving){
             CommonResponse res = new CommonResponse(
                     200,
                     HttpStatus.OK,
@@ -73,7 +74,7 @@ public class AccountController {
     public ResponseEntity<CommonResponse> sendMoney(@PathVariable @RequestBody Long userId, @Valid @RequestBody SendDto sendDto){
         boolean checkSend = accountService.sendSavingAccount(userId, sendDto);
 
-        if(checkSend == true){
+        if(checkSend){
             CommonResponse res = new CommonResponse(
                     200,
                     HttpStatus.OK,
