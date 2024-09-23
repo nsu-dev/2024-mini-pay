@@ -64,6 +64,16 @@ public class UserController {
 		return ResponseEntity.ok("이체 요청이 접수되었습니다.");
 	}
 
+	// 외부 메인 계좌로 송금
+	@PostMapping("/{userId}/transfer-to-external/{externalUserId}")
+	public ResponseEntity<String> transferToExternalMainAccount(@PathVariable Long userId,
+		@PathVariable Long externalUserId,
+		@RequestParam int money) {
+		TransferRequestDto request = new TransferRequestDto(userId, externalUserId, money);
+		queueService.addToQueue(request);
+		return ResponseEntity.ok("송금 요청이 접수되었습니다.");
+	}
+
 	// IllegalArgumentException 처리
 	@ExceptionHandler(IllegalArgumentException.class)
 	public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException e) {

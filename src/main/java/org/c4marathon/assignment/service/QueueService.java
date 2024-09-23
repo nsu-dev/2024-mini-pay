@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 public class QueueService {
 	// 송금 요청을 관리하는 큐
 	private final BlockingQueue<TransferRequestDto> queue = new LinkedBlockingQueue<>();
-
 	private final AccountService accountService;
 
 	public QueueService(AccountService accountService) {
@@ -31,9 +30,11 @@ public class QueueService {
 			try {
 				TransferRequestDto request = queue.take(); // 큐에서 요청 가져오기
 				if (request.isExternalTransfer()) {
+					// 외부 메인 계좌로 송금
 					accountService.transferFromExternalAccount(request.getUserId(), request.getExternalUserId(),
 						request.getMoney());
 				} else {
+					// 적금 계좌로 송금
 					accountService.transferToSavings(request.getUserId(), request.getSavingsAccountId(),
 						request.getMoney());
 				}
