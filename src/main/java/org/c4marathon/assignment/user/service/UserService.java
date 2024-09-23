@@ -1,12 +1,14 @@
 package org.c4marathon.assignment.user.service;
 
 import org.c4marathon.assignment.common.exception.BaseException;
+import org.c4marathon.assignment.event.JoinEventDto;
 import org.c4marathon.assignment.user.domain.User;
 import org.c4marathon.assignment.user.dto.JoinDto;
 import org.c4marathon.assignment.user.dto.LoginDto;
 import org.c4marathon.assignment.user.exception.JoinException;
 import org.c4marathon.assignment.user.exception.LoginException;
 import org.c4marathon.assignment.user.repository.UserRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -18,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 public class UserService {
 
 	private final UserRepository userRepository;
+	private final ApplicationEventPublisher eventPublisher;
 
 	// 회원가입
 	@Transactional
@@ -32,6 +35,7 @@ public class UserService {
 			.build();
 
 		userRepository.save(user);
+		eventPublisher.publishEvent(new JoinEventDto(user));
 		return true;
 	}
 
