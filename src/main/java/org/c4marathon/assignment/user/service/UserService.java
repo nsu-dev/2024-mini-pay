@@ -12,7 +12,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionalEventListener;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -23,10 +22,11 @@ public class UserService {
 	private final ApplicationEventPublisher eventPublisher;
 
 	// 회원가입
-	@Transactional
 	@TransactionalEventListener
 	public boolean save(JoinDto joinDto) {
-		userRepository.findByUserId(joinDto.userId()).orElseThrow(() -> new BaseException(JoinException.FOUND_USER));
+		userRepository.findByUserId(joinDto.userId()).ifPresent(user -> {
+			throw new BaseException(JoinException.FOUND_USER);
+		});
 
 		User user = User.builder()
 			.userId(joinDto.userId())
