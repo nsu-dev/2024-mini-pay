@@ -42,4 +42,7 @@ public class User {
 	@OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
 	private List<Account> accountList = new ArrayList<>();
 
+	@Column(name = "accountPw", nullable = false)
+	private int accountPw;
+
 }
