@@ -19,8 +19,4 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 	@Query("SELECT a FROM Account a WHERE a.user.userId = :userId and a.accountRole = :accountRole")
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	Account findMainAccount(@Param("userId") Long userId, @Param("accountRole") AccountRole accountRole);
-
-	@Query("select a.user from Account a where a.accountId = :accountId")
-	User findUserByAccount(@Param("accountId") Long accountId);
-
 }
