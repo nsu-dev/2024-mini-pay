@@ -33,14 +33,15 @@ dependencies {
     runtimeOnly 'com.mysql:mysql-connector-j'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation "org.junit.jupiter:junit-jupiter:5.8.1"
+    testImplementation "org.junit.jupiter:junit-jupiter:5.10.0" // 최신 버전으로 변경
 }
 
 checkstyle {
     configFile = file("${rootDir}/naver-checkstyle.xml")
     configProperties = ["suppressionFile": "${rootDir}/naver-checkstyle-suppressions.xml"]
-    toolVersion = "9.2"
+    toolVersion = "10.12"
 }
 
 tasks.named('test') {
@@ -51,6 +52,8 @@ tasks.named('test') {
 jacocoTestReport {
     reports {
         xml.required = true
+        html.required = true
+        csv.required = false
     }
 }
 
