@@ -55,8 +55,8 @@ public class AccountService {
 	}
 
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
-	public boolean craeteSavingAccount(Long userId, SavingAccountPwDto savingAccountPwDto) {
-		Optional<User> userOptional = userRepository.findByUserId(String.valueOf(userId));
+	public boolean craeteSavingAccount(String userId, SavingAccountPwDto savingAccountPwDto) {
+		Optional<User> userOptional = userRepository.findByUserId(userId);
 
 		if (userOptional.isPresent()) {
 			User user = userOptional.get();
