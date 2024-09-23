@@ -22,9 +22,9 @@ public class Account {
 
 	//계좌 유형을 추가하여 메인 계좌와 적금 계좌를 구분
 	private String type;
-	private int dailyWithdrawalLimit = 3000000; // 1일 출금 한도 3백만원
+	private int dailyChargeLimit = 3000000; // 1일 충전 한도 3백만원
 
-	private int todayWithdrawnAmount = 0; // 당일 출금한 금액
+	private int todayChargeAmount = 0; // 당일 충전한 금액
 	private LocalDate lastWithdrawalDate; // 마지막 출금 날짜
 
 	// 다대일 관계 (적금 계좌가 하나의 유저에 속함)
@@ -43,14 +43,14 @@ public class Account {
 	// 충전 로직
 	public void withdraw(int money, LocalDate today) { //날짜 매개변수로 받아오기 -> 매개변수로 안하면 픽스돼서 테스트로 변경이 안됨
 
-		// 출금 날짜가 달라지면 당일 출금 금액을 초기화
+		// 출금 날짜가 달라지면 당일 충전 금액을 초기화
 		if (!today.equals(lastWithdrawalDate)) {
-			todayWithdrawnAmount = 0;
+			todayChargeAmount = 0;
 			lastWithdrawalDate = today;
 		}
 
-		// 출금 한도 체크
-		if (todayWithdrawnAmount + money > dailyWithdrawalLimit) {
+		// 충전 한도 체크
+		if (todayChargeAmount + money > dailyChargeLimit) {
 			throw new IllegalArgumentException("오늘의 출금 한도를 초과했습니다.");
 		}
 
@@ -61,8 +61,13 @@ public class Account {
 
 		// 출금 처리
 		balance -= money;
-		todayWithdrawnAmount += money;
+		todayChargeAmount += money;
 
+	}
+
+	//메인 계좌인지 확인하는 메소드
+	public boolean isMainAccount() {
+		return "Main Account".equals(this.type);
 	}
 
 	//입금 로직
@@ -70,4 +75,7 @@ public class Account {
 		balance += money;
 	}
 
+	public void addTodayChargeAmount(int money) {
+		this.todayChargeAmount += money;
+	}
 }

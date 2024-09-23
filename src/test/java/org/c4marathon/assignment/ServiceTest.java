@@ -1,7 +1,6 @@
 package org.c4marathon.assignment;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.util.Optional;
@@ -36,14 +35,30 @@ public class ServiceTest {
 
 	@InjectMocks
 	private UserService userService;
+
 	@InjectMocks
 	private AccountService accountService;
 
+	private User user;
+	private User externalUser;
+	private Account userMainAccount;
+	private Account externalMainAccount;
+
 	@BeforeEach
-		//모든 테스트 전에 Mock 객체 초기화
 	void setUp() {
-		// Mockito 초기화
 		MockitoAnnotations.openMocks(this);
+
+		user = new User(1L, "lsk123", "이수경", "123456-7890123");
+		externalUser = new User(2L, "kim123", "김철수", "987654-3210987");
+
+		userMainAccount = new Account("Main Account", 1000000, user);
+		externalMainAccount = new Account("Main Account", 2000000, externalUser);
+
+		user.setMainAccount(userMainAccount);
+		externalUser.setMainAccount(externalMainAccount);
+
+		when(userRepository.findById(user.getUserId())).thenReturn(Optional.of(user));
+		when(userRepository.findById(externalUser.getUserId())).thenReturn(Optional.of(externalUser));
 	}
 
 	@Test
@@ -58,19 +73,12 @@ public class ServiceTest {
 		);
 
 		// User 객체를 생성자 방식으로 생성
-		User mockUser = new User(
-			1L,    // 테스트용 userId 설정
-			"lsk123",
-			"이수경",
-			"123456-7890123"
-		);
-
+		User mockUser = new User(1L, "lsk123", "이수경", "123456-7890123");
 		Account mockAccount = new Account("Main Account", 0, mockUser);
 		mockUser.setMainAccount(mockAccount);
 
 		// mock repository behaviors
-		Mockito.when(userRepository.save(any(User.class)))
-			.thenReturn(mockUser);
+		when(userRepository.save(any(User.class))).thenReturn(mockUser);
 
 		// when
 		UserResponseDto responseDto = userService.registerUser(userRequestDto);
@@ -79,7 +87,7 @@ public class ServiceTest {
 		assertNotNull(responseDto);
 		assertEquals(1L, responseDto.getUserId());
 		assertEquals("이수경", responseDto.getName());
-		assertEquals("123456-7890123", responseDto.getRegistrationNum());
+		assertEquals("123456-789123", responseDto.getRegistrationNum());
 
 		// 메인 계좌가 올바르게 설정되었는지 확인
 		assertNotNull(mockUser.getMainAccount());
@@ -170,4 +178,47 @@ public class ServiceTest {
 		System.out.println("메인 계좌에서 잔액 부족으로 송금 실패 테스트 성공!");
 	}
 
+	@Test
+	@DisplayName("외부 유저의 메인 계좌에서 사용자 메인 계좌로 돈 이동 성공 테스트")
+	public void transferSuccessTest() {
+		// given
+		Long userId = 1L;
+		Long externalUserId = 2L;
+		int transferMoney = 500000;
+
+		// when
+		boolean success = accountService.transferFromExternalAccount(userId, externalUserId, transferMoney);
+
+		// then
+		assertTrue(success);
+		assertEquals(1000000, userMainAccount.getBalance()); // 사용자의 메인 계좌 잔액
+		assertEquals(2000000, externalMainAccount.getBalance()); // 외부 유저의 메인 계좌 잔액
+
+		// 성공 시 문구 출력
+		System.out.println("돈 이동 성공 테스트 성공!");
+	}
+
+	@Test
+	@DisplayName("외부 유저의 잔액 부족으로 인한 돈 이동 실패 테스트")
+	public void transferInsufficientFundsTest() {
+		// given
+		Long userId = 1L;
+		Long externalUserId = 2L;
+		int transferAmount = 500000;
+
+		// 외부 유저의 잔액 부족 설정
+		externalMainAccount = new Account("Main Account", 300000, externalUser);
+		externalUser.setMainAccount(externalMainAccount);
+
+		when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+		when(userRepository.findById(externalUserId)).thenReturn(Optional.of(externalUser));
+
+		// when & then (잔액 부족으로 예외 발생 확인)
+		assertThrows(IllegalArgumentException.class, () -> {
+			accountService.transferFromExternalAccount(userId, externalUserId, transferAmount);
+		});
+
+		// 성공 메시지 출력
+		System.out.println("잔액 부족으로 인한 돈 이동 실패 테스트 성공!");
+	}
 }

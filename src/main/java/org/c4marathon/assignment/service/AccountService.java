@@ -67,4 +67,51 @@ public class AccountService {
 			throw new RuntimeException("알 수 없는 오류가 발생했습니다.");
 		}
 	}
+
+	//외부 계좌에서 돈을 가져오는 메서드
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
+	public boolean transferFromExternalAccount(Long userId, Long externalUserId, int money) {
+		try {
+			//사용자와 외부 사용자 찾기
+			User user = userRepository.findById(userId)
+				.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+			User externalUser = userRepository.findById(externalUserId)
+				.orElseThrow(() -> new IllegalArgumentException("외부 사용자를 찾을 수 없습니다."));
+
+			Account userMainAccount = user.getMainAccount();
+			Account externalMainAccount = externalUser.getMainAccount();
+
+			// 두 계좌 모두 메인 계좌인지 확인
+			if (!userMainAccount.isMainAccount() || !externalMainAccount.isMainAccount()) {
+				throw new IllegalArgumentException("두 계좌 모두 메인 계좌여야 합니다.");
+			}
+
+			//오늘 날짜를 가져오기
+			LocalDate today = LocalDate.now();
+
+			// 충전 한도 체크
+			if (userMainAccount.getTodayChargeAmount() + money > userMainAccount.getDailyChargeLimit()) {
+				throw new IllegalArgumentException("오늘의 충전 한도를 초과했습니다.");
+			}
+
+			// 외부 계좌의 잔액 확인
+			if (externalMainAccount.getBalance() < money) {
+				throw new IllegalArgumentException("외부 계좌의 잔액이 부족합니다.");
+			}
+
+			// 외부 계좌에서 돈을 차감하고 사용자 계좌에 돈을 입금
+			externalMainAccount.withdraw(money, today); // 외부 계좌에서 출금
+			userMainAccount.deposit(money); // 사용자 계좌에 입금
+
+			// 오늘의 충전 금액 업데이트
+			userMainAccount.addTodayChargeAmount(money);
+
+			return true;
+		} catch (IllegalArgumentException e) {
+			throw new IllegalArgumentException("입금 중 오류가 발생했습니다: " + e.getMessage());
+		} catch (Exception e) {
+			throw new RuntimeException("알 수 없는 오류가 발생했습니다.");
+		}
+	}
 }
