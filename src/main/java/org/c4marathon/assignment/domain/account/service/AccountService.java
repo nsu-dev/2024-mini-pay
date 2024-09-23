@@ -1,5 +1,6 @@
 package org.c4marathon.assignment.domain.account.service;
 
+import static org.c4marathon.assignment.domain.account.entity.AccountErrCode.*;
 import static org.c4marathon.assignment.domain.user.entity.UserErrCode.*;
 
 import java.time.LocalDateTime;
@@ -169,6 +170,9 @@ public class AccountService {
 
 		Long receiveAccountNum = remittanceRequestDto.accountNum();
 		Account receiveAccount = accountRepository.findByAccountNum(receiveAccountNum);
+		if(!receiveAccount.getAccountRole().equals(AccountRole.MAIN)){
+			throw new AccountException(NOT_MAIN_ACCOUNT);
+		}
 		Long remittanceAmount = remittanceRequestDto.remittanceAmount();
 		validateCharge(receiveAccount, remittanceAmount);
 		chargeAccountBalance(mainAccount, remittanceAmount);
