@@ -51,15 +51,14 @@ public class AccountControllerTest {
 	@DisplayName("메인 계좌 충전 API 테스트")
 	void chargeMain() throws Exception {
 		// given
-		Long userId = 1L;
 		RemittanceRequestDto remittanceRequestDto = new RemittanceRequestDto(3288494829384L, 100000L);
 		RemittanceResponseDto remittanceResponseDto = new RemittanceResponseDto(RemittanceResponseMsg.SUCCESS.getResponseMsg());
 
 		// 서비스 계층이 호출될 때 반환할 값을 미리 설정
-		given(accountService.chargeMain(any(RemittanceRequestDto.class), anyLong(), any())).willReturn(remittanceResponseDto);
+		given(accountService.chargeMain(any(RemittanceRequestDto.class))).willReturn(remittanceResponseDto);
 
 		// when & then
-		mockMvc.perform(post("/account/remittance/{userId}", userId)  // POST 요청
+		mockMvc.perform(post("/account/remittance")  // POST 요청
 				.contentType(MediaType.APPLICATION_JSON)  // 요청 본문의 타입 지정 (JSON)
 				.content(objectMapper.writeValueAsString(remittanceRequestDto))  // 요청 본문에 remittanceRequestDto를 JSON으로 변환하여 전달
 				.with(csrf())
@@ -71,9 +70,9 @@ public class AccountControllerTest {
 	@Test
 	public void testCreateAccount() throws Exception {
 		CreateResponseDto responseDto = new CreateResponseDto(CreateResponseMsg.SUCCESS.getResponseMsg());
-		when(accountService.createAccountOther(anyLong(), anyString(), any())).thenReturn(responseDto);
+		when(accountService.createAccountOther(anyString(), any())).thenReturn(responseDto);
 
-		mockMvc.perform(post("/account/creataccount/role/1")
+		mockMvc.perform(post("/account/creataccount/role")
 			.contentType(MediaType.APPLICATION_JSON)
 			.content(new ObjectMapper().writeValueAsString(responseDto))
 		).andExpect(status().isOk());
@@ -90,6 +89,20 @@ public class AccountControllerTest {
 			.contentType(MediaType.APPLICATION_JSON)
 			.content(new ObjectMapper().writeValueAsString(requestDto))
 		).andExpect(status().isOk());
+	}
+
+	@Test
+	@DisplayName("메인계좌간 거래 api")
+	public void testRemittanceMain() throws Exception{
+		RemittanceRequestDto remittanceRequestDto = new RemittanceRequestDto(3288494829384L, 100000L);
+		RemittanceResponseDto remittanceResponseDto = new RemittanceResponseDto(RemittanceResponseMsg.SUCCESS.getResponseMsg());
+
+		when(accountService.remittanceOtherMain(any(RemittanceRequestDto.class), any())).thenReturn(remittanceResponseDto);
+		mockMvc.perform(post("/account/remittance/other")
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(new ObjectMapper().writeValueAsString(remittanceRequestDto))
+		).andExpect(status().isOk());
+
 	}
 }
 
