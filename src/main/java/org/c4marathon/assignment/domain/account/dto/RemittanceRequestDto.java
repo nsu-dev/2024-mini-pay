@@ -4,7 +4,14 @@ import static org.c4marathon.assignment.domain.account.entity.AccountErrCode.*;
 
 import org.c4marathon.assignment.domain.account.exception.AccountException;
 
-public record RemittanceRequestDto (Long accountNum, Long remittanceAmount){
+import jakarta.validation.constraints.NotBlank;
+
+public record RemittanceRequestDto (
+	@NotBlank(message = "계좌번호는 공백일 수 없습니다.")
+	Long accountNum,
+	@NotBlank(message = "송금액은 공백일 수 없습니다.")
+	Long remittanceAmount
+){
 	public RemittanceRequestDto{
 		if(remittanceAmount > 3_000_000){
 			throw new AccountException(ACCOUNT_DALIYCHARGELIMIT_ERR);
