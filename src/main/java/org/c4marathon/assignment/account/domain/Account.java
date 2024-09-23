@@ -15,17 +15,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @NoArgsConstructor
-@AllArgsConstructor
-@Table(name = "users")
+@Table(name = "accounts")
 @Getter
-@Builder
 public class Account {
 
 	@Id
@@ -71,5 +68,15 @@ public class Account {
 
 	public void reduceAmount(int updatedAmount) {
 		this.amount -= updatedAmount;
+	}
+
+	@Builder
+	public Account(Long accountNum, AccountType type, int amount, int accountPw, int limitaccount, User user) {
+		this.accountNum = accountNum;
+		this.type = type;
+		this.amount = amount;
+		this.accountPw = accountPw;
+		this.limitaccount = limitaccount;
+		this.user = user;
 	}
 }
