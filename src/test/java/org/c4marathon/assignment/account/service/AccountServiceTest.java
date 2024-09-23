@@ -10,7 +10,6 @@ import org.c4marathon.assignment.domain.account.dto.RemittanceRequestDto;
 import org.c4marathon.assignment.domain.account.dto.RemittanceResponseDto;
 import org.c4marathon.assignment.domain.account.dto.SavingRequestDto;
 import org.c4marathon.assignment.domain.account.entity.Account;
-import org.c4marathon.assignment.domain.account.entity.AccountErrCode;
 import org.c4marathon.assignment.domain.account.entity.AccountRole;
 import org.c4marathon.assignment.domain.account.entity.AccountStatus;
 import org.c4marathon.assignment.domain.account.entity.RemittanceResponseMsg;
@@ -19,7 +18,6 @@ import org.c4marathon.assignment.domain.account.exception.AccountException;
 import org.c4marathon.assignment.domain.account.repository.AccountRepository;
 import org.c4marathon.assignment.domain.account.service.AccountService;
 import org.c4marathon.assignment.domain.user.entity.User;
-import org.c4marathon.assignment.domain.user.exception.UserException;
 import org.c4marathon.assignment.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -89,7 +87,6 @@ class AccountServiceTest {
 	@Test
 	void charMain(){
 		//given
-		Long userId = 1L;
 		RemittanceRequestDto remittanceRequestDto = new RemittanceRequestDto(3288494829384L, 1000000L);
 		given(accountRepository.findByAccountNum(anyLong())).willReturn(mainAccount);
 
@@ -119,7 +116,6 @@ class AccountServiceTest {
 	@DisplayName("일일 한도 초과 시 충전은 실패한다.")
 	@Test
 	void chargeMainDailyChargeLimitErr(){
-		Long userId = 1L;
 		mainAccount = Account.builder()
 			.dailyChargeLimit(3000000)
 			.build();
