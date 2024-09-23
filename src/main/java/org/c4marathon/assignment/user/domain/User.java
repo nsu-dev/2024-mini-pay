@@ -13,16 +13,13 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @NoArgsConstructor
-@AllArgsConstructor
 @Table(name = "users")
-@Builder
 @Getter
 public class User {
 	@Id
@@ -45,4 +42,11 @@ public class User {
 	@Column(name = "accountPw", nullable = false)
 	private int accountPw;
 
+	@Builder
+	public User(String userId, String userPw, String name, int accountPw) {
+		this.userId = userId;
+		this.userPw = userPw;
+		this.name = name;
+		this.accountPw = accountPw;
+	}
 }
