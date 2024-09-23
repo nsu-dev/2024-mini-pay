@@ -12,7 +12,8 @@ public enum RemittanceResponseMsg {
 	NOSUCHACCOUNT("없는 계좌!"),
 
 	INSUFFICIENT_BALANCE("잔액 부족!"),
-	NOT_MAIN_ACCOUNT("메인계좌가 아닙니다.");
+	NOT_MAIN_ACCOUNT("메인계좌가 아닙니다."),
+	INVALID_FAIL("공백일 수 없습니다.");
 
 	private final String responseMsg;
 }
