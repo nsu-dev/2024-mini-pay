@@ -29,7 +29,7 @@ public class Account {
 	private String type;
 	private int dailyChargeLimit = 3000000; // 1일 충전 한도 3백만원
 
-	private int todayChargeAmount = 0; // 당일 충전한 금액
+	private int todayChargeMoney = 0; // 당일 충전한 금액
 	private LocalDate lastWithdrawalDate; // 마지막 출금 날짜
 
 	// 다대일 관계 (적금 계좌가 하나의 유저에 속함)
@@ -50,12 +50,12 @@ public class Account {
 
 		// 출금 날짜가 달라지면 당일 충전 금액을 초기화
 		if (!today.equals(lastWithdrawalDate)) {
-			todayChargeAmount = 0;
+			todayChargeMoney = 0;
 			lastWithdrawalDate = today;
 		}
 
 		// 충전 한도 체크
-		if (todayChargeAmount + money > dailyChargeLimit) {
+		if (todayChargeMoney + money > dailyChargeLimit) {
 			throw new IllegalArgumentException("오늘의 출금 한도를 초과했습니다.");
 		}
 
@@ -66,7 +66,7 @@ public class Account {
 
 		// 출금 처리
 		balance -= money;
-		todayChargeAmount += money;
+		todayChargeMoney += money;
 
 	}
 
@@ -80,7 +80,7 @@ public class Account {
 		balance += money;
 	}
 
-	public void addTodayChargeAmount(int money) {
-		this.todayChargeAmount += money;
+	public void addTodayChargeMoney(int money) {
+		this.todayChargeMoney += money;
 	}
 }

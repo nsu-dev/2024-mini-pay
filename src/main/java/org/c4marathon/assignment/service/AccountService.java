@@ -65,7 +65,7 @@ public class AccountService {
 		}
 	}
 
-	//외부 계좌에서 돈을 가져오는 메서드
+	//외부 계좌에서 돈을 가져오는 메서드(입금)
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public boolean transferFromExternalAccount(Long userId, Long externalUserId, int money) {
 		try {
@@ -88,7 +88,7 @@ public class AccountService {
 			LocalDate today = LocalDate.now();
 
 			// 충전 한도 체크
-			if (userMainAccount.getTodayChargeAmount() + money > userMainAccount.getDailyChargeLimit()) {
+			if (userMainAccount.getTodayChargeMoney() + money > userMainAccount.getDailyChargeLimit()) {
 				throw new IllegalArgumentException("오늘의 충전 한도를 초과했습니다.");
 			}
 
@@ -102,7 +102,7 @@ public class AccountService {
 			userMainAccount.deposit(money); // 사용자 계좌에 입금
 
 			// 오늘의 충전 금액 업데이트
-			userMainAccount.addTodayChargeAmount(money);
+			userMainAccount.addTodayChargeMoney(money);
 
 			return true;
 		} catch (OptimisticLockException e) {
@@ -113,6 +113,52 @@ public class AccountService {
 			throw new IllegalArgumentException("입금 중 오류가 발생했습니다: " + e.getMessage());
 		} catch (Exception e) {
 			throw new RuntimeException("알 수 없는 오류가 발생했습니다.");
+		}
+	}
+
+	// 외부 메인 계좌로 송금
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
+	public boolean transferToExternalMainAccount(Long userId, Long externalUserId, int money) {
+		try {
+			// 송금하려는 사용자와 외부 사용자의 메인 계좌 조회
+			User user = userRepository.findById(userId)
+				.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+			User externalUser = userRepository.findById(externalUserId)
+				.orElseThrow(() -> new IllegalArgumentException("외부 사용자를 찾을 수 없습니다."));
+
+			Account userMainAccount = user.getMainAccount();
+			Account externalMainAccount = externalUser.getMainAccount();
+
+			// 외부 계좌가 메인 계좌인지 확인
+			if (!externalMainAccount.isMainAccount()) {
+				throw new IllegalArgumentException("외부 사용자의 계좌가 메인 계좌가 아닙니다.");
+			}
+
+			// 송금 금액이 부족할 경우 자동 충전
+			LocalDate today = LocalDate.now();
+			int remainingMoney = money - userMainAccount.getBalance(); // 부족 금액 계산
+			while (remainingMoney > 0) {
+				int chargeMoney = Math.min(10000, remainingMoney); // 10,000원 단위 충전
+				if (userMainAccount.getTodayChargeMoney() + chargeMoney > userMainAccount.getDailyChargeLimit()) {
+					throw new IllegalArgumentException("충전 한도를 초과했습니다.");
+				}
+				// 충전 수행
+				userMainAccount.deposit(chargeMoney);
+				userMainAccount.addTodayChargeMoney(chargeMoney);
+
+				remainingMoney -= chargeMoney; // 남은 금액을 줄임
+			}
+
+			// 송금 수행
+			userMainAccount.withdraw(money, today); // 사용자 계좌에서 출금
+			externalMainAccount.deposit(money); // 외부 계좌로 입금
+
+			return true;
+		} catch (OptimisticLockException e) {
+			System.out.println("낙관적 잠금 충돌 발생, 재시도 필요: " + e.getMessage());
+			return false;
+		} catch (IllegalArgumentException e) {
+			throw new IllegalArgumentException("송금 중 오류가 발생했습니다: " + e.getMessage());
 		}
 	}
 }
