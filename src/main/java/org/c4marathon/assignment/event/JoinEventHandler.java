@@ -1,4 +1,4 @@
-package org.c4marathon.assignment.common.config;
+package org.c4marathon.assignment.event;
 
 import java.util.Random;
 
@@ -18,15 +18,15 @@ import lombok.RequiredArgsConstructor;
 public class JoinEventHandler {
 	private final AccountRepository accountRepository;
 
-	Long random = new Random().nextLong();
+	Long randomAccountNum = new Random().nextLong();
 
-	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+	@TransactionalEventListener
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void craeteAccount(JoinEventDto joinEventDto) {
 		Account account = Account.builder()
-			.accountNum(random)
+			.accountNum(randomAccountNum)
 			.type(AccountType.MAIN_ACCOUNT)
-			.accountPw(1234)
+			.accountPw(joinEventDto.getUser().getAccountPw())
 			.limitaccount(3000000)
 			.amount(0)
 			.user(joinEventDto.getUser())
