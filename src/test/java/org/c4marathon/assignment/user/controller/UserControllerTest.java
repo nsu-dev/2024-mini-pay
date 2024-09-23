@@ -5,7 +5,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import org.c4marathon.assignment.domain.user.controller.UserController;
 import org.c4marathon.assignment.domain.user.dto.JoinResponseDto;
 import org.c4marathon.assignment.domain.user.dto.LoginRequestDto;
 import org.c4marathon.assignment.domain.user.dto.UserDto;
@@ -13,10 +12,8 @@ import org.c4marathon.assignment.domain.user.entity.JoinResponseMsg;
 import org.c4marathon.assignment.domain.user.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;

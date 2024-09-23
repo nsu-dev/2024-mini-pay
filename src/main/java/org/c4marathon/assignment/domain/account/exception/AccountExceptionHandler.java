@@ -5,8 +5,6 @@ import static org.c4marathon.assignment.domain.account.entity.AccountErrCode.*;
 import org.c4marathon.assignment.domain.account.controller.AccountController;
 import org.c4marathon.assignment.domain.account.dto.AccountErrDto;
 import org.c4marathon.assignment.domain.account.entity.AccountErrCode;
-import org.c4marathon.assignment.domain.user.dto.UserErrDto;
-import org.c4marathon.assignment.domain.user.entity.UserErrCode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;

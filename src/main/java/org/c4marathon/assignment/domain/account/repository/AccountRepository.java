@@ -2,7 +2,6 @@ package org.c4marathon.assignment.domain.account.repository;
 
 import org.c4marathon.assignment.domain.account.entity.Account;
 import org.c4marathon.assignment.domain.account.entity.AccountRole;
-import org.c4marathon.assignment.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;

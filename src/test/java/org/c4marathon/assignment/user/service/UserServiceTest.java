@@ -17,7 +17,6 @@ import org.c4marathon.assignment.domain.user.entity.User;
 import org.c4marathon.assignment.domain.user.exception.UserException;
 import org.c4marathon.assignment.domain.user.repository.UserRepository;
 import org.c4marathon.assignment.domain.user.service.UserService;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
