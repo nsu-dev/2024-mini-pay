@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -56,11 +57,11 @@ public class AccountService {
 
 			// 적금 계좌로 입금
 			savingsAccount.deposit(money);
+
 			return true;
-		} catch (IllegalArgumentException e) {
-			throw new IllegalArgumentException("송금 중 오류가 발생했습니다: " + e.getMessage());
-		} catch (Exception e) {
-			throw new RuntimeException("알 수 없는 오류가 발생했습니다.");
+		} catch (OptimisticLockException e) {
+			System.out.println("낙관적 잠금 충돌 발생, 재시도 필요: " + e.getMessage());
+			return false;
 		}
 	}
 
@@ -104,6 +105,10 @@ public class AccountService {
 			userMainAccount.addTodayChargeAmount(money);
 
 			return true;
+		} catch (OptimisticLockException e) {
+			// 낙관적 잠금 충돌 발생 시 로그 처리 및 재시도 로직 (필요할때)
+			System.out.println("낙관적 잠금 충돌 발생, 재시도 필요: " + e.getMessage());
+			return false;
 		} catch (IllegalArgumentException e) {
 			throw new IllegalArgumentException("입금 중 오류가 발생했습니다: " + e.getMessage());
 		} catch (Exception e) {
