@@ -5,7 +5,7 @@ import java.util.Optional;
 import lombok.Getter;
 
 @Getter
-public class TransferRequest {
+public class TransferRequestDto {
 	private Long userId;
 	private Long savingsAccountId;
 	private Long externalUserId;
@@ -13,7 +13,7 @@ public class TransferRequest {
 	private boolean externalTransfer;
 
 	// 외부 사용자 간 송금 생성자
-	public TransferRequest(Long userId, Optional<Long> externalUserId, int money) {
+	public TransferRequestDto(Long userId, Optional<Long> externalUserId, int money) {
 		this.userId = userId;
 		this.externalUserId = externalUserId.orElse(null); // Optional 처리
 		this.money = money;
@@ -21,7 +21,7 @@ public class TransferRequest {
 	}
 
 	// 적금 계좌로 송금 생성자
-	public TransferRequest(Long userId, Long savingsAccountId, int money) {
+	public TransferRequestDto(Long userId, Long savingsAccountId, int money) {
 		this.userId = userId;
 		this.savingsAccountId = savingsAccountId;
 		this.money = money;
