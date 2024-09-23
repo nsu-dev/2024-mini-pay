@@ -11,9 +11,9 @@ import java.util.Optional;
 
 @Repository
 public interface AccountRepository extends JpaRepository<Account, Long> {
-    Optional findByAccountNum(Long accountNum);
+    Optional findByAccount(Long accountNum);
 
-    Optional findByAccountPw(int accountPw);
+    Optional findByMyAccount(int accountPw);
 
     Optional<Account> findByUser_IdAndType(Long userId, AccountType type);
 
