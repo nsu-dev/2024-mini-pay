@@ -1,4 +1,4 @@
-package org.c4marathon.assignment.common.config;
+package org.c4marathon.assignment.event;
 
 import org.c4marathon.assignment.user.domain.User;
 
