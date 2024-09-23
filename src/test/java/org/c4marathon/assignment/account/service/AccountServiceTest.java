@@ -413,4 +413,38 @@ class AccountServiceTest {
 		then(accountRepository).should(times(1)).findByAccountNum(remittanceRequestDto.accountNum());
 		then(accountRepository).should(times(1)).findByAccountNum(mainAccount.getAccountNum());  // 충전 시 호출 여부 확인
 	}
+
+	@DisplayName("메인계좌간 거래에서 수신받는 계좌가 메인계좌가 아닌 경우 예외가 발생한다.")
+	@Test
+	void remittanceMainOtherErr(){
+		// given
+		Long userId = 1L;
+		Long remittanceAmount = 100000L;
+		Long receiveAccountBalance = 200000L;
+		Long initialMainAccountBalance = 88000L;
+		Long expectedChargeAmount = 20000L; // 충전해야할 금액
+		// 송금 요청 DTO 설정
+		RemittanceRequestDto remittanceRequestDto = new RemittanceRequestDto(3288494829385L, remittanceAmount); // 수신 계좌 번호와 송금 금액
+
+		mainAccount = Account.builder().accountBalance(initialMainAccountBalance).build();
+
+		// 수신 계좌를 적금계좌로 설정
+		Account receiveAccount = Account.builder()
+			.accountNum(3288494829385L)
+			.accountRole(AccountRole.SAVINGS)
+			.accountBalance(receiveAccountBalance)
+			.accountStatus(AccountStatus.AVAILABLE)
+			.dailyChargeLimit(0)
+			.build();
+
+		// Mock 설정: 세션에서 userId 반환
+		given(httpServletRequest.getSession(false)).willReturn(httpSession);
+		given(httpSession.getAttribute("userId")).willReturn(userId);
+
+		// Mock 설정: 메인 계좌 및 수신 계좌 조회
+		given(accountRepository.findMainAccount(userId, AccountRole.MAIN)).willReturn(mainAccount);  // 송금하는 메인 계좌 조회
+		given(accountRepository.findByAccountNum(remittanceRequestDto.accountNum())).willReturn(receiveAccount);  // 수신 계좌 조회
+		// when //then
+		assertThrows(AccountException.class, ()->accountService.remittanceOtherMain(remittanceRequestDto, httpServletRequest));
+	}
 }
