@@ -40,13 +40,29 @@ public class UserController {
 		return ResponseEntity.ok().build();
 	}
 
-	//메인 계좌에서 적금 계좌로 송금
+	//사용자 메인 계좌에서 적금 계좌로 송금
 	@PostMapping("/{userId}/move-to-savings")
 	public ResponseEntity<String> transferToSavings(@PathVariable Long userId,
 		@RequestParam Long savingsAccountId,
 		@RequestParam int money) {
 		boolean success = accountService.transferToSavings(userId, savingsAccountId, money);
 		return success ? ResponseEntity.ok("송금 성공") : ResponseEntity.badRequest().body("송금 실패");
+	}
+
+	//외부 계좌에서 사용자 계좌로 입금(메인 계좌)
+	@PostMapping("/{userId}/transfer-from-external/{externalUserId}")
+	public ResponseEntity<String> transferFromExternal(
+		@PathVariable Long userId,
+		@PathVariable Long externalUserId,
+		@RequestParam int money) {
+		try {
+			boolean success = accountService.transferFromExternalAccount(userId, externalUserId, money);
+			return success ? ResponseEntity.ok("이체 성공") : ResponseEntity.badRequest().body("이체 실패");
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.badRequest().body("오류: " + e.getMessage());
+		} catch (Exception e) {
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 오류: " + e.getMessage());
+		}
 	}
 
 	// IllegalArgumentException 처리
@@ -60,5 +76,4 @@ public class UserController {
 	public ResponseEntity<String> handleGeneralException(Exception e) {
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("서버 에러: " + e.getMessage());
 	}
-
 }
