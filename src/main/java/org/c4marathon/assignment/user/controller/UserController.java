@@ -1,6 +1,6 @@
 package org.c4marathon.assignment.user.controller;
 
-import org.c4marathon.assignment.common.config.CommonResponse;
+import org.c4marathon.assignment.config.CommonResponse;
 import org.c4marathon.assignment.user.dto.JoinDto;
 import org.c4marathon.assignment.user.dto.LoginDto;
 import org.c4marathon.assignment.user.service.UserService;
