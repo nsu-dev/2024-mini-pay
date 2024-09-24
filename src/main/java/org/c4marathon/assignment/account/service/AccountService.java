@@ -14,6 +14,7 @@ import org.c4marathon.assignment.account.exception.NotFountAccountException;
 import org.c4marathon.assignment.account.repository.AccountRepository;
 import org.c4marathon.assignment.common.exception.BaseException;
 import org.c4marathon.assignment.user.domain.User;
+import org.c4marathon.assignment.user.exception.LoginException;
 import org.c4marathon.assignment.user.repository.UserRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ public class AccountService {
 	private final UserRepository userRepository;
 	Long randomAccountNum = new Random().nextLong();
 
+	// 정각마다 일일한도 초기화 서비스
 	@Scheduled(cron = "0 0 0 * * *")
 	@Transactional(isolation = Isolation.SERIALIZABLE)
 	public void resetLimitAccount() {
@@ -39,26 +41,22 @@ public class AccountService {
 		}
 	}
 
+	// 메인 계좌 충전 서비스
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public boolean chargeMainAccount(ChargeDto chargeDto) {
-
 		Optional<Account> optionalAccount = accountRepository.findByAccount(chargeDto.accountNum());
-
-		if (optionalAccount.isPresent()) {
-			Account account = optionalAccount.get();
-
-			account.setAmount(chargeDto.chargeMoney());
-			return true;
-		}
-
-		return false;
+		optionalAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUNT_ACCOUNT));
+		Account account = optionalAccount.get();
+		account.setAmount(chargeDto.chargeMoney());
+		return true;
 	}
 
+	// 적금 계좌 생성 서비스
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public boolean craeteSavingAccount(String userId, SavingAccountPwDto savingAccountPwDto) {
 		Optional<User> userOptional = userRepository.findByUserId(userId);
+		userOptional.orElseThrow(()-> new BaseException(LoginException.NOT_FOUND_USER));
 
-		if (userOptional.isPresent()) {
 			User user = userOptional.get();
 			Account account = Account.builder()
 				.accountNum(randomAccountNum)
@@ -70,21 +68,18 @@ public class AccountService {
 
 			accountRepository.save(account);
 			return true;
-		} else {
-			return false;
-		}
 	}
 
-	@Transactional(isolation = Isolation.SERIALIZABLE)
-	public boolean sendSavingAccount(Long userId, SendDto sendDto) {
+	// 메인 계좌 -> 적금 계좌로 송금 서비스
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
+	public boolean sendSavingAccount(SendDto sendDto) {
 		Optional<Account> optionalAccount = accountRepository.findByAccount(sendDto.accountNum());
 		Optional<Account> optionalMyAccount = accountRepository.findByMyAccount(sendDto.accountPw());
-		Optional<Account> mainAccount = accountRepository.findByUser_IdAndType(userId, AccountType.MAIN_ACCOUNT);
 
 		optionalAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUNT_ACCOUNT));
 		optionalMyAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_MATCH_ACCOUNT));
 
-		Account main = mainAccount.get();
+		Account main = optionalMyAccount.get();
 		Account saving = optionalAccount.get();
 		int checkMoney = main.getAmount() - sendDto.sendMoney();
 
@@ -97,5 +92,32 @@ public class AccountService {
 		} else {
 			throw new BaseException(MainAccountException.SHORT_MONEY);
 		}
+	}
+
+	// 메인 계좌 -> 다른 유저의 메인 계좌로 송금 서비스
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
+	public boolean sendOtherAccount(SendDto sendDto) {
+		Optional<Account> optionalMyAccount = accountRepository.findByMyAccount(sendDto.accountPw());
+		Optional<Account> optionalAccount = accountRepository.findByAccount(sendDto.accountNum());
+
+		optionalMyAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_MATCH_ACCOUNT));
+		optionalAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUNT_ACCOUNT));
+
+		Account mainAccount = optionalMyAccount.get();
+		Account otherAccount = optionalAccount.get();
+		int checkMoney = mainAccount.getAmount() - sendDto.sendMoney();
+		int lackingMoney = sendDto.sendMoney() - mainAccount.getAmount();
+
+		if (checkMoney > 0) {
+			otherAccount.increaseAmount(sendDto.sendMoney());
+			mainAccount.reduceAmount(sendDto.sendMoney());
+			accountRepository.save(mainAccount);
+			accountRepository.save(otherAccount);
+			return true;
+		}else {
+			int chargeMoney = (int)(Math.round(lackingMoney / 10000.0) * 10000);
+			chargeMainAccount(new ChargeDto(mainAccount.getAccountNum(), chargeMoney));
+		}
+		return false;
 	}
 }
