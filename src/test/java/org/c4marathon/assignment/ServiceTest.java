@@ -8,6 +8,7 @@ import java.util.Optional;
 import org.c4marathon.assignment.Dto.UserRequestDto;
 import org.c4marathon.assignment.Dto.UserResponseDto;
 import org.c4marathon.assignment.domain.Account;
+import org.c4marathon.assignment.domain.AccountType;
 import org.c4marathon.assignment.domain.User;
 import org.c4marathon.assignment.repository.AccountRepository;
 import org.c4marathon.assignment.repository.UserRepository;
@@ -51,8 +52,8 @@ public class ServiceTest {
 		user = new User(1L, "lsk123", "이수경", "123456-7890123");
 		externalUser = new User(2L, "kim123", "김철수", "987654-3210987");
 
-		userMainAccount = new Account("Main Account", 1000000, user);
-		externalMainAccount = new Account("Main Account", 2000000, externalUser);
+		userMainAccount = new Account(AccountType.MAIN, 1000000, user);
+		externalMainAccount = new Account(AccountType.MAIN, 2000000, externalUser);
 
 		user.setMainAccount(userMainAccount);
 		externalUser.setMainAccount(externalMainAccount);
@@ -74,7 +75,7 @@ public class ServiceTest {
 
 		// User 객체를 생성자 방식으로 생성
 		User mockUser = new User(1L, "lsk123", "이수경", "123456-7890123");
-		Account mockAccount = new Account("Main Account", 0, mockUser);
+		Account mockAccount = new Account(AccountType.MAIN, 0, mockUser);
 		mockUser.setMainAccount(mockAccount);
 
 		// mock repository behaviors
@@ -91,7 +92,7 @@ public class ServiceTest {
 
 		// 메인 계좌가 올바르게 설정되었는지 확인
 		assertNotNull(mockUser.getMainAccount());
-		assertEquals("Main Account", mockUser.getMainAccount().getType());
+		assertEquals(AccountType.MAIN, mockUser.getMainAccount().getType());
 		assertEquals(0, mockUser.getMainAccount().getBalance());
 
 		// 성공 시 문구 출력
@@ -103,7 +104,7 @@ public class ServiceTest {
 	public void addSavingsAccountTest() {
 		// given
 		Long userId = 1L;
-		String accountType = "Savings Account";
+		AccountType type = AccountType.SAVINGS;
 		int initialBalance = 100000;
 
 		// User 객체를 Mock으로 설정
@@ -122,7 +123,7 @@ public class ServiceTest {
 		ArgumentCaptor<Account> accountCaptor = ArgumentCaptor.forClass(Account.class);
 
 		// when
-		accountService.addSavingsAccount(userId, accountType, initialBalance);
+		accountService.addSavingsAccount(userId, type, initialBalance);
 
 		// then
 		// 적금 계좌가 AccountRepository에 저장되는지 확인
@@ -130,14 +131,14 @@ public class ServiceTest {
 
 		Account savedAccount = accountCaptor.getValue();
 		assertNotNull(savedAccount);
-		assertEquals(accountType, savedAccount.getType());
+		assertEquals(type, savedAccount.getType());
 		assertEquals(initialBalance, savedAccount.getBalance());
 		assertEquals(mockUser, savedAccount.getUser()); // User가 null이 아닌지 확인
 
 		// 계좌가 올바르게 추가되었는지 확인 (User 객체에 계좌가 추가되었는지 체크)
 		assertEquals(1, mockUser.getSavingAccounts().size());
 		Account addedAccount = mockUser.getSavingAccounts().get(0);
-		assertEquals(accountType, addedAccount.getType());
+		assertEquals(type, addedAccount.getType());
 		assertEquals(initialBalance, addedAccount.getBalance());
 
 		// 성공 메시지 출력
@@ -157,8 +158,8 @@ public class ServiceTest {
 			1L, "lsk123", "이수경", "123456-7890123"
 		);
 
-		Account mainAccount = new Account("Main Account", 100000, mockUser); // 메인 계좌에 100,000원
-		Account savingsAccount = new Account("Savings Account", 0, mockUser); // 적금 계좌는 0원
+		Account mainAccount = new Account(AccountType.MAIN, 100000, mockUser); // 메인 계좌에 100,000원
+		Account savingsAccount = new Account(AccountType.SAVINGS, 0, mockUser); // 적금 계좌는 0원
 
 		mockUser.setMainAccount(mainAccount);
 
@@ -207,7 +208,7 @@ public class ServiceTest {
 		int transferAmount = 500000;
 
 		// 외부 유저의 잔액 부족 설정
-		externalMainAccount = new Account("Main Account", 300000, externalUser);
+		externalMainAccount = new Account(AccountType.MAIN, 300000, externalUser);
 		externalUser.setMainAccount(externalMainAccount);
 
 		when(userRepository.findById(userId)).thenReturn(Optional.of(user));
