@@ -3,6 +3,7 @@ package org.c4marathon.assignment.service;
 import java.time.LocalDate;
 
 import org.c4marathon.assignment.domain.Account;
+import org.c4marathon.assignment.domain.AccountType;
 import org.c4marathon.assignment.domain.User;
 import org.c4marathon.assignment.repository.AccountRepository;
 import org.c4marathon.assignment.repository.UserRepository;
@@ -10,7 +11,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -22,143 +22,125 @@ public class AccountService {
 
 	// 적금 계좌 추가
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
-	public boolean addSavingsAccount(Long userId, String type, int balance) {
-		try {
-			User user = userRepository.findById(userId)
-				.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+	public boolean addSavingsAccount(Long userId, AccountType type, int balance) {
+		User user = findUserById(userId);
+		// 적금 계좌 생성 및 저장
+		Account savingsAccount = createAndSaveAccount(user, type, balance);
 
-			// 적금 계좌 생성 및 저장
-			Account savingsAccount = accountRepository.save(new Account(type, balance, user));
-
-			// 적금 계좌를 User 객체에 추가
-			user.addSavingAccount(savingsAccount);
-
-			// 적금 계좌가 User 엔터티에 반영되도록 저장
-			userRepository.save(user);
-			return true;
-		} catch (IllegalArgumentException e) {
-			throw new IllegalArgumentException("적금 계좌 추가 중 오류가 발생했습니다: " + e.getMessage());
-		}
+		// 적금 계좌를 User 객체에 추가
+		user.addSavingAccount(savingsAccount);
+		// 적금 계좌가 User 엔터티에 반영되도록 저장
+		userRepository.save(user);
+		return true;
 	}
 
 	// 메인 계좌에서 적금 계좌로 송금
 	@Transactional(isolation = Isolation.SERIALIZABLE)
 	public boolean transferToSavings(Long userId, Long savingsAccountId, int money) {
-		try {
-			User user = userRepository.findById(userId)
-				.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+		User user = findUserById(userId);
+		Account mainAccount = user.getMainAccount();
+		Account savingsAccount = findAccountById(savingsAccountId);
 
-			Account mainAccount = user.getMainAccount();
-			Account savingsAccount = accountRepository.findById(savingsAccountId)
-				.orElseThrow(() -> new IllegalArgumentException("적금 계좌를 찾을 수 없습니다."));
-
-			// 메인 계좌에서 출금
-			mainAccount.withdraw(money, LocalDate.now());
-
-			// 적금 계좌로 입금
-			savingsAccount.deposit(money);
-
-			return true;
-		} catch (OptimisticLockException e) {
-			System.out.println("낙관적 잠금 충돌 발생, 재시도 필요: " + e.getMessage());
-			return false;
-		}
+		executeTransfer(mainAccount, savingsAccount, money);
+		return true;
 	}
 
 	//외부 계좌에서 돈을 가져오는 메서드(입금)
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public boolean transferFromExternalAccount(Long userId, Long externalUserId, int money) {
-		try {
-			//사용자와 외부 사용자 찾기
-			User user = userRepository.findById(userId)
-				.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+		//사용자와 외부 사용자 찾기
+		User user = findUserById(userId);
+		User externalUser = findUserById(userId);
 
-			User externalUser = userRepository.findById(externalUserId)
-				.orElseThrow(() -> new IllegalArgumentException("외부 사용자를 찾을 수 없습니다."));
+		Account userMainAccount = user.getMainAccount();
+		Account externalMainAccount = externalUser.getMainAccount();
 
-			Account userMainAccount = user.getMainAccount();
-			Account externalMainAccount = externalUser.getMainAccount();
+		checkMainAccount(userMainAccount, externalMainAccount);
+		checkTransferLimit(userMainAccount, money);
+		executeTransfer(externalMainAccount, userMainAccount, money);
 
-			// 두 계좌 모두 메인 계좌인지 확인
-			if (!userMainAccount.isMainAccount() || !externalMainAccount.isMainAccount()) {
-				throw new IllegalArgumentException("두 계좌 모두 메인 계좌여야 합니다.");
-			}
-
-			//오늘 날짜를 가져오기
-			LocalDate today = LocalDate.now();
-
-			// 충전 한도 체크
-			if (userMainAccount.getTodayChargeMoney() + money > userMainAccount.getDailyChargeLimit()) {
-				throw new IllegalArgumentException("오늘의 충전 한도를 초과했습니다.");
-			}
-
-			// 외부 계좌의 잔액 확인
-			if (externalMainAccount.getBalance() < money) {
-				throw new IllegalArgumentException("외부 계좌의 잔액이 부족합니다.");
-			}
-
-			// 외부 계좌에서 돈을 차감하고 사용자 계좌에 돈을 입금
-			externalMainAccount.withdraw(money, today); // 외부 계좌에서 출금
-			userMainAccount.deposit(money); // 사용자 계좌에 입금
-
-			// 오늘의 충전 금액 업데이트
-			userMainAccount.addTodayChargeMoney(money);
-
-			return true;
-		} catch (OptimisticLockException e) {
-			// 낙관적 잠금 충돌 발생 시 로그 처리 및 재시도 로직 (필요할때)
-			System.out.println("낙관적 잠금 충돌 발생, 재시도 필요: " + e.getMessage());
-			return false;
-		} catch (IllegalArgumentException e) {
-			throw new IllegalArgumentException("입금 중 오류가 발생했습니다: " + e.getMessage());
-		} catch (Exception e) {
-			throw new RuntimeException("알 수 없는 오류가 발생했습니다.");
-		}
+		return true;
 	}
 
 	// 외부 메인 계좌로 송금
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public boolean transferToExternalMainAccount(Long userId, Long externalUserId, int money) {
-		try {
-			// 송금하려는 사용자와 외부 사용자의 메인 계좌 조회
-			User user = userRepository.findById(userId)
-				.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-			User externalUser = userRepository.findById(externalUserId)
-				.orElseThrow(() -> new IllegalArgumentException("외부 사용자를 찾을 수 없습니다."));
+		// 사용자와 외부 사용자 찾기
+		User user = findUserById(userId);
+		User externalUser = findUserById(externalUserId);
 
-			Account userMainAccount = user.getMainAccount();
-			Account externalMainAccount = externalUser.getMainAccount();
+		Account userMainAccount = user.getMainAccount();
+		Account externalMainAccount = externalUser.getMainAccount();
 
-			// 외부 계좌가 메인 계좌인지 확인
-			if (!externalMainAccount.isMainAccount()) {
-				throw new IllegalArgumentException("외부 사용자의 계좌가 메인 계좌가 아닙니다.");
+		// 메인 계좌 여부 확인
+		checkMainAccount(userMainAccount, externalMainAccount);
+
+		// 부족한 금액이 있을 경우 자동 충전 처리
+		handleAutoCharge(userMainAccount, money);
+
+		// 송금 수행
+		executeTransfer(userMainAccount, externalMainAccount, money);
+
+		return true;
+	}
+
+	//메서드 역할 분리
+	// 사용자 ID로 User 찾기
+	private User findUserById(Long userId) {
+		return userRepository.findById(userId)
+			.orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+	}
+
+	// 계좌 ID로 Account 찾기
+	private Account findAccountById(Long accountId) {
+		return accountRepository.findById(accountId)
+			.orElseThrow(() -> new IllegalArgumentException("계좌를 찾을 수 없습니다."));
+	}
+
+	// 메인 계좌 여부 확인
+	private void checkMainAccount(Account... accounts) {
+		for (Account account : accounts) {
+			if (!account.isMainAccount()) {
+				throw new IllegalArgumentException("모든 계좌는 메인 계좌여야 합니다.");
 			}
+		}
+	}
 
-			// 송금 금액이 부족할 경우 자동 충전
-			LocalDate today = LocalDate.now();
-			int remainingMoney = money - userMainAccount.getBalance(); // 부족 금액 계산
-			while (remainingMoney > 0) {
-				int chargeMoney = Math.min(10000, remainingMoney); // 10,000원 단위 충전
-				if (userMainAccount.getTodayChargeMoney() + chargeMoney > userMainAccount.getDailyChargeLimit()) {
-					throw new IllegalArgumentException("충전 한도를 초과했습니다.");
-				}
-				// 충전 수행
-				userMainAccount.deposit(chargeMoney);
-				userMainAccount.addTodayChargeMoney(chargeMoney);
+	// 충전 한도 확인
+	private void checkTransferLimit(Account account, int money) {
+		if (account.getTodayChargeMoney() + money > account.getDailyChargeLimit()) {
+			throw new IllegalArgumentException("오늘의 충전 한도를 초과했습니다.");
+		}
+	}
 
-				remainingMoney -= chargeMoney; // 남은 금액을 줄임
-			}
+	// 송금 처리
+	private void executeTransfer(Account fromAccount, Account toAccount, int money) {
+		LocalDate today = LocalDate.now();
+		fromAccount.withdraw(money, today);
+		toAccount.deposit(money);
+		toAccount.addTodayChargeMoney(money);
+	}
 
-			// 송금 수행
-			userMainAccount.withdraw(money, today); // 사용자 계좌에서 출금
-			externalMainAccount.deposit(money); // 외부 계좌로 입금
+	// 적금 계좌 생성 및 저장
+	private Account createAndSaveAccount(User user, AccountType type, int balance) {
+		Account account = new Account(type, balance, user);
+		return accountRepository.save(account);
+	}
 
-			return true;
-		} catch (OptimisticLockException e) {
-			System.out.println("낙관적 잠금 충돌 발생, 재시도 필요: " + e.getMessage());
-			return false;
-		} catch (IllegalArgumentException e) {
-			throw new IllegalArgumentException("송금 중 오류가 발생했습니다: " + e.getMessage());
+	// 자동 충전 처리
+	private void handleAutoCharge(Account userMainAccount, int money) {
+		LocalDate today = LocalDate.now();
+		int remainingMoney = money - userMainAccount.getBalance(); // 부족 금액 계산
+
+		while (remainingMoney > 0) {
+			int chargeMoney = Math.min(10000, remainingMoney); // 10,000원 단위로 충전
+			checkTransferLimit(userMainAccount, chargeMoney);   // 충전 한도 체크
+
+			// 충전 수행
+			userMainAccount.deposit(chargeMoney);
+			userMainAccount.addTodayChargeMoney(chargeMoney);
+
+			remainingMoney -= chargeMoney; // 남은 금액에서 충전 금액을 차감
 		}
 	}
 }

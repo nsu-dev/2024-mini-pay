@@ -3,6 +3,7 @@ package org.c4marathon.assignment.service;
 import org.c4marathon.assignment.Dto.UserRequestDto;
 import org.c4marathon.assignment.Dto.UserResponseDto;
 import org.c4marathon.assignment.domain.Account;
+import org.c4marathon.assignment.domain.AccountType;
 import org.c4marathon.assignment.domain.User;
 import org.c4marathon.assignment.repository.AccountRepository;
 import org.c4marathon.assignment.repository.UserRepository;
@@ -31,7 +32,7 @@ public class UserService {
 			.build();
 
 		// 메인 계좌 설정
-		Account mainAccount = new Account("Main Account", 0, user);
+		Account mainAccount = new Account(AccountType.MAIN, 0, user);
 		user.setMainAccount(mainAccount);
 
 		// 저장

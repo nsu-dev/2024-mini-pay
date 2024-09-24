@@ -3,6 +3,7 @@ package org.c4marathon.assignment.controller;
 import org.c4marathon.assignment.Dto.TransferRequestDto;
 import org.c4marathon.assignment.Dto.UserRequestDto;
 import org.c4marathon.assignment.Dto.UserResponseDto;
+import org.c4marathon.assignment.domain.AccountType;
 import org.c4marathon.assignment.service.AccountService;
 import org.c4marathon.assignment.service.QueueService;
 import org.c4marathon.assignment.service.UserService;
@@ -37,7 +38,7 @@ public class UserController {
 	//적금 계좌 추가
 	@PostMapping("/{userId}/savings")
 	public ResponseEntity<Void> addSavingsAccount(@PathVariable Long userId,
-		@RequestParam String type,
+		@RequestParam AccountType type,
 		@RequestParam int balance) {
 		accountService.addSavingsAccount(userId, type, balance);
 		return ResponseEntity.ok().build();

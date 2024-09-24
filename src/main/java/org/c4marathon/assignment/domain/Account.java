@@ -26,7 +26,7 @@ public class Account {
 	private int version;
 
 	//계좌 유형을 추가하여 메인 계좌와 적금 계좌를 구분
-	private String type;
+	private AccountType type;
 	private int dailyChargeLimit = 3000000; // 1일 충전 한도 3백만원
 
 	private int todayChargeMoney = 0; // 당일 충전한 금액
@@ -38,7 +38,7 @@ public class Account {
 	private User user;
 
 	//사용자와의 관계를 설정하는 생성자
-	public Account(String type, int initialBalance, User user) {
+	public Account(AccountType type, int initialBalance, User user) {
 		this.type = type;
 		this.balance = initialBalance;
 		this.lastWithdrawalDate = LocalDate.now(); // 계좌 생성 시 초기화
@@ -72,7 +72,7 @@ public class Account {
 
 	//메인 계좌인지 확인하는 메소드
 	public boolean isMainAccount() {
-		return "Main Account".equals(this.type);
+		return this.type == AccountType.MAIN;
 	}
 
 	//입금 로직

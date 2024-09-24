@@ -28,7 +28,7 @@ public class User {
 
 	//메인 계좌는 1대1 관계
 	@OneToOne(cascade = CascadeType.REMOVE)
-	@JoinColumn(name = "mainAccountId")
+	@JoinColumn(name = "mainAccountId", unique = true)
 	private Account mainAccount;
 
 	//사용자와 적금계좌는 1대 다 관계
