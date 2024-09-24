@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -23,7 +24,7 @@ public class AccountController {
 
 	//메인계좌 충전 api
 	@PostMapping("/remittance")
-	public ResponseEntity<RemittanceResponseDto> chargeMain(@RequestBody RemittanceRequestDto remittanceRequestDto) {
+	public ResponseEntity<RemittanceResponseDto> chargeMain(@RequestBody @Valid RemittanceRequestDto remittanceRequestDto) {
 		RemittanceResponseDto remittanceResponseDto = accountService.chargeMain(remittanceRequestDto);
 		return ResponseEntity.ok().body(remittanceResponseDto);
 	}
@@ -46,7 +47,7 @@ public class AccountController {
 
 	//메인계좌간의 송금api
 	@PostMapping("/remittance/other")
-	public ResponseEntity<RemittanceResponseDto> remittanceMain(@RequestBody RemittanceRequestDto remittanceRequestDto,
+	public ResponseEntity<RemittanceResponseDto> remittanceMain(@RequestBody @Valid RemittanceRequestDto remittanceRequestDto,
 		HttpServletRequest httpServletRequest){
 		RemittanceResponseDto remittanceResponseDto = accountService.remittanceOtherMain(remittanceRequestDto, httpServletRequest);
 		return ResponseEntity.ok().body(remittanceResponseDto);
