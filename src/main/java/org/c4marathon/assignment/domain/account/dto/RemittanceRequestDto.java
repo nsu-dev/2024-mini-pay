@@ -4,7 +4,6 @@ import static org.c4marathon.assignment.domain.account.entity.AccountErrCode.*;
 
 import org.c4marathon.assignment.domain.account.exception.AccountException;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record RemittanceRequestDto (
