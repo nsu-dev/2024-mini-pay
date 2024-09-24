@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import org.c4marathon.assignment.domain.account.dto.CreateResponseDto;
 import org.c4marathon.assignment.domain.account.dto.RemittanceRequestDto;
@@ -24,6 +25,8 @@ import org.c4marathon.assignment.domain.account.repository.AccountRepository;
 import org.c4marathon.assignment.domain.user.entity.User;
 import org.c4marathon.assignment.domain.user.exception.UserException;
 import org.c4marathon.assignment.domain.user.repository.UserRepository;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -46,6 +49,7 @@ public class AccountService {
 
 	private final AccountRepository accountRepository;
 	private final UserRepository userRepository;
+	private final RedissonClient redissonClient;
 
 	//메인계좌 생성
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -93,11 +97,25 @@ public class AccountService {
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public RemittanceResponseDto chargeMain(RemittanceRequestDto remittanceRequestDto) {
 		Long accountNum = remittanceRequestDto.accountNum();
-		Account account = accountRepository.findByAccountNum(accountNum);
-		Long remittanceAmount = remittanceRequestDto.remittanceAmount();
-		validateCharge(account, remittanceAmount);
-		account.updateChargeAccount(remittanceAmount);
-		return new RemittanceResponseDto(RemittanceResponseMsg.SUCCESS.getResponseMsg());
+		String lockKey = "accountLock : " + accountNum;
+		RLock lock = redissonClient.getLock(lockKey);
+		try {
+			if (lock.tryLock(5, 30, TimeUnit.SECONDS)) {
+				Account account = accountRepository.findByAccountNum(accountNum);
+				Long remittanceAmount = remittanceRequestDto.remittanceAmount();
+				validateCharge(account, remittanceAmount);
+				account.updateChargeAccount(remittanceAmount);
+				accountRepository.save(account);				//조기 커밋을 통해 트랜잭션의 수명을 짧게 하여 락으로 인한 문제를 방지
+				return new RemittanceResponseDto(RemittanceResponseMsg.SUCCESS.getResponseMsg());
+			}
+			throw new AccountException(INVALID_ACCOUNT_TYPE);
+		} catch (InterruptedException e){
+			throw new RuntimeException();
+		} finally {
+			if (lock.isHeldByCurrentThread()) {
+				lock.unlock();
+			}
+		}
 	}
 
 	private Long getSessionId(HttpServletRequest httpServletRequest) {
@@ -150,16 +168,34 @@ public class AccountService {
 		return ((long)Math.ceil((double)Math.abs(balance - remittanceAmount) / BALANCE_UNIT)) * BALANCE_UNIT;
 	}
 	//메인계좌에서 인출 후 적금계좌에 입금
-	@Transactional(isolation = Isolation.REPEATABLE_READ)
+	@Transactional(isolation = Isolation.DEFAULT)
 	public RemittanceResponseDto savingRemittance(Long savingId, SavingRequestDto savingRequestDto, HttpServletRequest httpServletRequest) {
 		Long userId = getSessionId(httpServletRequest);
 		User user = userRepository.findById(userId).orElseThrow(()->new UserException(USER_NOT_FOUND));
 		Account mainAccount = accountRepository.findMainAccount(user.getUserId(), AccountRole.MAIN);
-		Account saving = accountRepository.findById(savingId).orElseThrow(NoSuchElementException::new);
-		chargeAccountBalance(mainAccount, (long)savingRequestDto.amount());
-		mainAccount.updateSaving(mainAccount.getAccountBalance() - savingRequestDto.amount());
-		saving.updateSaving(saving.getAccountBalance() + savingRequestDto.amount());
-		return new RemittanceResponseDto(RemittanceResponseMsg.SUCCESS.getResponseMsg());
+		String mainLockKey = "accountLock : " + mainAccount.getAccountNum();
+		RLock mainLock = redissonClient.getLock(mainLockKey);
+		Account saving = accountRepository.findById(savingId).orElseThrow(NoSuchElementException::new); // 메인계좌는 공유자원이 될 가능성이 높지만 적금계좌는 아님
+		try {
+			if (mainLock.tryLock(5, 30, TimeUnit.SECONDS)) {
+				chargeAccountBalance(mainAccount, (long) savingRequestDto.amount());
+				mainAccount.updateSaving(mainAccount.getAccountBalance() - savingRequestDto.amount());
+				saving.updateSaving(saving.getAccountBalance() + savingRequestDto.amount());
+
+				// 중요 트랜잭션 부분 커밋
+				accountRepository.save(mainAccount);
+				accountRepository.save(saving);
+
+				return new RemittanceResponseDto(RemittanceResponseMsg.SUCCESS.getResponseMsg());
+			}
+			throw new AccountException(INVALID_ACCOUNT_TYPE);
+		} catch (InterruptedException e) {
+			throw new RuntimeException();
+		} finally {
+			if (mainLock.isHeldByCurrentThread()) {
+				mainLock.unlock();
+			}
+		}
 	}
 
 	//메인계좌 간의 송금
@@ -167,18 +203,42 @@ public class AccountService {
 	public RemittanceResponseDto remittanceOtherMain(RemittanceRequestDto remittanceRequestDto, HttpServletRequest httpServletRequest){
 		Long userId = getSessionId(httpServletRequest);
 		Account mainAccount = accountRepository.findMainAccount(userId, AccountRole.MAIN);
+		String mainLockKey = "accountLock : " + mainAccount.getAccountNum();
+		RLock mainLock = redissonClient.getLock(mainLockKey);
 
 		Long receiveAccountNum = remittanceRequestDto.accountNum();
 		Account receiveAccount = accountRepository.findByAccountNum(receiveAccountNum);
-		if(!receiveAccount.getAccountRole().equals(AccountRole.MAIN)){
-			throw new AccountException(NOT_MAIN_ACCOUNT);
+		String receiveLockKey = "accountLock : " + receiveAccountNum;
+		RLock receiveLock = redissonClient.getLock(receiveLockKey);
+		try {
+			if (mainLock.tryLock(5, 30, TimeUnit.SECONDS) && receiveLock.tryLock(5, 30, TimeUnit.SECONDS)) {
+				if (!receiveAccount.getAccountRole().equals(AccountRole.MAIN)) {
+					throw new AccountException(NOT_MAIN_ACCOUNT);
+				}
+				Long remittanceAmount = remittanceRequestDto.remittanceAmount();
+				validateCharge(receiveAccount, remittanceAmount);
+				chargeAccountBalance(mainAccount, remittanceAmount);
+
+				mainAccount.updateSaving(mainAccount.getAccountBalance() - remittanceAmount);
+				receiveAccount.updateChargeAccount(remittanceAmount);
+
+				// 트랜잭션 커밋
+				accountRepository.save(mainAccount);
+				accountRepository.save(receiveAccount);
+
+				return new RemittanceResponseDto(RemittanceResponseMsg.SUCCESS.getResponseMsg());
+			}
+			throw new AccountException(INVALID_ACCOUNT_TYPE);
+		} catch (InterruptedException e) {
+			throw new RuntimeException();
+		} finally {
+			if (mainLock.isHeldByCurrentThread()) {
+				mainLock.unlock();
+			}
+			if (receiveLock.isHeldByCurrentThread()) {
+				receiveLock.unlock();
+			}
 		}
-		Long remittanceAmount = remittanceRequestDto.remittanceAmount();
-		validateCharge(receiveAccount, remittanceAmount);
-		chargeAccountBalance(mainAccount, remittanceAmount);
-		mainAccount.updateSaving(mainAccount.getAccountBalance() - remittanceAmount);
-		receiveAccount.updateChargeAccount(remittanceAmount);
-		return new RemittanceResponseDto(RemittanceResponseMsg.SUCCESS.getResponseMsg());
 	}
 
 	@Scheduled(cron = "0 0 0 * * ?")
