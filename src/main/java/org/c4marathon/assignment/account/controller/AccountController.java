@@ -72,10 +72,33 @@ public class AccountController {
 	}
 
 	// 적금 계좌로 돈 송금
-	@PostMapping("/account/send/{userId}")
-	public ResponseEntity<CommonResponse> sendMoney(@PathVariable @RequestBody Long userId,
-		@Valid @RequestBody SendDto sendDto) {
-		boolean checkSend = accountService.sendSavingAccount(userId, sendDto);
+	@PostMapping("/account/send/saving")
+	public ResponseEntity<CommonResponse> sendMoney(@Valid @RequestBody SendDto sendDto) {
+		boolean checkSend = accountService.sendSavingAccount(sendDto);
+
+		if (checkSend) {
+			CommonResponse res = new CommonResponse(
+				200,
+				HttpStatus.OK,
+				"송금완료",
+				null
+			);
+			return new ResponseEntity<>(res, res.getHttpStatus());
+		} else {
+			CommonResponse res = new CommonResponse(
+				400,
+				HttpStatus.BAD_REQUEST,
+				"송금실패",
+				null
+			);
+			return new ResponseEntity<>(res, res.getHttpStatus());
+		}
+	}
+
+	// 다른 계좌로 돈 송금
+	@PostMapping("/account/send/other")
+	public ResponseEntity<CommonResponse> otherSendMoney(@Valid @RequestBody SendDto sendDto) {
+		boolean checkSend = accountService.sendOtherAccount(sendDto);
 
 		if (checkSend) {
 			CommonResponse res = new CommonResponse(
