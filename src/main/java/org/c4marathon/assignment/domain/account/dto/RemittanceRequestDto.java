@@ -17,6 +17,8 @@ public record RemittanceRequestDto (
 		if(remittanceAmount > 3_000_000){
 			throw new AccountException(ACCOUNT_DALIYCHARGELIMIT_ERR);
 		}
+		if(remittanceAmount <= 0){
+			throw new AccountException(ACCOUNT_INVALID_FAIL);
+		}
 	}
-
 }
