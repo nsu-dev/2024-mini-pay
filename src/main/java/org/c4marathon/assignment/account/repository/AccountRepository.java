@@ -16,6 +16,4 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 	@Query("SELECT a FROM Account a WHERE a.accountPw = :accountPw")
 	Optional findByMyAccount(int accountPw);
 
-	Optional<Account> findByUser_IdAndType(Long userId, AccountType type);
-
 }
