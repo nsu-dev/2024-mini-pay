@@ -7,14 +7,18 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.nio.channels.AcceptPendingException;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.c4marathon.assignment.domain.account.dto.CreateResponseDto;
 import org.c4marathon.assignment.domain.account.dto.RemittanceRequestDto;
 import org.c4marathon.assignment.domain.account.dto.RemittanceResponseDto;
 import org.c4marathon.assignment.domain.account.dto.SavingRequestDto;
+import org.c4marathon.assignment.domain.account.entity.AccountErrCode;
 import org.c4marathon.assignment.domain.account.entity.CreateResponseMsg;
 import org.c4marathon.assignment.domain.account.entity.RemittanceResponseMsg;
+import org.c4marathon.assignment.domain.account.exception.AccountException;
 import org.c4marathon.assignment.domain.account.service.AccountService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,6 +29,10 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+
+import jakarta.validation.constraints.Null;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 @WithMockUser(username = "testUser", roles = {"USER"})
@@ -59,7 +67,7 @@ public class AccountControllerTest {
 	}
 	@DisplayName("적금계좌 생성 api 테스트")
 	@Test
-	public void testCreateAccount() throws Exception {
+	void testCreateAccount() throws Exception {
 		CreateResponseDto responseDto = new CreateResponseDto(CreateResponseMsg.SUCCESS.getResponseMsg());
 		when(accountService.createAccountOther(anyString(), any())).thenReturn(responseDto);
 
@@ -71,7 +79,7 @@ public class AccountControllerTest {
 
 	@Test
 	@DisplayName("적금계좌 입급 api 테스트")
-	public void testSavingRemittance() throws Exception {
+	void testSavingRemittance() throws Exception {
 		SavingRequestDto requestDto = new SavingRequestDto(30000);
 		RemittanceResponseDto remittanceResponseDto = new RemittanceResponseDto(RemittanceResponseMsg.SUCCESS.getResponseMsg());
 		when(accountService.savingRemittance(anyLong(), any(SavingRequestDto.class), any())).thenReturn(remittanceResponseDto);
@@ -84,7 +92,7 @@ public class AccountControllerTest {
 
 	@Test
 	@DisplayName("메인계좌간 거래 api")
-	public void testRemittanceMain() throws Exception{
+	void testRemittanceMain() throws Exception{
 		RemittanceRequestDto remittanceRequestDto = new RemittanceRequestDto(3288494829384L, 100000L);
 		RemittanceResponseDto remittanceResponseDto = new RemittanceResponseDto(RemittanceResponseMsg.SUCCESS.getResponseMsg());
 
@@ -93,7 +101,45 @@ public class AccountControllerTest {
 			.contentType(MediaType.APPLICATION_JSON)
 			.content(new ObjectMapper().writeValueAsString(remittanceRequestDto))
 		).andExpect(status().isOk());
+	}
 
+	@Test
+	@DisplayName("컨트롤러 단에서 런타임예외발생 시 잡아서 잘 처리하는지 검증")
+	void accountRuntimeExceptionFromController() throws Exception{
+		RemittanceRequestDto remittanceRequestDto = new RemittanceRequestDto(3288494829384L, 100000L);
+		given(accountService.chargeMain(any(RemittanceRequestDto.class))).willThrow(new RuntimeException());
+
+		mockMvc.perform(post("/account/remittance")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(remittanceRequestDto))
+				.with(csrf())
+				.characterEncoding("utf-8"))
+			.andExpect(status().isInternalServerError());
+	}
+
+	@Test
+	@DisplayName("컨트롤러 단에서 AccountException 발생 시 잡아서 잘 처리하는지 검증")
+	void accountExceptionFromController() throws Exception{
+		RemittanceRequestDto remittanceRequestDto = new RemittanceRequestDto(3288494829384L, 100000L);
+		given(accountService.chargeMain(any(RemittanceRequestDto.class))).willThrow(new AccountException(AccountErrCode.ACCOUNT_UNAVAILABLE));
+
+		mockMvc.perform(post("/account/remittance")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(remittanceRequestDto))
+				.with(csrf())
+				.characterEncoding("utf-8"))
+			.andExpect(status().isBadRequest());
+	}
+	@Test
+	@DisplayName("컨트롤러 단에서 validation 에러 발생 시 잡아서 잘 처리하는지 검증")
+	void accountValidationFromController() throws Exception{
+		RemittanceRequestDto remittanceRequestDto = new RemittanceRequestDto(null, 100000L);
+		mockMvc.perform(post("/account/remittance")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(objectMapper.writeValueAsString(remittanceRequestDto))
+				.with(csrf())
+				.characterEncoding("utf-8"))
+			.andExpect(status().isBadRequest());
 	}
 }
 
