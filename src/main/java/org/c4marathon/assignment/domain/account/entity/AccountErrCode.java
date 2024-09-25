@@ -18,6 +18,7 @@ public enum AccountErrCode {
 	ACCOUNT_NOT_FOUND(404, RemittanceResponseMsg.NOSUCHACCOUNT.getResponseMsg()),
 
 	ACCOUNT_CREATE_FAIL(500, CreateResponseMsg.FAIL.getResponseMsg()),
+	ACCOUNT_TOO_MANY_USER(500, RLockErrorMsg.TOO_MANY_USER.getResponseMsg()),
 	ACCOUNT_SERVER_ERROR(500, CreateResponseMsg.ACCOUNT_SERVER_ERROR.getResponseMsg());
 	private final int status;
 	private final String message;
