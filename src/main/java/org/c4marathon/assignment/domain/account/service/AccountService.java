@@ -108,9 +108,9 @@ public class AccountService {
 				accountRepository.save(account);				//조기 커밋을 통해 트랜잭션의 수명을 짧게 하여 락으로 인한 문제를 방지
 				return new RemittanceResponseDto(RemittanceResponseMsg.SUCCESS.getResponseMsg());
 			}
-			throw new AccountException(INVALID_ACCOUNT_TYPE);
+			throw new AccountException(ACCOUNT_TOO_MANY_USER);
 		} catch (InterruptedException e){
-			throw new RuntimeException();
+			throw new AccountException(ACCOUNT_SERVER_ERROR);
 		} finally {
 			if (lock.isHeldByCurrentThread()) {
 				lock.unlock();
@@ -188,9 +188,9 @@ public class AccountService {
 
 				return new RemittanceResponseDto(RemittanceResponseMsg.SUCCESS.getResponseMsg());
 			}
-			throw new AccountException(INVALID_ACCOUNT_TYPE);
+			throw new AccountException(ACCOUNT_TOO_MANY_USER);
 		} catch (InterruptedException e) {
-			throw new RuntimeException();
+			throw new AccountException(ACCOUNT_SERVER_ERROR);
 		} finally {
 			if (mainLock.isHeldByCurrentThread()) {
 				mainLock.unlock();
@@ -228,9 +228,9 @@ public class AccountService {
 
 				return new RemittanceResponseDto(RemittanceResponseMsg.SUCCESS.getResponseMsg());
 			}
-			throw new AccountException(INVALID_ACCOUNT_TYPE);
+			throw new AccountException(ACCOUNT_TOO_MANY_USER);
 		} catch (InterruptedException e) {
-			throw new RuntimeException();
+			throw new AccountException(ACCOUNT_SERVER_ERROR);
 		} finally {
 			if (mainLock.isHeldByCurrentThread()) {
 				mainLock.unlock();
