@@ -199,7 +199,7 @@ public class AccountService {
 	}
 
 	//메인계좌 간의 송금
-	@Transactional(isolation = Isolation.REPEATABLE_READ, timeout = 60)
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public RemittanceResponseDto remittanceOtherMain(RemittanceRequestDto remittanceRequestDto, HttpServletRequest httpServletRequest){
 		Long userId = getSessionId(httpServletRequest);
 		Account mainAccount = accountRepository.findMainAccount(userId, AccountRole.MAIN);
