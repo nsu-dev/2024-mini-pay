@@ -11,8 +11,8 @@ import org.c4marathon.assignment.account.domain.Account;
 import org.c4marathon.assignment.account.domain.AccountType;
 import org.c4marathon.assignment.account.dto.AccountMapper;
 import org.c4marathon.assignment.account.dto.request.ChargeRequestDto;
-import org.c4marathon.assignment.account.dto.request.SendRequestDto;
 import org.c4marathon.assignment.account.dto.request.SendToOthersRequestDto;
+import org.c4marathon.assignment.account.dto.request.SendToSavingAccountRequestDto;
 import org.c4marathon.assignment.account.dto.response.AccountResponseDto;
 import org.c4marathon.assignment.account.dto.response.ChargeResponseDto;
 import org.c4marathon.assignment.account.dto.response.SavingAccountResponseDto;
@@ -59,11 +59,13 @@ public class AccountService {
 	}
 
 	@Transactional(isolation = Isolation.SERIALIZABLE)
-	public SendResponseDto sendMoney(User user, SendRequestDto sendRequestDto) {
-		int sendToMoney = sendRequestDto.sendToMoney();
+	public SendResponseDto sendMoney(User user, SendToSavingAccountRequestDto sendToSavingAccountRequestDto) {
+		int sendToMoney = sendToSavingAccountRequestDto.sendToMoney();
 
-		Account toAccount = findAccount(sendRequestDto.toAccountId(), sendRequestDto.toAccountType());
-		Account fromAccount = findAccount(sendRequestDto.fromAccountId(), sendRequestDto.fromAccountType());
+		Account toAccount = findAccount(sendToSavingAccountRequestDto.toAccountId(),
+			sendToSavingAccountRequestDto.toAccountType());
+		Account fromAccount = findAccount(sendToSavingAccountRequestDto.fromAccountId(),
+			sendToSavingAccountRequestDto.fromAccountType());
 
 		if (!verifyAccountByUser(user, toAccount) || !verifyAccountByUser(user, fromAccount)) {
 			throw new BaseException(AccountErrorCode.NOT_AUTHORIZED_ACCOUNT);

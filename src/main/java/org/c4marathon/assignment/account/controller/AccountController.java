@@ -3,8 +3,8 @@ package org.c4marathon.assignment.account.controller;
 import java.util.List;
 
 import org.c4marathon.assignment.account.dto.request.ChargeRequestDto;
-import org.c4marathon.assignment.account.dto.request.SendRequestDto;
 import org.c4marathon.assignment.account.dto.request.SendToOthersRequestDto;
+import org.c4marathon.assignment.account.dto.request.SendToSavingAccountRequestDto;
 import org.c4marathon.assignment.account.dto.response.AccountResponseDto;
 import org.c4marathon.assignment.account.dto.response.ChargeResponseDto;
 import org.c4marathon.assignment.account.dto.response.SavingAccountResponseDto;
@@ -48,7 +48,7 @@ public class AccountController {
 	@PostMapping("/api/send")
 	public ResponseEntity<SendResponseDto> sendMoney(
 		@AuthenticationPrincipal User user,
-		@Valid @RequestBody SendRequestDto requestDto
+		@Valid @RequestBody SendToSavingAccountRequestDto requestDto
 	) {
 		SendResponseDto sendResponseDto = accountService.sendMoney(user, requestDto);
 		return ResponseEntity.ok(sendResponseDto);

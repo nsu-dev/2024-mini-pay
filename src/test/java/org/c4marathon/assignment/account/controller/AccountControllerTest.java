@@ -10,8 +10,8 @@ import java.util.List;
 import org.c4marathon.assignment.account.domain.Account;
 import org.c4marathon.assignment.account.domain.AccountType;
 import org.c4marathon.assignment.account.dto.request.ChargeRequestDto;
-import org.c4marathon.assignment.account.dto.request.SendRequestDto;
 import org.c4marathon.assignment.account.dto.request.SendToOthersRequestDto;
+import org.c4marathon.assignment.account.dto.request.SendToSavingAccountRequestDto;
 import org.c4marathon.assignment.common.fixture.AccountFixture;
 import org.c4marathon.assignment.common.fixture.UserFixture;
 import org.c4marathon.assignment.common.support.ApiTestSupport;
@@ -52,7 +52,7 @@ class AccountControllerTest extends ApiTestSupport {
 		Account savingAccount = AccountFixture.accountWithTypeAndAmount(loginUser, SAVING_ACCOUNT, 0);
 		accountRepository.saveAll(List.of(mainAccount, savingAccount));
 
-		SendRequestDto requestDto = new SendRequestDto(
+		SendToSavingAccountRequestDto requestDto = new SendToSavingAccountRequestDto(
 			mainAccount.getId(),
 			mainAccount.getType().getType(),
 			300_000,

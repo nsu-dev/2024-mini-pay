@@ -10,8 +10,8 @@ import java.util.Optional;
 
 import org.c4marathon.assignment.account.domain.Account;
 import org.c4marathon.assignment.account.dto.request.ChargeRequestDto;
-import org.c4marathon.assignment.account.dto.request.SendRequestDto;
 import org.c4marathon.assignment.account.dto.request.SendToOthersRequestDto;
+import org.c4marathon.assignment.account.dto.request.SendToSavingAccountRequestDto;
 import org.c4marathon.assignment.account.dto.response.AccountResponseDto;
 import org.c4marathon.assignment.account.dto.response.ChargeResponseDto;
 import org.c4marathon.assignment.account.dto.response.SavingAccountResponseDto;
@@ -74,7 +74,7 @@ class AccountServiceTest {
 		Account mainAccount = AccountFixture.accountWithTypeAndAmount(owner, MAIN_ACCOUNT, 600_000);
 		Account savingAccount = AccountFixture.accountWithTypeAndAmount(owner, SAVING_ACCOUNT, 0);
 
-		SendRequestDto requestDto = new SendRequestDto(
+		SendToSavingAccountRequestDto requestDto = new SendToSavingAccountRequestDto(
 			mainAccount.getId(),
 			MAIN_ACCOUNT.getType(),
 			300_000,
@@ -108,7 +108,7 @@ class AccountServiceTest {
 		Account mainAccount = AccountFixture.accountWithTypeAndAmount(owner, MAIN_ACCOUNT, 600_000);
 		Account savingAccount = AccountFixture.accountWithTypeAndAmount(owner, SAVING_ACCOUNT, 0);
 
-		SendRequestDto requestDto = new SendRequestDto(
+		SendToSavingAccountRequestDto requestDto = new SendToSavingAccountRequestDto(
 			mainAccount.getId(),
 			MAIN_ACCOUNT.getType(),
 			300_000,
@@ -138,7 +138,7 @@ class AccountServiceTest {
 		Account mainAccount = AccountFixture.accountWithTypeAndAmount(owner, MAIN_ACCOUNT, 200_000);
 		Account savingAccount = AccountFixture.accountWithTypeAndAmount(owner, SAVING_ACCOUNT, 0);
 
-		SendRequestDto requestDto = new SendRequestDto(
+		SendToSavingAccountRequestDto requestDto = new SendToSavingAccountRequestDto(
 			mainAccount.getId(),
 			MAIN_ACCOUNT.getType(),
 			300_000,
