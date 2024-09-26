@@ -61,8 +61,8 @@ public class AccountService {
 	public SendResponseDto sendMoney(User user, SendToSavingAccountRequestDto sendToSavingAccountRequestDto) {
 		int sendToMoney = sendToSavingAccountRequestDto.sendToMoney();
 
-		Account toAccount = findAccount(sendToSavingAccountRequestDto.toAccountId());
-		Account fromAccount = findAccount(sendToSavingAccountRequestDto.fromAccountId());
+		Account toAccount = getAccount(sendToSavingAccountRequestDto.toAccountId());
+		Account fromAccount = getAccount(sendToSavingAccountRequestDto.fromAccountId());
 
 		if (!verifyAccountByUser(user, toAccount) || !verifyAccountByUser(user, fromAccount)) {
 			throw new BaseException(AccountErrorCode.NOT_AUTHORIZED_ACCOUNT);
@@ -74,7 +74,7 @@ public class AccountService {
 		return AccountMapper.toSendResponseDto(toAccount, fromAccount);
 	}
 
-	private Account findAccount(Long accountId) {
+	private Account getAccount(Long accountId) {
 
 		return accountRepository.findById(accountId)
 			.orElseThrow(() -> new BaseException(AccountErrorCode.NOT_FOUND_ACCOUNT));
@@ -126,7 +126,7 @@ public class AccountService {
 
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public int withdrawal(User user, SendToOthersRequestDto requestDto) {
-		Account userAccount = findAccount(requestDto.accountId());
+		Account userAccount = getAccount(requestDto.accountId());
 
 		if (!verifyAccountByUser(user, userAccount)) {
 			throw new BaseException(AccountErrorCode.NOT_AUTHORIZED_ACCOUNT);
@@ -146,7 +146,7 @@ public class AccountService {
 		SendToOthersRequestDto requestDto
 	) {
 		try {
-			Account othersAccount = findAccount(othersAccountId);
+			Account othersAccount = getAccount(othersAccountId);
 
 			if (!verifyMainAccount(othersAccount)) {
 				throw new BaseException(AccountErrorCode.NOT_MAIN_ACCOUNT);
@@ -156,7 +156,7 @@ public class AccountService {
 
 			return AccountMapper.sendToOthersResponseDto(othersAccount.getUser(), sendToMoney);
 		} catch (Exception e) {
-			Account userAccount = findAccount(requestDto.accountId());
+			Account userAccount = getAccount(requestDto.accountId());
 			eventPublisher.publishEvent(new WithdrawalFailEvent(userAccount, requestDto.sendAmount()));
 			throw new BaseException(AccountErrorCode.FAILED_ACCOUNT_DEPOSIT);
 		}
