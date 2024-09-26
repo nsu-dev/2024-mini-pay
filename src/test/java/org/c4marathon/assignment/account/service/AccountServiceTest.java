@@ -76,15 +76,13 @@ class AccountServiceTest {
 
 		SendToSavingAccountRequestDto requestDto = new SendToSavingAccountRequestDto(
 			mainAccount.getId(),
-			MAIN_ACCOUNT.getType(),
 			300_000,
-			savingAccount.getId(),
-			SAVING_ACCOUNT.getType()
+			savingAccount.getId()
 		);
 
-		given(accountRepository.findByIdAndType(mainAccount.getId(), MAIN_ACCOUNT)).willReturn(
+		given(accountRepository.findById(mainAccount.getId())).willReturn(
 			Optional.of(mainAccount));
-		given(accountRepository.findByIdAndType(savingAccount.getId(), SAVING_ACCOUNT)).willReturn(
+		given(accountRepository.findById(savingAccount.getId())).willReturn(
 			Optional.of(savingAccount));
 
 		// when
@@ -110,15 +108,13 @@ class AccountServiceTest {
 
 		SendToSavingAccountRequestDto requestDto = new SendToSavingAccountRequestDto(
 			mainAccount.getId(),
-			MAIN_ACCOUNT.getType(),
 			300_000,
-			savingAccount.getId(),
-			SAVING_ACCOUNT.getType()
+			savingAccount.getId()
 		);
 
-		given(accountRepository.findByIdAndType(mainAccount.getId(), MAIN_ACCOUNT)).willReturn(
+		given(accountRepository.findById(mainAccount.getId())).willReturn(
 			Optional.of(mainAccount));
-		given(accountRepository.findByIdAndType(savingAccount.getId(), SAVING_ACCOUNT)).willReturn(
+		given(accountRepository.findById(savingAccount.getId())).willReturn(
 			Optional.of(savingAccount));
 
 		// when
@@ -140,15 +136,13 @@ class AccountServiceTest {
 
 		SendToSavingAccountRequestDto requestDto = new SendToSavingAccountRequestDto(
 			mainAccount.getId(),
-			MAIN_ACCOUNT.getType(),
 			300_000,
-			savingAccount.getId(),
-			SAVING_ACCOUNT.getType()
+			savingAccount.getId()
 		);
 
-		given(accountRepository.findByIdAndType(mainAccount.getId(), MAIN_ACCOUNT)).willReturn(
+		given(accountRepository.findById(mainAccount.getId())).willReturn(
 			Optional.of(mainAccount));
-		given(accountRepository.findByIdAndType(savingAccount.getId(), SAVING_ACCOUNT)).willReturn(
+		given(accountRepository.findById(savingAccount.getId())).willReturn(
 			Optional.of(savingAccount));
 
 		// when
@@ -289,7 +283,7 @@ class AccountServiceTest {
 			100_000
 		);
 
-		given(accountRepository.findByIdAndType(mainAccount.getId(), MAIN_ACCOUNT))
+		given(accountRepository.findById(mainAccount.getId()))
 			.willReturn(Optional.of(mainAccount));
 
 		// when
@@ -311,11 +305,11 @@ class AccountServiceTest {
 			100_000
 		);
 
-		given(accountRepository.findByIdAndType(mainAccount.getId(), MAIN_ACCOUNT))
+		given(accountRepository.findById(mainAccount.getId()))
 			.willReturn(Optional.of(mainAccount));
 
 		// when
-		accountService.deposit(owner.getId(), MAIN_ACCOUNT.getType(), 200_000, requestDto);
+		accountService.deposit(owner.getId(), 200_000, requestDto);
 
 		// then
 		assertThat(mainAccount.getAmount()).isEqualTo(500_000);
@@ -333,12 +327,12 @@ class AccountServiceTest {
 			100_000
 		);
 
-		given(accountRepository.findByIdAndType(any(), any()))
+		given(accountRepository.findById(any()))
 			.willReturn(Optional.of(mainAccount));
 
 		// when
 		BaseException baseException = assertThrows(BaseException.class,
-			() -> accountService.deposit(owner.getId(), mainAccount.getType().getType(), 200_000, requestDto));
+			() -> accountService.deposit(owner.getId(), 200_000, requestDto));
 
 		// then
 		verify(eventPublisher).publishEvent(any(WithdrawalFailEvent.class));
@@ -365,13 +359,13 @@ class AccountServiceTest {
 			100_000
 		);
 
-		given(accountRepository.findByIdAndType(mainAccountByOwner.getId(), MAIN_ACCOUNT))
+		given(accountRepository.findById(mainAccountByOwner.getId()))
 			.willReturn(Optional.of(mainAccountByOwner));
-		given(accountRepository.findByIdAndType(mainAccountByOthers.getId(), MAIN_ACCOUNT))
+		given(accountRepository.findById(mainAccountByOthers.getId()))
 			.willReturn(Optional.of(mainAccountByOthers));
 
 		// when
-		accountService.sendToOthers(others.getId(), mainAccountByOthers.getType().getType(), owner, requestDto);
+		accountService.sendToOthers(others.getId(), owner, requestDto);
 
 		// then
 		assertAll(

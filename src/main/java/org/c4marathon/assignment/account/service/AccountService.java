@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Objects;
 
 import org.c4marathon.assignment.account.domain.Account;
-import org.c4marathon.assignment.account.domain.AccountType;
 import org.c4marathon.assignment.account.dto.AccountMapper;
 import org.c4marathon.assignment.account.dto.request.ChargeRequestDto;
 import org.c4marathon.assignment.account.dto.request.SendToOthersRequestDto;
@@ -62,10 +61,8 @@ public class AccountService {
 	public SendResponseDto sendMoney(User user, SendToSavingAccountRequestDto sendToSavingAccountRequestDto) {
 		int sendToMoney = sendToSavingAccountRequestDto.sendToMoney();
 
-		Account toAccount = findAccount(sendToSavingAccountRequestDto.toAccountId(),
-			sendToSavingAccountRequestDto.toAccountType());
-		Account fromAccount = findAccount(sendToSavingAccountRequestDto.fromAccountId(),
-			sendToSavingAccountRequestDto.fromAccountType());
+		Account toAccount = findAccount(sendToSavingAccountRequestDto.toAccountId());
+		Account fromAccount = findAccount(sendToSavingAccountRequestDto.fromAccountId());
 
 		if (!verifyAccountByUser(user, toAccount) || !verifyAccountByUser(user, fromAccount)) {
 			throw new BaseException(AccountErrorCode.NOT_AUTHORIZED_ACCOUNT);
@@ -77,10 +74,9 @@ public class AccountService {
 		return AccountMapper.toSendResponseDto(toAccount, fromAccount);
 	}
 
-	private Account findAccount(Long accountId, String type) {
-		AccountType findAccountType = from(type);
+	private Account findAccount(Long accountId) {
 
-		return accountRepository.findByIdAndType(accountId, findAccountType)
+		return accountRepository.findById(accountId)
 			.orElseThrow(() -> new BaseException(AccountErrorCode.NOT_FOUND_ACCOUNT));
 	}
 
@@ -121,17 +117,16 @@ public class AccountService {
 
 	public SendToOthersResponseDto sendToOthers(
 		Long othersAccountId,
-		String othersAccountType,
 		User user,
 		SendToOthersRequestDto requestDto
 	) {
 		int sendToMoney = withdrawal(user, requestDto);
-		return deposit(othersAccountId, othersAccountType, sendToMoney, requestDto);
+		return deposit(othersAccountId, sendToMoney, requestDto);
 	}
 
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public int withdrawal(User user, SendToOthersRequestDto requestDto) {
-		Account userAccount = findAccount(requestDto.accountId(), requestDto.accountType());
+		Account userAccount = findAccount(requestDto.accountId());
 
 		if (!verifyAccountByUser(user, userAccount)) {
 			throw new BaseException(AccountErrorCode.NOT_AUTHORIZED_ACCOUNT);
@@ -143,12 +138,11 @@ public class AccountService {
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public SendToOthersResponseDto deposit(
 		Long othersAccountId,
-		String othersAccountType,
 		int sendToMoney,
 		SendToOthersRequestDto requestDto
 	) {
 		try {
-			Account othersAccount = findAccount(othersAccountId, othersAccountType);
+			Account othersAccount = findAccount(othersAccountId);
 
 			if (!verifyMainAccount(othersAccount)) {
 				throw new BaseException(AccountErrorCode.NOT_MAIN_ACCOUNT);
@@ -158,7 +152,7 @@ public class AccountService {
 
 			return AccountMapper.sendToOthersResponseDto(othersAccount.getUser(), sendToMoney);
 		} catch (Exception e) {
-			Account userAccount = findAccount(requestDto.accountId(), requestDto.accountType());
+			Account userAccount = findAccount(requestDto.accountId());
 			eventPublisher.publishEvent(new WithdrawalFailEvent(userAccount, requestDto.sendAmount()));
 			throw new BaseException(AccountErrorCode.FAILED_ACCOUNT_DEPOSIT);
 		}

@@ -63,16 +63,14 @@ public class AccountController {
 		return ResponseEntity.ok(chargeResponseDto);
 	}
 
-	@PostMapping("/api/send/{othersAccountId}/{othersAccountType}")
+	@PostMapping("/api/send/{othersAccountId}")
 	public ResponseEntity<SendToOthersResponseDto> sendToOthers(
 		@PathVariable("othersAccountId") Long othersAccountId,
-		@PathVariable("othersAccountType") String othersAccountType,
 		@AuthenticationPrincipal User user,
 		@Valid @RequestBody SendToOthersRequestDto requestDto
 	) {
 		SendToOthersResponseDto sendToOthersResponseDto = accountService.sendToOthers(
 			othersAccountId,
-			othersAccountType,
 			user,
 			requestDto
 		);
