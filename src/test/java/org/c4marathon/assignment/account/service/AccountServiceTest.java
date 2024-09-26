@@ -91,7 +91,7 @@ class AccountServiceTest {
 			Optional.of(savingAccount));
 
 		// when
-		SendToSavingAccountResponseDto responseDto = accountService.sendMoney(owner, requestDto);
+		SendToSavingAccountResponseDto responseDto = accountService.sendToSavingAccount(owner, requestDto);
 
 		// then
 		assertAll(
@@ -124,7 +124,7 @@ class AccountServiceTest {
 
 		// when
 		BaseException baseException = assertThrows(
-			BaseException.class, () -> accountService.sendMoney(others, requestDto)
+			BaseException.class, () -> accountService.sendToSavingAccount(others, requestDto)
 		);
 
 		// then
@@ -152,7 +152,7 @@ class AccountServiceTest {
 
 		// when
 		BaseException baseException = assertThrows(BaseException.class,
-			() -> accountService.sendMoney(owner, requestDto));
+			() -> accountService.sendToSavingAccount(owner, requestDto));
 
 		// then
 		assertThat(baseException.getMessage()).isEqualTo("계좌 금액이 충분하지 않습니다.");

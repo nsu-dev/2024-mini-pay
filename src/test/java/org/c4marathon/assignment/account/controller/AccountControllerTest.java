@@ -59,7 +59,7 @@ class AccountControllerTest extends ApiTestSupport {
 		);
 
 		// when		// then
-		mockMvc.perform(post("/api/send")
+		mockMvc.perform(post("/api/send-saving")
 				.header("Authorization", "Bearer " + token)
 				.content(toJson(requestDto))
 				.contentType(APPLICATION_JSON)

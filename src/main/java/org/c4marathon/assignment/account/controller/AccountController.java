@@ -45,12 +45,13 @@ public class AccountController {
 		return ResponseEntity.ok(accountResponseDto);
 	}
 
-	@PostMapping("/api/send")
-	public ResponseEntity<SendToSavingAccountResponseDto> sendMoney(
+	@PostMapping("/api/send-saving")
+	public ResponseEntity<SendToSavingAccountResponseDto> sendToSavingAccount(
 		@AuthenticationPrincipal User user,
 		@Valid @RequestBody SendToSavingAccountRequestDto requestDto
 	) {
-		SendToSavingAccountResponseDto sendToSavingAccountResponseDto = accountService.sendMoney(user, requestDto);
+		SendToSavingAccountResponseDto sendToSavingAccountResponseDto = accountService.sendToSavingAccount(user,
+			requestDto);
 		return ResponseEntity.ok(sendToSavingAccountResponseDto);
 	}
 

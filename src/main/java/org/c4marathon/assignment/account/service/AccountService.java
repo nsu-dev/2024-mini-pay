@@ -58,7 +58,7 @@ public class AccountService {
 	}
 
 	@Transactional(isolation = Isolation.SERIALIZABLE)
-	public SendToSavingAccountResponseDto sendMoney(User user,
+	public SendToSavingAccountResponseDto sendToSavingAccount(User user,
 		SendToSavingAccountRequestDto sendToSavingAccountRequestDto) {
 		int sendToMoney = sendToSavingAccountRequestDto.remittanceMoney();
 
