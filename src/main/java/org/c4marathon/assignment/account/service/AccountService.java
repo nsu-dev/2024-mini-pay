@@ -128,16 +128,36 @@ public class AccountService {
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public int withdrawal(User user, SendToOthersRequestDto requestDto) {
 		Account userAccount = getAccount(requestDto.accountId());
+		int subAmount = userAccount.getAmount() - requestDto.remittanceAmount();
 
 		if (!verifyAccountByUser(user, userAccount)) {
 			throw new BaseException(AccountErrorCode.NOT_AUTHORIZED_ACCOUNT);
 		}
 
 		if (!verifyMainAccount(userAccount)) {
-			throw new BaseException(AccountErrorCode.NOT_ACCESS_CHARGE);
+			throw new BaseException(AccountErrorCode.NOT_MAIN_ACCOUNT);
+		}
+
+		// 부족한 금액은 10_000 단위로 충전 한도 내에서 자동 충전
+		if (subAmount < 0) {
+			autoChargingAmount(userAccount, subAmount);
 		}
 
 		return userAccount.decreaseAmount(requestDto.remittanceAmount());
+	}
+
+	private void autoChargingAmount(Account userAccount, int subAmount) {
+		try {
+			verifyLastChargeDate(userAccount);
+			int chargeAmount = calculateChargingAmount(subAmount);
+			userAccount.chargeAmount(chargeAmount);
+		} catch (Exception e) {
+			throw new BaseException(AccountErrorCode.FAILED_AUTO_CHARGING);
+		}
+	}
+
+	private int calculateChargingAmount(int subAmount) {
+		return (Math.abs(subAmount) + 9_999) / 10_000 * 10_000;
 	}
 
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
