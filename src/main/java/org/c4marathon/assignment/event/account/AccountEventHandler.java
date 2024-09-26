@@ -40,5 +40,6 @@ public class AccountEventHandler {
 	public void cancelWithdrawal(WithdrawalFailEvent event) {
 		Account withdrawnAccount = event.getAccount();
 		withdrawnAccount.increaseAmount(event.getWithdrawnAmount());
+		// 비동기 시 UI 변경 등 여러가지 고려 및 변경해야될 사안들이 많아짐
 	}
 }
