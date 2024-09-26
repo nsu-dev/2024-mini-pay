@@ -5,6 +5,8 @@ import static org.c4marathon.assignment.account.domain.AccountType.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -274,7 +276,7 @@ class AccountServiceTest {
 		);
 	}
 
-	@DisplayName("[메인 계좌에서 요청 금액만큼 출금한다.]")
+	@DisplayName("[메인 계좌에서 송금 금액만큼 출금한다.]")
 	@Test
 	void withdrawal() {
 		// given
@@ -293,6 +295,103 @@ class AccountServiceTest {
 
 		// then
 		assertThat(mainAccount.getAmount()).isEqualTo(200_000);
+	}
+
+	@DisplayName("[송금 금액만큼 출금 할 때 자신의 계좌가 아니면 예외가 발생한다.]")
+	@Test
+	void withdrawalWithOwnerThrowException() {
+		// given
+		User owner = UserFixture.basicUser();
+		User others = UserFixture.others();
+		ReflectionTestUtils.setField(owner, "id", 1L);
+		ReflectionTestUtils.setField(others, "id", 2L);
+
+		Account mainAccount = AccountFixture.accountWithTypeAndAmount(others, MAIN_ACCOUNT, 300_000);
+		SendToOthersRequestDto requestDto = new SendToOthersRequestDto(
+			mainAccount.getId(),
+			100_000
+		);
+
+		given(accountRepository.findById(mainAccount.getId()))
+			.willReturn(Optional.of(mainAccount));
+
+		// when
+		BaseException baseException = assertThrows(BaseException.class,
+			() -> accountService.withdrawal(owner, requestDto));
+
+		// then
+		assertThat(baseException.getMessage()).isEqualTo("계좌 인출 권한이 없습니다.");
+	}
+
+	@DisplayName("[송금 금액만큼 출금 할 때 출금 계좌가 메인 계좌가 아니라면 예외가 발생한다.]")
+	@Test
+	void withdrawalWithMainAccountThrowException() {
+		// given
+		User owner = UserFixture.basicUser();
+		Account mainAccount = AccountFixture.accountWithTypeAndAmount(owner, SAVING_ACCOUNT, 300_000);
+		SendToOthersRequestDto requestDto = new SendToOthersRequestDto(
+			mainAccount.getId(),
+			100_000
+		);
+
+		given(accountRepository.findById(mainAccount.getId()))
+			.willReturn(Optional.of(mainAccount));
+
+		// when
+		BaseException baseException = assertThrows(BaseException.class,
+			() -> accountService.withdrawal(owner, requestDto));
+
+		// then
+		assertThat(baseException.getMessage()).isEqualTo("메인 계좌가 아닙니다.");
+	}
+
+	@DisplayName("[송금 금액만큼 출금 할 때 금액이 부족하면 한도 내에서 10,000 단위 자동 충전된다.]")
+	@Test
+	void withdrawalWithAutoCharging() {
+		// given
+		User owner = UserFixture.basicUser();
+		Account mainAccount = AccountFixture.accountWithTypeAndAmount(owner, MAIN_ACCOUNT, 300_000);
+		SendToOthersRequestDto requestDto = new SendToOthersRequestDto(
+			mainAccount.getId(),
+			400_000
+		);
+
+		given(accountRepository.findById(mainAccount.getId()))
+			.willReturn(Optional.of(mainAccount));
+
+		// when
+		int withdrawal = accountService.withdrawal(owner, requestDto);
+
+		// then
+		assertAll(
+			() -> assertThat(withdrawal).isEqualTo(400_000),
+			() -> assertThat(mainAccount.getAmount()).isEqualTo(0)
+		);
+	}
+
+	@DisplayName("[송금 금액만큼 출금 할 때 금액이 부족하여 자동 충전할 때 한도 초과라면 예외가 발생한다.]")
+	@Test
+	void AutoChargingWithLimitAmountThrowException() {
+		// given
+		User owner = UserFixture.basicUser();
+
+		Account mainAccount = AccountFixture.accountWithTypeAndAmount(owner, MAIN_ACCOUNT, 300_000);
+		ReflectionTestUtils.setField(mainAccount, "limitAmount", 99_999);
+		ReflectionTestUtils.setField(mainAccount, "lastChargeDate", LocalDate.now(ZoneId.of("Asia/Seoul")));
+
+		SendToOthersRequestDto requestDto = new SendToOthersRequestDto(
+			mainAccount.getId(),
+			400_000
+		);
+
+		given(accountRepository.findById(mainAccount.getId()))
+			.willReturn(Optional.of(mainAccount));
+
+		// when
+		BaseException baseException = assertThrows(BaseException.class,
+			() -> accountService.withdrawal(owner, requestDto));
+		// then
+		assertThat(baseException.getMessage()).isEqualTo("부족한 금액 충전을 실패했습니다.");
 	}
 
 	@DisplayName("[요청 금액만큼 메인 계좌에 입금한다.]")
