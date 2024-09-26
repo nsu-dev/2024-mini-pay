@@ -74,6 +74,9 @@ class AccountServiceTest {
 		Account mainAccount = AccountFixture.accountWithTypeAndAmount(owner, MAIN_ACCOUNT, 600_000);
 		Account savingAccount = AccountFixture.accountWithTypeAndAmount(owner, SAVING_ACCOUNT, 0);
 
+		ReflectionTestUtils.setField(mainAccount, "id", 1L);
+		ReflectionTestUtils.setField(savingAccount, "id", 2L);
+
 		SendToSavingAccountRequestDto requestDto = new SendToSavingAccountRequestDto(
 			mainAccount.getId(),
 			300_000,

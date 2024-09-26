@@ -54,10 +54,8 @@ class AccountControllerTest extends ApiTestSupport {
 
 		SendToSavingAccountRequestDto requestDto = new SendToSavingAccountRequestDto(
 			mainAccount.getId(),
-			mainAccount.getType().getType(),
 			300_000,
-			savingAccount.getId(),
-			savingAccount.getType().getType()
+			savingAccount.getId()
 		);
 
 		// when		// then
@@ -145,7 +143,7 @@ class AccountControllerTest extends ApiTestSupport {
 
 		// when		// then
 		mockMvc.perform(
-				post("/api/send/{othersAccountId}/{othersAccountType}", mainAccount2.getId(), MAIN_ACCOUNT.getType())
+				post("/api/send/{othersAccountId}", mainAccount2.getId())
 					.header("Authorization", "Bearer " + token)
 					.content(toJson(requestDto))
 					.contentType(APPLICATION_JSON)
