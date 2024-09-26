@@ -117,7 +117,7 @@ class AccountControllerTest extends ApiTestSupport {
 			)
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.accountId").value(mainAccount.getId()))
-			.andExpect(jsonPath("$.amount").value(mainAccount.getAmount() + 300_000))
+			.andExpect(jsonPath("$.chargedAmount").value(mainAccount.getAmount() + 300_000))
 			.andExpect(jsonPath("$.limitAmount").value(mainAccount.getLimitAmount() - 300_000)
 			);
 	}
@@ -137,7 +137,6 @@ class AccountControllerTest extends ApiTestSupport {
 
 		SendToOthersRequestDto requestDto = new SendToOthersRequestDto(
 			mainAccount1.getId(),
-			MAIN_ACCOUNT.getType(),
 			sendToAmount
 		);
 
@@ -150,7 +149,7 @@ class AccountControllerTest extends ApiTestSupport {
 			)
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.sendFromUserName").value(others.getName()))
-			.andExpect(jsonPath("$.amount").value(sendToAmount)
+			.andExpect(jsonPath("$.remittanceAmount").value(sendToAmount)
 			);
 	}
 }

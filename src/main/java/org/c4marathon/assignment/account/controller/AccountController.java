@@ -8,8 +8,8 @@ import org.c4marathon.assignment.account.dto.request.SendToSavingAccountRequestD
 import org.c4marathon.assignment.account.dto.response.AccountResponseDto;
 import org.c4marathon.assignment.account.dto.response.ChargeResponseDto;
 import org.c4marathon.assignment.account.dto.response.SavingAccountResponseDto;
-import org.c4marathon.assignment.account.dto.response.SendResponseDto;
 import org.c4marathon.assignment.account.dto.response.SendToOthersResponseDto;
+import org.c4marathon.assignment.account.dto.response.SendToSavingAccountResponseDto;
 import org.c4marathon.assignment.account.service.AccountService;
 import org.c4marathon.assignment.user.domain.User;
 import org.springframework.http.ResponseEntity;
@@ -46,12 +46,12 @@ public class AccountController {
 	}
 
 	@PostMapping("/api/send")
-	public ResponseEntity<SendResponseDto> sendMoney(
+	public ResponseEntity<SendToSavingAccountResponseDto> sendMoney(
 		@AuthenticationPrincipal User user,
 		@Valid @RequestBody SendToSavingAccountRequestDto requestDto
 	) {
-		SendResponseDto sendResponseDto = accountService.sendMoney(user, requestDto);
-		return ResponseEntity.ok(sendResponseDto);
+		SendToSavingAccountResponseDto sendToSavingAccountResponseDto = accountService.sendMoney(user, requestDto);
+		return ResponseEntity.ok(sendToSavingAccountResponseDto);
 	}
 
 	@PostMapping("/api/account/charge")

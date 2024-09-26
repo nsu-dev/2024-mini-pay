@@ -15,8 +15,8 @@ import org.c4marathon.assignment.account.dto.request.SendToSavingAccountRequestD
 import org.c4marathon.assignment.account.dto.response.AccountResponseDto;
 import org.c4marathon.assignment.account.dto.response.ChargeResponseDto;
 import org.c4marathon.assignment.account.dto.response.SavingAccountResponseDto;
-import org.c4marathon.assignment.account.dto.response.SendResponseDto;
 import org.c4marathon.assignment.account.dto.response.SendToOthersResponseDto;
+import org.c4marathon.assignment.account.dto.response.SendToSavingAccountResponseDto;
 import org.c4marathon.assignment.account.exception.AccountErrorCode;
 import org.c4marathon.assignment.account.repository.AccountRepository;
 import org.c4marathon.assignment.common.exception.runtime.BaseException;
@@ -58,8 +58,9 @@ public class AccountService {
 	}
 
 	@Transactional(isolation = Isolation.SERIALIZABLE)
-	public SendResponseDto sendMoney(User user, SendToSavingAccountRequestDto sendToSavingAccountRequestDto) {
-		int sendToMoney = sendToSavingAccountRequestDto.sendToMoney();
+	public SendToSavingAccountResponseDto sendMoney(User user,
+		SendToSavingAccountRequestDto sendToSavingAccountRequestDto) {
+		int sendToMoney = sendToSavingAccountRequestDto.remittanceMoney();
 
 		Account toAccount = getAccount(sendToSavingAccountRequestDto.toAccountId());
 		Account fromAccount = getAccount(sendToSavingAccountRequestDto.fromAccountId());
@@ -136,7 +137,7 @@ public class AccountService {
 			throw new BaseException(AccountErrorCode.NOT_ACCESS_CHARGE);
 		}
 
-		return userAccount.decreaseAmount(requestDto.sendAmount());
+		return userAccount.decreaseAmount(requestDto.remittanceAmount());
 	}
 
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
@@ -157,7 +158,7 @@ public class AccountService {
 			return AccountMapper.sendToOthersResponseDto(othersAccount.getUser(), sendToMoney);
 		} catch (Exception e) {
 			Account userAccount = getAccount(requestDto.accountId());
-			eventPublisher.publishEvent(new WithdrawalFailEvent(userAccount, requestDto.sendAmount()));
+			eventPublisher.publishEvent(new WithdrawalFailEvent(userAccount, requestDto.remittanceAmount()));
 			throw new BaseException(AccountErrorCode.FAILED_ACCOUNT_DEPOSIT);
 		}
 	}

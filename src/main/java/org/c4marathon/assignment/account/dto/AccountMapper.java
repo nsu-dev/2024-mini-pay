@@ -7,8 +7,8 @@ import org.c4marathon.assignment.account.domain.Account;
 import org.c4marathon.assignment.account.dto.response.AccountResponseDto;
 import org.c4marathon.assignment.account.dto.response.ChargeResponseDto;
 import org.c4marathon.assignment.account.dto.response.SavingAccountResponseDto;
-import org.c4marathon.assignment.account.dto.response.SendResponseDto;
 import org.c4marathon.assignment.account.dto.response.SendToOthersResponseDto;
+import org.c4marathon.assignment.account.dto.response.SendToSavingAccountResponseDto;
 import org.c4marathon.assignment.user.domain.User;
 
 import lombok.AccessLevel;
@@ -32,8 +32,8 @@ public class AccountMapper {
 			.collect(Collectors.toList());
 	}
 
-	public static SendResponseDto toSendResponseDto(Account toAccount, Account fromAccount) {
-		return new SendResponseDto(
+	public static SendToSavingAccountResponseDto toSendResponseDto(Account toAccount, Account fromAccount) {
+		return new SendToSavingAccountResponseDto(
 			toAccount.getId(),
 			toAccount.getType().getType(),
 			toAccount.getAmount(),

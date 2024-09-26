@@ -15,7 +15,7 @@ import org.c4marathon.assignment.account.dto.request.SendToSavingAccountRequestD
 import org.c4marathon.assignment.account.dto.response.AccountResponseDto;
 import org.c4marathon.assignment.account.dto.response.ChargeResponseDto;
 import org.c4marathon.assignment.account.dto.response.SavingAccountResponseDto;
-import org.c4marathon.assignment.account.dto.response.SendResponseDto;
+import org.c4marathon.assignment.account.dto.response.SendToSavingAccountResponseDto;
 import org.c4marathon.assignment.account.repository.AccountRepository;
 import org.c4marathon.assignment.common.exception.runtime.BaseException;
 import org.c4marathon.assignment.common.fixture.AccountFixture;
@@ -89,7 +89,7 @@ class AccountServiceTest {
 			Optional.of(savingAccount));
 
 		// when
-		SendResponseDto responseDto = accountService.sendMoney(owner, requestDto);
+		SendToSavingAccountResponseDto responseDto = accountService.sendMoney(owner, requestDto);
 
 		// then
 		assertAll(
@@ -173,7 +173,7 @@ class AccountServiceTest {
 		// then
 		assertAll(
 			() -> assertThat(responseDto.accountId()).isEqualTo(account.getId()),
-			() -> assertThat(responseDto.amount()).isEqualTo(600_000),
+			() -> assertThat(responseDto.chargedAmount()).isEqualTo(600_000),
 			() -> assertThat(responseDto.limitAmount()).isEqualTo(3_000_000 - requestDto.chargeAmount())
 		);
 	}
@@ -282,7 +282,6 @@ class AccountServiceTest {
 		Account mainAccount = AccountFixture.accountWithTypeAndAmount(owner, MAIN_ACCOUNT, 300_000);
 		SendToOthersRequestDto requestDto = new SendToOthersRequestDto(
 			mainAccount.getId(),
-			MAIN_ACCOUNT.getType(),
 			100_000
 		);
 
@@ -304,7 +303,6 @@ class AccountServiceTest {
 		Account mainAccount = AccountFixture.accountWithTypeAndAmount(owner, MAIN_ACCOUNT, 300_000);
 		SendToOthersRequestDto requestDto = new SendToOthersRequestDto(
 			mainAccount.getId(),
-			MAIN_ACCOUNT.getType(),
 			100_000
 		);
 
@@ -326,7 +324,6 @@ class AccountServiceTest {
 		Account mainAccount = AccountFixture.accountWithTypeAndAmount(owner, SAVING_ACCOUNT, 300_000);
 		SendToOthersRequestDto requestDto = new SendToOthersRequestDto(
 			mainAccount.getId(),
-			MAIN_ACCOUNT.getType(),
 			100_000
 		);
 
@@ -358,7 +355,6 @@ class AccountServiceTest {
 
 		SendToOthersRequestDto requestDto = new SendToOthersRequestDto(
 			mainAccountByOwner.getId(),
-			MAIN_ACCOUNT.getType(),
 			100_000
 		);
 
