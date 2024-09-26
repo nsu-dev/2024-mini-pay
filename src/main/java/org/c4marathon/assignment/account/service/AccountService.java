@@ -132,6 +132,10 @@ public class AccountService {
 			throw new BaseException(AccountErrorCode.NOT_AUTHORIZED_ACCOUNT);
 		}
 
+		if (!verifyMainAccount(userAccount)) {
+			throw new BaseException(AccountErrorCode.NOT_ACCESS_CHARGE);
+		}
+
 		return userAccount.decreaseAmount(requestDto.sendAmount());
 	}
 
