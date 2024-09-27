@@ -20,12 +20,12 @@ import org.c4marathon.assignment.domain.account.entity.RemittanceResponseMsg;
 import org.c4marathon.assignment.domain.account.entity.ScheduleCreateEvent;
 import org.c4marathon.assignment.domain.account.exception.AccountException;
 import org.c4marathon.assignment.domain.account.repository.AccountRepository;
+import org.c4marathon.assignment.domain.account.transaction.TransactionHandler;
 import org.c4marathon.assignment.domain.user.entity.User;
 import org.c4marathon.assignment.domain.user.exception.UserException;
 import org.c4marathon.assignment.domain.user.repository.UserRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
@@ -45,6 +45,7 @@ public class AccountService {
 
 	private final AccountRepository accountRepository;
 	private final UserRepository userRepository;
+	private final TransactionHandler transactionHandler;
 
 	//메인계좌 생성
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -89,13 +90,14 @@ public class AccountService {
 	}
 
 	//메인계좌 충전
-	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public RemittanceResponseDto chargeMain(RemittanceRequestDto remittanceRequestDto) {
 		Long accountNum = remittanceRequestDto.accountNum();
-		Account account = accountRepository.findByAccountNum(accountNum);
 		Long remittanceAmount = remittanceRequestDto.remittanceAmount();
-		validateCharge(account, remittanceAmount);
-		account.updateChargeAccount(remittanceAmount);
+		transactionHandler.runInRepeatableTransaction(() -> {
+			Account account = accountRepository.findByAccountNum(accountNum);
+			validateCharge(account, remittanceAmount);
+			account.updateChargeAccount(remittanceAmount);
+		});
 		return new RemittanceResponseDto(RemittanceResponseMsg.SUCCESS.getResponseMsg());
 	}
 
@@ -138,8 +140,7 @@ public class AccountService {
 		};
 	}
 
-	@Transactional(propagation = Propagation.NOT_SUPPORTED)
-	public void chargeAccountBalance(Account account, Long amount) {
+	private void chargeAccountBalance(Account account, Long amount) {
 		if (account.getAccountBalance() < amount) {
 			Long requiredAmount = calculateChargeBalance(account.getAccountBalance(), amount);
 			RemittanceRequestDto chargeRequest = new RemittanceRequestDto(account.getAccountNum(), requiredAmount);
@@ -152,40 +153,38 @@ public class AccountService {
 	}
 
 	//메인계좌에서 인출 후 적금계좌에 입금
-	@Transactional(isolation = Isolation.DEFAULT)
 	public RemittanceResponseDto savingRemittance(Long savingId, SavingRequestDto savingRequestDto,
 		HttpServletRequest httpServletRequest) {
 		Long userId = getSessionId(httpServletRequest);
 		User user = userRepository.findById(userId).orElseThrow(() -> new UserException(USER_NOT_FOUND));
-		Account mainAccount = accountRepository.findMainAccount(user.getUserId(), AccountRole.MAIN);
-		Account saving = accountRepository.findById(savingId)
-			.orElseThrow(NoSuchElementException::new); // 메인계좌는 공유자원이 될 가능성이 높지만 적금계좌는 아님
-
-		chargeAccountBalance(mainAccount, (long)savingRequestDto.amount());
-
-		mainAccount.updateSaving(mainAccount.getAccountBalance() - savingRequestDto.amount());
-		saving.updateSaving(saving.getAccountBalance() + savingRequestDto.amount());
+		transactionHandler.runInCommittedTransaction(() -> {
+			Account mainAccount = accountRepository.findMainAccount(user.getUserId(), AccountRole.MAIN);
+			Account saving = accountRepository.findById(savingId).orElseThrow(NoSuchElementException::new);
+			chargeAccountBalance(mainAccount, (long)savingRequestDto.amount());
+			mainAccount.updateSaving(mainAccount.getAccountBalance() - savingRequestDto.amount());
+			saving.updateSaving(saving.getAccountBalance() + savingRequestDto.amount());
+		});
 		return new RemittanceResponseDto(RemittanceResponseMsg.SUCCESS.getResponseMsg());
 	}
 
 	//메인계좌간의 거래
-	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public RemittanceResponseDto remittanceOtherMain(RemittanceRequestDto remittanceRequestDto,
 		HttpServletRequest httpServletRequest) {
 		Long userId = getSessionId(httpServletRequest);
-		Account mainAccount = accountRepository.findMainAccount(userId, AccountRole.MAIN);
 		Long receiveAccountNum = remittanceRequestDto.accountNum();
-		Account receiveAccount = accountRepository.findByAccountNum(receiveAccountNum);
-		if (!receiveAccount.getAccountRole().equals(AccountRole.MAIN)) {
-			throw new AccountException(AccountErrCode.NOT_MAIN_ACCOUNT);
-		}
 		Long remittanceAmount = remittanceRequestDto.remittanceAmount();
+		transactionHandler.runInRepeatableTransaction(() -> {
+			Account mainAccount = accountRepository.findMainAccount(userId, AccountRole.MAIN);
+			Account receiveAccount = accountRepository.findByAccountNum(receiveAccountNum);
+			if (!receiveAccount.getAccountRole().equals(AccountRole.MAIN)) {
+				throw new AccountException(AccountErrCode.NOT_MAIN_ACCOUNT);
+			}
+			validateCharge(receiveAccount, remittanceAmount);
+			chargeAccountBalance(mainAccount, remittanceAmount);
+			mainAccount.updateSaving(mainAccount.getAccountBalance() - remittanceAmount);
+			receiveAccount.updateChargeAccount(remittanceAmount);
+		});
 
-		validateCharge(receiveAccount, remittanceAmount);
-		chargeAccountBalance(mainAccount, remittanceAmount);
-
-		mainAccount.updateSaving(mainAccount.getAccountBalance() - remittanceAmount);
-		receiveAccount.updateChargeAccount(remittanceAmount);
 		return new RemittanceResponseDto(RemittanceResponseMsg.SUCCESS.getResponseMsg());
 	}
 
