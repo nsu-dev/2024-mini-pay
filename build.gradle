@@ -45,7 +45,6 @@ dependencies {
     testImplementation "org.junit.jupiter:junit-jupiter:5.8.1"
     implementation 'org.springframework.boot:spring-boot-starter-security'
     testImplementation 'org.springframework.security:spring-security-test'
-    implementation 'org.redisson:redisson-spring-boot-starter:3.27.0'
 }
 
 checkstyle {
@@ -60,6 +59,13 @@ tasks.named('test') {
 }
 
 jacocoTestReport {
+    classDirectories.setFrom(files(classDirectories.files.collect {
+        fileTree(dir: it, excludes: [
+                '**/*Application*',
+                '**/dto/**',
+                '**/config/**'
+        ])
+    }))
     reports {
         html.required = true
     }
