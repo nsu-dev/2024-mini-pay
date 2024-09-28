@@ -54,7 +54,7 @@ public class AccountService {
 		return false;
 	}
 
-	@Transactional(isolation = Isolation.REPEATABLE_READ)
+	@Transactional
 	public boolean craeteSavingAccount(String userId, SavingAccountPwDto savingAccountPwDto) {
 		Optional<User> userOptional = userRepository.findByUserId(userId);
 
@@ -75,27 +75,30 @@ public class AccountService {
 		}
 	}
 
-	@Transactional(isolation = Isolation.SERIALIZABLE)
-	public boolean sendSavingAccount(Long userId, SendDto sendDto) {
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
+	public boolean sendSavingAccount(String userId, SendDto sendDto) {
 		Optional<Account> optionalAccount = accountRepository.findByAccount(sendDto.accountNum());
-		Optional<Account> optionalMyAccount = accountRepository.findByMyAccount(sendDto.accountPw());
-		Optional<Account> mainAccount = accountRepository.findByUser_IdAndType(userId, AccountType.MAIN_ACCOUNT);
+		Optional<Account> mainAccount = accountRepository.findByMainAccount(userId, AccountType.MAIN_ACCOUNT);
 
 		optionalAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUNT_ACCOUNT));
-		optionalMyAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_MATCH_ACCOUNT));
 
 		Account main = mainAccount.get();
-		Account saving = optionalAccount.get();
-		int checkMoney = main.getAmount() - sendDto.sendMoney();
 
-		if (checkMoney > 0) {
-			main.reduceAmount(sendDto.sendMoney());
-			saving.increaseAmount(sendDto.sendMoney());
-			accountRepository.save(main);
-			accountRepository.save(saving);
-			return true;
+		if (main.getAccountPw() == sendDto.accountPw()) {
+			Account saving = optionalAccount.get();
+			int checkMoney = main.getAmount() - sendDto.sendMoney();
+
+			if (checkMoney > 0) {
+				main.reduceAmount(sendDto.sendMoney());
+				saving.increaseAmount(sendDto.sendMoney());
+				accountRepository.save(main);
+				accountRepository.save(saving);
+				return true;
+			} else {
+				throw new BaseException(MainAccountException.SHORT_MONEY);
+			}
 		} else {
-			throw new BaseException(MainAccountException.SHORT_MONEY);
+			throw new BaseException(NotFountAccountException.NOT_MATCH_ACCOUNT);
 		}
 	}
 }
