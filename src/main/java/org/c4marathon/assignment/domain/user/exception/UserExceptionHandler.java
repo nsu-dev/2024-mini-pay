@@ -36,7 +36,7 @@ public class UserExceptionHandler {
 		return getUserErrDto(USER_SERVER_ERROR);
 	}
 
-	public ResponseEntity<UserErrDto> getUserErrDto(UserErrCode errCode) {
+	private ResponseEntity<UserErrDto> getUserErrDto(UserErrCode errCode) {
 		return getUserErrDto(errCode, errCode.getMessage());
 	}
 
