@@ -45,7 +45,7 @@ public class AccountExceptionHandler {
 		HttpStatus httpStatus;
 		try {
 			httpStatus = HttpStatus.valueOf(errCode.getStatus());
-		} catch (IllegalAccessError e) {
+		} catch (IllegalArgumentException e) {
 			httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
 		}
 		AccountErrDto errDto = new AccountErrDto(
