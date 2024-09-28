@@ -48,7 +48,7 @@ public class AccountController {
 
 	// 적금 계좌 생성
 	@PostMapping("/account/create/{userId}")
-	public ResponseEntity<CommonResponse> CreateSavingsAccount(@PathVariable String userId,
+	public ResponseEntity<CommonResponse> CreateSavingsAccount(@PathVariable("userId") String userId,
 		@Valid @RequestBody SavingAccountPwDto savingAccountPwDto) {
 		boolean checkSaving = accountService.craeteSavingAccount(userId, savingAccountPwDto);
 
@@ -73,7 +73,7 @@ public class AccountController {
 
 	// 적금 계좌로 돈 송금
 	@PostMapping("/account/send/{userId}")
-	public ResponseEntity<CommonResponse> sendMoney(@PathVariable @RequestBody Long userId,
+	public ResponseEntity<CommonResponse> sendMoney(@PathVariable("userId") @RequestBody String userId,
 		@Valid @RequestBody SendDto sendDto) {
 		boolean checkSend = accountService.sendSavingAccount(userId, sendDto);
 
