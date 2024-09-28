@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 
+import java.util.Arrays;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -23,6 +24,7 @@ import org.c4marathon.assignment.domain.account.repository.AccountRepository;
 import org.c4marathon.assignment.domain.account.service.AccountService;
 import org.c4marathon.assignment.domain.account.transaction.TransactionHandler;
 import org.c4marathon.assignment.domain.user.entity.User;
+import org.c4marathon.assignment.domain.user.exception.UserException;
 import org.c4marathon.assignment.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -151,6 +153,23 @@ class AccountServiceTest {
 		assertThrows(AccountException.class, () -> accountService.chargeMain(remittanceRequestDto));
 	}
 
+	@DisplayName("송금액과 일일한도의 합이 한도초과 시 예외가 발생한다.")
+	@Test
+	void chargeValidateChargeErr() {
+		mainAccount = Account.builder()
+			.dailyChargeLimit(2500000)
+			.build();
+		RemittanceRequestDto remittanceRequestDto = new RemittanceRequestDto(3288494829384L, 1000000L);
+		given(accountRepository.findByAccountNum(anyLong())).willReturn(mainAccount);
+		doAnswer(invocation -> {
+			// 실제로 수행할 동작 정의
+			((TransactionHandler.Action)invocation.getArgument(0)).act();
+			return null;
+		}).when(transactionHandler).runInRepeatableTransaction(any());
+		//when //then
+		assertThrows(AccountException.class, () -> accountService.chargeMain(remittanceRequestDto));
+	}
+
 	@DisplayName("송금액이 일일한도 초과 시 충전은 실패한다.")
 	@Test
 	void chargeMainRemittanceAmountErr() {
@@ -187,6 +206,42 @@ class AccountServiceTest {
 		// then
 		then(accountRepository).should(times(1)).save(any(Account.class)); // 계좌 저장이 호출되었는지 검증
 		then(userRepository).should(times(1)).findById(userId); // userRepository에서 사용자 조회가 호출되었는지 검증
+	}
+
+	@DisplayName("적금계좌생성시 세션에 저장한 userId가 없는 경우 예외가 발생한다.")
+	@Test
+	void createAccountSavingsNotSessionId() {
+		// given
+		Long userId = 1L;
+		user = User.builder()
+			.userId(1L)
+			.userPhone("010-8337-6023")
+			.userName("조아빈")
+			.userBirth("20000604")
+			.userPassword("pw123")
+			.build();
+		// 모킹: 세션에서 userId가 반환되도록 설정
+		given(httpServletRequest.getSession(false)).willReturn(httpSession);
+		// when
+		// then
+		assertThrows(UserException.class, () -> accountService.createAccountOther("SAVINGS", httpServletRequest));
+	}
+
+	@DisplayName("적금계좌생성시 세션에 저장한 세션 자체가 없는 경우 예외가 발생한다.")
+	@Test
+	void createAccountSavingsNotSession() {
+		// given
+		user = User.builder()
+			.userId(1L)
+			.userPhone("010-8337-6023")
+			.userName("조아빈")
+			.userBirth("20000604")
+			.userPassword("pw123")
+			.build();
+
+		// when
+		// then
+		assertThrows(UserException.class, () -> accountService.createAccountOther("SAVINGS", httpServletRequest));
 	}
 
 	@DisplayName("메인계좌 외 계좌생성")
@@ -562,5 +617,21 @@ class AccountServiceTest {
 
 		assertThat(mainAccount.getAccountBalance()).isEqualTo(expectedMainBalance);
 		assertThat(receiveAccount.getAccountBalance()).isEqualTo(expectedReceiveBalance);
+	}
+
+	@Test
+	@DisplayName("모든 계좌의 한도가 초기화되는지 검증한다.")
+	void resetDailyCharge() {
+		Account account1 = mock(Account.class);
+		Account account2 = mock(Account.class);
+
+		// accountRepository.findAll() 메서드가 두 개의 Account를 반환하도록 모킹
+		given(accountRepository.findAll()).willReturn(Arrays.asList(account1, account2));
+
+		// 메서드 실행
+		accountService.resetDailyChargeLimit();
+
+		verify(account1, times(1)).updateDailyChargeLimit(0);
+		verify(account2, times(1)).updateDailyChargeLimit(0);
 	}
 }
