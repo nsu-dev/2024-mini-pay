@@ -14,9 +14,7 @@ import org.c4marathon.assignment.domain.user.dto.UserDto;
 import org.c4marathon.assignment.domain.user.entity.JoinResponseMsg;
 import org.c4marathon.assignment.domain.user.entity.LoginResponseMsg;
 import org.c4marathon.assignment.domain.user.entity.User;
-import org.c4marathon.assignment.domain.user.entity.UserErrCode;
 import org.c4marathon.assignment.domain.user.exception.UserException;
-import org.c4marathon.assignment.domain.user.exception.UserExceptionHandler;
 import org.c4marathon.assignment.domain.user.repository.UserRepository;
 import org.c4marathon.assignment.domain.user.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,11 +43,6 @@ public class UserServiceTest {
 
 	@Mock
 	private HttpSession httpSession;
-
-	@Mock
-	private UserErrCode mockUserErrCode;
-	@InjectMocks
-	private UserExceptionHandler userExceptionHandler;
 
 	@BeforeEach
 	void setup() {
