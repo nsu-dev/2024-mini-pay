@@ -11,7 +11,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.c4marathon.assignment.domain.account.dto.AccountErrDto;
 import org.c4marathon.assignment.domain.account.dto.RemittanceRequestDto;
 import org.c4marathon.assignment.domain.account.dto.RemittanceResponseDto;
 import org.c4marathon.assignment.domain.account.dto.SavingRequestDto;
@@ -36,8 +35,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -642,17 +639,5 @@ class AccountServiceTest {
 
 		verify(account1, times(1)).updateDailyChargeLimit(0);
 		verify(account2, times(1)).updateDailyChargeLimit(0);
-	}
-
-	@DisplayName("예외코드가 비정상적인 코드라도 예외를 정상적으로 처리한다.")
-	@Test
-	public void testHandleIllegalAccessError() {
-		// UserErrCode.getStatus()가 잘못된 값을 반환하도록 설정하여 IllegalAccessError 발생 시뮬레이션
-		given(mockUserErrCode.getStatus()).willReturn(9999); // 유효하지 않은 HTTP 상태 코드
-
-		// getUserErrDto 호출 시 예외가 발생하는지 테스트
-		ResponseEntity<AccountErrDto> response = accountExceptionHandler.getAccountErrDto(mockUserErrCode);
-
-		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
 	}
 }

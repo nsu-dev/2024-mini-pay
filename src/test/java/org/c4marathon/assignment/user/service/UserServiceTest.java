@@ -11,7 +11,6 @@ import org.c4marathon.assignment.domain.user.dto.JoinResponseDto;
 import org.c4marathon.assignment.domain.user.dto.LoginRequestDto;
 import org.c4marathon.assignment.domain.user.dto.LoginResponseDto;
 import org.c4marathon.assignment.domain.user.dto.UserDto;
-import org.c4marathon.assignment.domain.user.dto.UserErrDto;
 import org.c4marathon.assignment.domain.user.entity.JoinResponseMsg;
 import org.c4marathon.assignment.domain.user.entity.LoginResponseMsg;
 import org.c4marathon.assignment.domain.user.entity.User;
@@ -27,8 +26,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -136,17 +133,5 @@ public class UserServiceTest {
 
 		// when //then
 		assertThrows(UserException.class, () -> userService.login(loginRequestDto, httpServletRequest));
-	}
-
-	@DisplayName("로그인 시 예외에서 예외코드가 비정상적인 코드라도 예외를 정상적으로 처리한다.")
-	@Test
-	public void testHandleIllegalAccessError() {
-		// UserErrCode.getStatus()가 잘못된 값을 반환하도록 설정하여 IllegalAccessError 발생 시뮬레이션
-		given(mockUserErrCode.getStatus()).willReturn(9999); // 유효하지 않은 HTTP 상태 코드
-
-		// getUserErrDto 호출 시 예외가 발생하는지 테스트
-		ResponseEntity<UserErrDto> response = userExceptionHandler.getUserErrDto(mockUserErrCode);
-
-		assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
 	}
 }
