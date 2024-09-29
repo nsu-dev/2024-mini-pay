@@ -26,6 +26,7 @@ import org.c4marathon.assignment.domain.account.repository.AccountRepository;
 import org.c4marathon.assignment.domain.account.service.AccountService;
 import org.c4marathon.assignment.domain.account.transaction.TransactionHandler;
 import org.c4marathon.assignment.domain.user.entity.User;
+import org.c4marathon.assignment.domain.user.entity.UserErrCode;
 import org.c4marathon.assignment.domain.user.exception.UserException;
 import org.c4marathon.assignment.domain.user.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -139,7 +140,11 @@ class AccountServiceTest {
 			.build();
 		given(accountRepository.findByAccountNum(anyLong())).willReturn(mainAccount);
 		// when // then
-		assertThrows(AccountException.class, () -> accountService.chargeMain(remittanceRequestDto));
+		AccountException exception = assertThrows(AccountException.class,
+			() -> accountService.chargeMain(remittanceRequestDto));
+
+		// 발생한 예외의 메시지나 에러 코드 확인
+		assertEquals(AccountErrCode.ACCOUNT_UNAVAILABLE.getMessage(), exception.getAccountErrCode().getMessage());
 	}
 
 	@DisplayName("일일 한도 초과 시 충전은 실패한다.")
@@ -156,7 +161,12 @@ class AccountServiceTest {
 			return null;
 		}).when(transactionHandler).runInRepeatableTransaction(any());
 		//when //then
-		assertThrows(AccountException.class, () -> accountService.chargeMain(remittanceRequestDto));
+		AccountException exception = assertThrows(AccountException.class,
+			() -> accountService.chargeMain(remittanceRequestDto));
+
+		// 발생한 예외의 메시지나 에러 코드 확인
+		assertEquals(AccountErrCode.ACCOUNT_DALIYCHARGELIMIT_ERR.getMessage(),
+			exception.getAccountErrCode().getMessage());
 	}
 
 	@DisplayName("송금액과 일일한도의 합이 한도초과 시 예외가 발생한다.")
@@ -173,7 +183,12 @@ class AccountServiceTest {
 			return null;
 		}).when(transactionHandler).runInRepeatableTransaction(any());
 		//when //then
-		assertThrows(AccountException.class, () -> accountService.chargeMain(remittanceRequestDto));
+		AccountException exception = assertThrows(AccountException.class,
+			() -> accountService.chargeMain(remittanceRequestDto));
+
+		// 발생한 예외의 메시지나 에러 코드 확인
+		assertEquals(AccountErrCode.ACCOUNT_DALIYCHARGELIMIT_ERR.getMessage(),
+			exception.getAccountErrCode().getMessage());
 	}
 
 	@DisplayName("송금액이 일일한도 초과 시 충전은 실패한다.")
@@ -230,7 +245,9 @@ class AccountServiceTest {
 		given(httpServletRequest.getSession(false)).willReturn(httpSession);
 		// when
 		// then
-		assertThrows(UserException.class, () -> accountService.createAccountOther("SAVINGS", httpServletRequest));
+		UserException exception = assertThrows(UserException.class,
+			() -> accountService.createAccountOther("SAVINGS", httpServletRequest));
+		assertEquals(exception.getUserErrCode().getMessage(), UserErrCode.USER_SESSION_ERR.getMessage());
 	}
 
 	@DisplayName("적금계좌생성시 세션에 저장한 세션 자체가 없는 경우 예외가 발생한다.")
@@ -247,7 +264,9 @@ class AccountServiceTest {
 
 		// when
 		// then
-		assertThrows(UserException.class, () -> accountService.createAccountOther("SAVINGS", httpServletRequest));
+		UserException exception = assertThrows(UserException.class,
+			() -> accountService.createAccountOther("SAVINGS", httpServletRequest));
+		assertEquals(exception.getUserErrCode().getMessage(), UserErrCode.USER_SESSION_ERR.getMessage());
 	}
 
 	@DisplayName("메인계좌 외 계좌생성")
@@ -293,7 +312,9 @@ class AccountServiceTest {
 		given(accountRepository.existsByAccountNum(anyLong())).willReturn(false); // 계좌 중복 검사에서 중복이 없다고 설정
 
 		// when
-		assertThrows(AccountException.class, () -> accountService.createAccountOther("울랄라", httpServletRequest));
+		AccountException exception = assertThrows(AccountException.class,
+			() -> accountService.createAccountOther("울랄라", httpServletRequest));
+		assertEquals(exception.getAccountErrCode().getMessage(), AccountErrCode.INVALID_ACCOUNT_TYPE.getMessage());
 	}
 
 	@DisplayName("메인 계좌에서 적금 계좌로 송금 테스트")
@@ -416,7 +437,7 @@ class AccountServiceTest {
 
 	@DisplayName("메인계좌간의 거래")
 	@Test
-	void remittanceMainOther() throws InterruptedException {
+	void remittanceMainOther() {
 		// given
 		Long userId = 1L;
 		Long remittanceAmount = 100000L;
@@ -564,8 +585,9 @@ class AccountServiceTest {
 			return null;
 		}).when(transactionHandler).runInRepeatableTransaction(any());
 		// when //then
-		assertThrows(AccountException.class,
+		AccountException exception = assertThrows(AccountException.class,
 			() -> accountService.remittanceOtherMain(remittanceRequestDto, httpServletRequest));
+		assertEquals(exception.getAccountErrCode().getMessage(), AccountErrCode.NOT_MAIN_ACCOUNT.getMessage());
 	}
 
 	@Test
