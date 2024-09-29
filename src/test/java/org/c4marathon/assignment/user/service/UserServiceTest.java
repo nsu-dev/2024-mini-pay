@@ -14,6 +14,7 @@ import org.c4marathon.assignment.domain.user.dto.UserDto;
 import org.c4marathon.assignment.domain.user.entity.JoinResponseMsg;
 import org.c4marathon.assignment.domain.user.entity.LoginResponseMsg;
 import org.c4marathon.assignment.domain.user.entity.User;
+import org.c4marathon.assignment.domain.user.entity.UserErrCode;
 import org.c4marathon.assignment.domain.user.exception.UserException;
 import org.c4marathon.assignment.domain.user.repository.UserRepository;
 import org.c4marathon.assignment.domain.user.service.UserService;
@@ -72,7 +73,8 @@ public class UserServiceTest {
 		UserDto userDto = new UserDto("010-8337-6023", "조아빈", "20000604", "pw123");
 		given(userRepository.existsByUserPhone(userDto.userPhone())).willReturn(true);
 		// when //then
-		assertThrows(UserException.class, () -> userService.join(userDto)); // 반환된 결과 검증
+		UserException exception = assertThrows(UserException.class, () -> userService.join(userDto)); // 반환된 결과 검증
+		assertEquals(exception.getUserErrCode().getMessage(), UserErrCode.USER_DUPLICATED_FAIL.getMessage());
 	}
 
 	@DisplayName("로그인 시 일치하는 정보가 있다면 로그인은 성공하고 세션이 등록된다.")
@@ -108,7 +110,9 @@ public class UserServiceTest {
 		given(userRepository.findByUserPhone(anyString())).willReturn(Optional.empty());
 
 		//when //then
-		assertThrows(UserException.class, () -> userService.login(loginRequestDto, httpServletRequest));
+		UserException exception = assertThrows(UserException.class,
+			() -> userService.login(loginRequestDto, httpServletRequest));
+		assertEquals(exception.getUserErrCode().getMessage(), UserErrCode.USER_NOT_FOUND.getMessage());
 	}
 
 	@DisplayName("로그인 시 비밀번호가 일치하지 않다면 로그인 실패 예외가 발생한다.")
@@ -125,6 +129,8 @@ public class UserServiceTest {
 		given(passwordEncoder.matches(any(), any())).willReturn(Boolean.FALSE);
 
 		// when //then
-		assertThrows(UserException.class, () -> userService.login(loginRequestDto, httpServletRequest));
+		UserException exception = assertThrows(UserException.class,
+			() -> userService.login(loginRequestDto, httpServletRequest));
+		assertEquals(exception.getUserErrCode().getMessage(), UserErrCode.USER_LOGIN_FAIL.getMessage());
 	}
 }
