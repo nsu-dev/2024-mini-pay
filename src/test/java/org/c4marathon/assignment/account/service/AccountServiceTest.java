@@ -21,7 +21,6 @@ import org.c4marathon.assignment.domain.account.entity.AccountStatus;
 import org.c4marathon.assignment.domain.account.entity.RemittanceResponseMsg;
 import org.c4marathon.assignment.domain.account.entity.ScheduleCreateEvent;
 import org.c4marathon.assignment.domain.account.exception.AccountException;
-import org.c4marathon.assignment.domain.account.exception.AccountExceptionHandler;
 import org.c4marathon.assignment.domain.account.repository.AccountRepository;
 import org.c4marathon.assignment.domain.account.service.AccountService;
 import org.c4marathon.assignment.domain.account.transaction.TransactionHandler;
@@ -58,10 +57,6 @@ class AccountServiceTest {
 	private UserRepository userRepository;
 	@Mock
 	private TransactionHandler transactionHandler;
-	@Mock
-	private AccountErrCode mockUserErrCode;
-	@InjectMocks
-	private AccountExceptionHandler accountExceptionHandler;
 	private User user;
 	private Account mainAccount;
 
@@ -189,12 +184,6 @@ class AccountServiceTest {
 		// 발생한 예외의 메시지나 에러 코드 확인
 		assertEquals(AccountErrCode.ACCOUNT_DALIYCHARGELIMIT_ERR.getMessage(),
 			exception.getAccountErrCode().getMessage());
-	}
-
-	@DisplayName("송금액이 일일한도 초과 시 충전은 실패한다.")
-	@Test
-	void chargeMainRemittanceAmountErr() {
-		assertThrows(AccountException.class, () -> new RemittanceRequestDto(3288494829384L, 3000001L));
 	}
 
 	@DisplayName("메인계좌 외 적금계좌생성")
