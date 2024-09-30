@@ -16,6 +16,7 @@ import org.c4marathon.assignment.common.exception.BaseException;
 import org.c4marathon.assignment.user.domain.User;
 import org.c4marathon.assignment.user.exception.NotFoundException;
 import org.c4marathon.assignment.user.repository.UserRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -28,7 +29,10 @@ import lombok.RequiredArgsConstructor;
 public class AccountService {
 
 	private final AccountRepository accountRepository;
+
 	private final UserRepository userRepository;
+
+	private final ApplicationEventPublisher eventPublisher;
 	Long randomAccountNum = new Random().nextLong();
 
 	// 정각마다 일일한도 초기화 서비스
@@ -52,7 +56,7 @@ public class AccountService {
 
 			account.setAmount(chargeDto.chargeMoney());
 		} else {
-			throw new BaseException(NotFountAccountException.NOT_FOUND_ACCOUNT);
+			throw new BaseException(NotFountAccountException.NOT_FOUNT_ACCOUNT);
 		}
 	}
 
@@ -78,7 +82,8 @@ public class AccountService {
 		Optional<Account> optionalAccount = accountRepository.findByAccount(sendDto.accountNum());
 		Optional<Account> mainAccount = accountRepository.findByMainAccount(userId, AccountType.MAIN_ACCOUNT);
 
-		optionalAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUND_ACCOUNT));
+		optionalAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUNT_ACCOUNT));
+		mainAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUNT_MAIN_ACCOUNT));
 
 		Account main = mainAccount.get();
 
@@ -103,8 +108,8 @@ public class AccountService {
 		Optional<Account> optionalMyAccount = accountRepository.findByMainAccount(userId, AccountType.MAIN_ACCOUNT);
 		Optional<Account> optionalAccount = accountRepository.findByAccount(sendDto.accountNum());
 
-		optionalMyAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_MATCH_ACCOUNT));
-		optionalAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUND_ACCOUNT));
+		optionalMyAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUNT_MAIN_ACCOUNT));
+		optionalAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUNT_ACCOUNT));
 
 		Account mainAccount = optionalMyAccount.get();
 		Account otherAccount = optionalAccount.get();

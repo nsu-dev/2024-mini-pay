@@ -69,11 +69,14 @@ public class UserTest {
 		// given
 		JoinDto joinDto = new JoinDto("aaaa", "ab12", "홍길동", 1234);
 
-		// when, then
+		// when
 		mockMvc.perform(post("/user/join")
 				.content(toJson(joinDto))
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk());
+
+		// then
+		verify(userRepository).save(any(User.class));
 	}
 
 	@DisplayName("[회원가입 성공시 메인계좌 생성 테스트]")
@@ -83,7 +86,7 @@ public class UserTest {
 		JoinDto joinDto = new JoinDto("aaaa", "a1234", "홍길동", 1234);
 
 		// Mocking userRepository to return the user when searching by userId
-		given(userRepository.findByUserId("aaaa")).willReturn(Optional.empty()); // User가 없다고 가정
+		given(userRepository.findByUserId(joinDto.userId())).willReturn(Optional.empty());
 
 		// when
 		mockMvc.perform(post("/user/join")
@@ -100,15 +103,14 @@ public class UserTest {
 		verify(accountRepository).save(any(Account.class));
 	}
 
-
 	@DisplayName("[회원가입 중 아이디 중복으로 인한 예외 발생]")
 	@Test
-	void joinTestExceptionByUserId() throws Exception{
+	void joinTestExceptionByUserId() throws Exception {
 		// given
 		JoinDto joinDto = new JoinDto("aaaa", "ab12", "홍길동", 1234);
 
 		User user = new User("aaaa", "a1234", "홍길동", 1234);
-		given(userRepository.findByUserId("aaaa")).willReturn(Optional.of(user));
+		given(userRepository.findByUserId(user.getUserId())).willReturn(Optional.of(user));
 
 		// when, then
 		mockMvc.perform(post("/user/join")
@@ -125,18 +127,20 @@ public class UserTest {
 		LoginDto loginDto = new LoginDto("abcd", "a1234");
 
 		User user = new User("abcd", "a1234", "홍길동", 1234);
-		given(userRepository.findByUserId("abcd")).willReturn(Optional.of(user));
+		given(userRepository.findByUserId(user.getUserId())).willReturn(Optional.of(user));
 
 		// when, then
 		mockMvc.perform(post("/user/login")
 				.content(toJson(loginDto))
 				.contentType(MediaType.APPLICATION_JSON))
-			.andExpect(status().isOk());
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.message").value("로그인 성공"))
+			.andExpect(jsonPath("$.data").isNotEmpty());
 	}
 
 	@DisplayName("[로그인 중 아이디를 찾을 수 없음으로 인한 예외 발생]")
 	@Test
-	void loginTestExceptionByUserId() throws Exception{
+	void loginTestExceptionByUserId() throws Exception {
 		// given
 		LoginDto loginDto = new LoginDto("abcd", "a1234");
 
@@ -152,12 +156,12 @@ public class UserTest {
 
 	@DisplayName("[로그인 중 비밀번호를 찾을 수 없음으로 인한 예외 발생]")
 	@Test
-	void loginTestExceptionByUserPw() throws Exception{
+	void loginTestExceptionByUserPw() throws Exception {
 		// given
 		LoginDto loginDto = new LoginDto("abcd", "a12");
 
 		User user = new User("abcd", "a1234", "홍길동", 1234);
-		given(userRepository.findByUserId("abcd")).willReturn(Optional.of(user));
+		given(userRepository.findByUserId(loginDto.userId())).willReturn(Optional.of(user));
 
 		// when, then
 		mockMvc.perform(post("/user/login")
