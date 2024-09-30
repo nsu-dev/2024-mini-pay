@@ -1,14 +1,23 @@
 package org.c4marathon.assignment.domain.user.entity;
 
-import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.c4marathon.assignment.domain.account.entity.account.Account;
+import org.c4marathon.assignment.domain.account.entity.settlement.Settlement_User;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.c4marathon.assignment.domain.account.entity.Account;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
@@ -33,6 +42,9 @@ public class User {
 
 	@OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE)
 	private List<Account> accountList = new ArrayList<>();
+
+	@OneToMany(mappedBy = "user")
+	private List<Settlement_User> settlementUserList = new ArrayList<>();
 
 	@Builder
 	private User(String userPhone, String userPassword, String userName, String userBirth) {
