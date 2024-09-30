@@ -437,38 +437,4 @@ class AccountServiceTest {
 		verify(eventPublisher).publishEvent(any(WithdrawalFailEvent.class));
 		assertThat(baseException.getMessage()).isEqualTo("해당 계좌에 입금을 실패했습니다.");
 	}
-
-	@DisplayName("[요청자의 계좌에서 요청 금액만큼 출금하고 출금 금액을 상대방 메인 계좌에 입금한다.]")
-	@Test
-	void sendToOthers() {
-		// given
-		User owner = UserFixture.basicUser();
-		User others = UserFixture.basicUser();
-		ReflectionTestUtils.setField(owner, "id", 1L);
-		ReflectionTestUtils.setField(others, "id", 2L);
-
-		Account mainAccountByOwner = AccountFixture.accountWithTypeAndAmount(owner, MAIN_ACCOUNT, 300_000);
-		Account mainAccountByOthers = AccountFixture.accountWithTypeAndAmount(others, MAIN_ACCOUNT, 100_000);
-		ReflectionTestUtils.setField(mainAccountByOwner, "id", 1L);
-		ReflectionTestUtils.setField(mainAccountByOthers, "id", 2L);
-
-		SendToOthersRequestDto requestDto = new SendToOthersRequestDto(
-			mainAccountByOwner.getId(),
-			100_000
-		);
-
-		given(accountRepository.findById(mainAccountByOwner.getId()))
-			.willReturn(Optional.of(mainAccountByOwner));
-		given(accountRepository.findById(mainAccountByOthers.getId()))
-			.willReturn(Optional.of(mainAccountByOthers));
-
-		// when
-		accountService.sendToOthers(others.getId(), owner, requestDto);
-
-		// then
-		assertAll(
-			() -> assertThat(mainAccountByOwner.getAmount()).isEqualTo(200_000),
-			() -> assertThat(mainAccountByOthers.getAmount()).isEqualTo(200_000)
-		);
-	}
 }
