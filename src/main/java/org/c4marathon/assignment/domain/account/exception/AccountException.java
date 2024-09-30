@@ -1,6 +1,6 @@
 package org.c4marathon.assignment.domain.account.exception;
 
-import org.c4marathon.assignment.domain.account.entity.AccountErrCode;
+import org.c4marathon.assignment.domain.account.entity.responseMsg.AccountErrCode;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

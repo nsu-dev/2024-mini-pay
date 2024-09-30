@@ -1,13 +1,10 @@
 package org.c4marathon.assignment.domain.account.repository;
 
-import org.c4marathon.assignment.domain.account.entity.Account;
-import org.c4marathon.assignment.domain.account.entity.AccountRole;
+import org.c4marathon.assignment.domain.account.entity.account.Account;
+import org.c4marathon.assignment.domain.account.entity.account.AccountRole;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
-import jakarta.persistence.LockModeType;
 
 public interface AccountRepository extends JpaRepository<Account, Long> {
 	boolean existsByAccountNum(Long accountNum);

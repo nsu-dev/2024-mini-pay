@@ -1,13 +1,13 @@
 package org.c4marathon.assignment.domain.account.exception;
 
-import static org.c4marathon.assignment.domain.account.entity.AccountErrCode.*;
+import static org.c4marathon.assignment.domain.account.entity.responseMsg.AccountErrCode.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.c4marathon.assignment.domain.account.controller.AccountController;
 import org.c4marathon.assignment.domain.account.dto.response.AccountErrDto;
-import org.c4marathon.assignment.domain.account.entity.AccountErrCode;
+import org.c4marathon.assignment.domain.account.entity.responseMsg.AccountErrCode;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
