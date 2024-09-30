@@ -1,4 +1,6 @@
-package org.c4marathon.assignment.domain.account.entity;
+package org.c4marathon.assignment.domain.account.entity.responseMsg;
+
+import org.c4marathon.assignment.domain.account.entity.account.AccountStatus;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
