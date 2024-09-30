@@ -37,7 +37,7 @@ public class Settlement {
 	@Enumerated(STRING)
 	private SettlementStatus settlementStatus;
 	@OneToMany(mappedBy = "settlement")
-	private List<Settlement_User> settlementUserList = new ArrayList<>();
+	private List<SettlementUser> settlementUserList = new ArrayList<>();
 
 	@Builder
 	private Settlement(Long totalAmount, SettlementType settlementType, int numberOfUsers,
