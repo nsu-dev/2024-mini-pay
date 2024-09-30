@@ -14,6 +14,8 @@ import org.c4marathon.assignment.account.exception.NotFountAccountException;
 import org.c4marathon.assignment.account.repository.AccountRepository;
 import org.c4marathon.assignment.common.exception.BaseException;
 import org.c4marathon.assignment.user.domain.User;
+import org.c4marathon.assignment.user.exception.LoginException;
+import org.c4marathon.assignment.user.exception.NotFoundException;
 import org.c4marathon.assignment.user.repository.UserRepository;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -40,7 +42,7 @@ public class AccountService {
 	}
 
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
-	public boolean chargeMainAccount(ChargeDto chargeDto) {
+	public void chargeMainAccount(ChargeDto chargeDto) {
 
 		Optional<Account> optionalAccount = accountRepository.findByAccount(chargeDto.accountNum());
 
@@ -48,14 +50,13 @@ public class AccountService {
 			Account account = optionalAccount.get();
 
 			account.setAmount(chargeDto.chargeMoney());
-			return true;
+		}else {
+			throw new BaseException(NotFountAccountException.NOT_FOUNT_ACCOUNT);
 		}
-
-		return false;
 	}
 
 	@Transactional
-	public boolean craeteSavingAccount(String userId, SavingAccountPwDto savingAccountPwDto) {
+	public void craeteSavingAccount(String userId, SavingAccountPwDto savingAccountPwDto) {
 		Optional<User> userOptional = userRepository.findByUserId(userId);
 
 		if (userOptional.isPresent()) {
@@ -69,14 +70,13 @@ public class AccountService {
 				.build();
 
 			accountRepository.save(account);
-			return true;
 		} else {
-			return false;
+			throw new BaseException(NotFoundException.NOT_FOUND_USER);
 		}
 	}
 
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
-	public boolean sendSavingAccount(String userId, SendDto sendDto) {
+	public void sendSavingAccount(String userId, SendDto sendDto) {
 		Optional<Account> optionalAccount = accountRepository.findByAccount(sendDto.accountNum());
 		Optional<Account> mainAccount = accountRepository.findByMainAccount(userId, AccountType.MAIN_ACCOUNT);
 
@@ -93,7 +93,6 @@ public class AccountService {
 				saving.increaseAmount(sendDto.sendMoney());
 				accountRepository.save(main);
 				accountRepository.save(saving);
-				return true;
 			} else {
 				throw new BaseException(MainAccountException.SHORT_MONEY);
 			}
