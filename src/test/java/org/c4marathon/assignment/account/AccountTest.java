@@ -67,11 +67,46 @@ public class AccountTest {
 
 		given(accountRepository.findByAccount(12345678L)).willReturn(Optional.of(mainAccount));
 
-		// 메인 계좌 가져오기
-		Optional<Account> account = accountRepository.findByAccount(12345678L);
+		// given: 충전할 계좌 번호와 금액
+		ChargeDto chargeDto = new ChargeDto(12345678L, 10000);
+
+		// when, then: 해당 계좌에 충전 테스트 수행
+		mockMvc.perform(post("/account/charge")
+				.content(toJson(chargeDto))
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk());
+	}
+
+	@DisplayName("[메인 계좌 충전시 한도 초과 예외처리 테스트]")
+	@Test
+	void chargeExceptionOverMoneyTest() throws Exception {
+		// 회원가입 후 계좌 생성
+		User user = new User("user123", "password", "홍길동", 1234);
+		Account mainAccount = new Account(12345678L, AccountType.MAIN_ACCOUNT, 0, 1234, 3000000, user);
+
+		given(accountRepository.findByAccount(12345678L)).willReturn(Optional.of(mainAccount));
 
 		// given: 충전할 계좌 번호와 금액
-		ChargeDto chargeDto = new ChargeDto(account.get().getAccountNum(), 10000);
+		ChargeDto chargeDto = new ChargeDto(12345678L, 3000001);
+
+		// when, then: 해당 계좌에 충전 테스트 수행
+		mockMvc.perform(post("/account/charge")
+				.content(toJson(chargeDto))
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk());
+	}
+
+	@DisplayName("[메인 계좌 충전시 계좌 번호 불일치 예외처리 테스트]")
+	@Test
+	void chargeExceptionNotMatchAccount() throws Exception {
+		// 회원가입 후 계좌 생성
+		User user = new User("user123", "password", "홍길동", 1234);
+		Account mainAccount = new Account(12345678L, AccountType.MAIN_ACCOUNT, 0, 1234, 3000000, user);
+
+		given(accountRepository.findByAccount(12345678L)).willReturn(Optional.of(mainAccount));
+
+		// given: 충전할 계좌 번호와 금액
+		ChargeDto chargeDto = new ChargeDto(123456L, 10000);
 
 		// when, then: 해당 계좌에 충전 테스트 수행
 		mockMvc.perform(post("/account/charge")
@@ -121,6 +156,66 @@ public class AccountTest {
 		given(accountRepository.findByAccount(11111111L)).willReturn(Optional.of(savingAccount));
 
 		SendDto sendDto = new SendDto(11111111L, 5000, 1234);
+
+		// when, then
+		mockMvc.perform(post("/account/send/{userId}", user.getUserId())
+				.content(toJson(sendDto))
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk());
+	}
+
+	@DisplayName("[적금 계좌 송금시 송금액이 잔액보다 높을 때 예외처리 테스트]")
+	@Test
+	void sendToSavingExceptionByShortMainAccountMoneyTest() throws Exception {
+
+		// given
+		// 회원가입
+		User user = new User("user123", "password", "홍길동", 1234);
+
+		given(userRepository.findByUserId("user123")).willReturn(Optional.of(user));
+
+		// 메인 계좌 생성
+		Account mainAccount = new Account(12345678L, AccountType.MAIN_ACCOUNT, 10000, 1234, 3000000, user);
+
+		given(accountRepository.findByMainAccount(user.getUserId(), AccountType.MAIN_ACCOUNT)).willReturn(
+			Optional.of(mainAccount));
+
+		// 적금 계좌 생성
+		Account savingAccount = new Account(11111111L, AccountType.SAVING_ACCOUNT, 0, 1111, 3000000, user);
+
+		given(accountRepository.findByAccount(11111111L)).willReturn(Optional.of(savingAccount));
+
+		SendDto sendDto = new SendDto(11111111L, 15000, 1234);
+
+		// when, then
+		mockMvc.perform(post("/account/send/{userId}", user.getUserId())
+				.content(toJson(sendDto))
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk());
+	}
+
+	@DisplayName("[적금 계좌 송금시 계좌 비밀번호 불일치 예외처리 테스트]")
+	@Test
+	void sendToSavingExceptionByNotMatchAccountPwTest() throws Exception {
+
+		// given
+		// 회원가입
+		User user = new User("user123", "password", "홍길동", 1234);
+
+		given(userRepository.findByUserId("user123")).willReturn(Optional.of(user));
+
+		// 메인 계좌 생성
+		Account mainAccount = new Account(12345678L, AccountType.MAIN_ACCOUNT, 10000, 1234, 3000000, user);
+
+		given(accountRepository.findByMainAccount(user.getUserId(), AccountType.MAIN_ACCOUNT)).willReturn(
+			Optional.of(mainAccount));
+
+		// 적금 계좌 생성
+		Account savingAccount = new Account(11111111L, AccountType.SAVING_ACCOUNT, 0, 1111, 3000000, user);
+
+		given(accountRepository.findByAccount(11111111L)).willReturn(Optional.of(savingAccount));
+
+		SendDto sendDto = new SendDto(11111111L, 5000, 1111);
 
 		// when, then
 		mockMvc.perform(post("/account/send/{userId}", user.getUserId())
