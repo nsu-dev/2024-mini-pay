@@ -30,7 +30,7 @@ public class Account {
 	@Column(name = "account_id")
 	private Long id;
 
-	@Column(name = "accountNumber", nullable = false, unique = true)
+	@Column(name = "accountNum", nullable = false, unique = true)
 	private Long accountNum;
 
 	@Enumerated(EnumType.STRING)
