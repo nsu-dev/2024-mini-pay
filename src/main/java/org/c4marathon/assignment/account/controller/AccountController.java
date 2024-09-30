@@ -4,7 +4,7 @@ import org.c4marathon.assignment.account.dto.ChargeDto;
 import org.c4marathon.assignment.account.dto.SavingAccountPwDto;
 import org.c4marathon.assignment.account.dto.SendDto;
 import org.c4marathon.assignment.account.service.AccountService;
-import org.c4marathon.assignment.config.CommonResponse;
+import org.c4marathon.assignment.common.config.CommonResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,75 +25,45 @@ public class AccountController {
 	@PostMapping("/account/charge")
 	public ResponseEntity<CommonResponse> chargingMoney(@Valid @RequestBody ChargeDto chargeDto) {
 
-		boolean checkCharge = accountService.chargeMainAccount(chargeDto);
+		accountService.chargeMainAccount(chargeDto);
 
-		if (checkCharge) {
-			CommonResponse res = new CommonResponse(
-				200,
-				HttpStatus.OK,
-				"충전 성공",
-				null
-			);
-			return new ResponseEntity<>(res, res.getHttpStatus());
-		} else {
-			CommonResponse res = new CommonResponse(
-				400,
-				HttpStatus.BAD_REQUEST,
-				"충전 실패",
-				null
-			);
-			return new ResponseEntity<>(res, res.getHttpStatus());
-		}
+		CommonResponse res = new CommonResponse(
+			200,
+			HttpStatus.OK,
+			"충전 성공",
+			null
+		);
+		return new ResponseEntity<>(res, res.getHttpStatus());
 	}
 
 	// 적금 계좌 생성
 	@PostMapping("/account/create/{userId}")
 	public ResponseEntity<CommonResponse> CreateSavingsAccount(@PathVariable("userId") String userId,
 		@Valid @RequestBody SavingAccountPwDto savingAccountPwDto) {
-		boolean checkSaving = accountService.craeteSavingAccount(userId, savingAccountPwDto);
+		accountService.craeteSavingAccount(userId, savingAccountPwDto);
 
-		if (checkSaving) {
-			CommonResponse res = new CommonResponse(
-				200,
-				HttpStatus.OK,
-				"적금계좌 생성완료",
-				null
-			);
-			return new ResponseEntity<>(res, res.getHttpStatus());
-		} else {
-			CommonResponse res = new CommonResponse(
-				400,
-				HttpStatus.BAD_REQUEST,
-				"적금계좌 생성실패",
-				null
-			);
-			return new ResponseEntity<>(res, res.getHttpStatus());
-		}
+		CommonResponse res = new CommonResponse(
+			200,
+			HttpStatus.OK,
+			"적금계좌 생성완료",
+			null
+		);
+		return new ResponseEntity<>(res, res.getHttpStatus());
 	}
 
 	// 적금 계좌로 돈 송금
 	@PostMapping("/account/send/{userId}")
 	public ResponseEntity<CommonResponse> sendMoney(@PathVariable("userId") @RequestBody String userId,
 		@Valid @RequestBody SendDto sendDto) {
-		boolean checkSend = accountService.sendSavingAccount(userId, sendDto);
+		accountService.sendSavingAccount(userId, sendDto);
 
-		if (checkSend) {
-			CommonResponse res = new CommonResponse(
-				200,
-				HttpStatus.OK,
-				"송금완료",
-				null
-			);
-			return new ResponseEntity<>(res, res.getHttpStatus());
-		} else {
-			CommonResponse res = new CommonResponse(
-				400,
-				HttpStatus.BAD_REQUEST,
-				"송금실패",
-				null
-			);
-			return new ResponseEntity<>(res, res.getHttpStatus());
-		}
+		CommonResponse res = new CommonResponse(
+			200,
+			HttpStatus.OK,
+			"송금완료",
+			null
+		);
+		return new ResponseEntity<>(res, res.getHttpStatus());
 	}
 
 }
