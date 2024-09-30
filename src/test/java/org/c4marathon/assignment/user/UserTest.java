@@ -69,11 +69,14 @@ public class UserTest {
 		// given
 		JoinDto joinDto = new JoinDto("aaaa", "ab12", "홍길동", 1234);
 
-		// when, then
+		// when
 		mockMvc.perform(post("/user/join")
 				.content(toJson(joinDto))
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk());
+
+		// then
+		verify(userRepository).save(any(User.class));
 	}
 
 	@DisplayName("[회원가입 성공시 메인계좌 생성 테스트]")
@@ -100,10 +103,9 @@ public class UserTest {
 		verify(accountRepository).save(any(Account.class));
 	}
 
-
 	@DisplayName("[회원가입 중 아이디 중복으로 인한 예외 발생]")
 	@Test
-	void joinTestExceptionByUserId() throws Exception{
+	void joinTestExceptionByUserId() throws Exception {
 		// given
 		JoinDto joinDto = new JoinDto("aaaa", "ab12", "홍길동", 1234);
 
@@ -131,12 +133,14 @@ public class UserTest {
 		mockMvc.perform(post("/user/login")
 				.content(toJson(loginDto))
 				.contentType(MediaType.APPLICATION_JSON))
-			.andExpect(status().isOk());
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.message").value("로그인 성공"))
+			.andExpect(jsonPath("$.data").isNotEmpty());
 	}
 
 	@DisplayName("[로그인 중 아이디를 찾을 수 없음으로 인한 예외 발생]")
 	@Test
-	void loginTestExceptionByUserId() throws Exception{
+	void loginTestExceptionByUserId() throws Exception {
 		// given
 		LoginDto loginDto = new LoginDto("abcd", "a1234");
 
@@ -152,7 +156,7 @@ public class UserTest {
 
 	@DisplayName("[로그인 중 비밀번호를 찾을 수 없음으로 인한 예외 발생]")
 	@Test
-	void loginTestExceptionByUserPw() throws Exception{
+	void loginTestExceptionByUserPw() throws Exception {
 		// given
 		LoginDto loginDto = new LoginDto("abcd", "a12");
 
