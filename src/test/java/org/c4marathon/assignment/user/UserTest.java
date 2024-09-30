@@ -6,6 +6,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.Optional;
 
+import org.c4marathon.assignment.account.domain.Account;
+import org.c4marathon.assignment.account.repository.AccountRepository;
+import org.c4marathon.assignment.event.JoinEventDto;
+import org.c4marathon.assignment.event.JoinEventHandler;
 import org.c4marathon.assignment.user.domain.User;
 import org.c4marathon.assignment.user.dto.JoinDto;
 import org.c4marathon.assignment.user.dto.LoginDto;
@@ -31,6 +35,12 @@ public class UserTest {
 	@MockBean
 	private UserRepository userRepository;
 
+	@MockBean
+	private AccountRepository accountRepository;
+
+	@Autowired
+	private JoinEventHandler joinEventHandler;
+
 	@Autowired
 	private MockMvc mockMvc;
 
@@ -44,10 +54,12 @@ public class UserTest {
 	@BeforeEach
 	void start() {
 		userRepository.deleteAll();
+		accountRepository.deleteAll();
 	}
 
 	@AfterEach
 	void end() {
+		userRepository.deleteAll();
 		userRepository.deleteAll();
 	}
 
@@ -64,12 +76,85 @@ public class UserTest {
 			.andExpect(status().isOk());
 	}
 
+	@DisplayName("[회원가입 성공시 메인계좌 생성 테스트]")
+	@Test
+	void joinEventTest() throws Exception {
+		// given
+		JoinDto joinDto = new JoinDto("aaaa", "a1234", "홍길동", 1234);
+
+		// Mocking userRepository to return the user when searching by userId
+		given(userRepository.findByUserId("aaaa")).willReturn(Optional.empty()); // User가 없다고 가정
+
+		// when
+		mockMvc.perform(post("/user/join")
+				.content(toJson(joinDto))
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk());
+
+		// then
+		// 강제로 이벤트 핸들러 호출
+		User user = new User("aaaa", "a1234", "홍길동", 1234);
+		joinEventHandler.craeteAccount(new JoinEventDto(user));
+
+		// Account가 저장되었는지 확인
+		verify(accountRepository).save(any(Account.class));
+	}
+
+
+	@DisplayName("[회원가입 중 아이디 중복으로 인한 예외 발생]")
+	@Test
+	void joinTestExceptionByUserId() throws Exception{
+		// given
+		JoinDto joinDto = new JoinDto("aaaa", "ab12", "홍길동", 1234);
+
+		User user = new User("aaaa", "a1234", "홍길동", 1234);
+		given(userRepository.findByUserId("aaaa")).willReturn(Optional.of(user));
+
+		// when, then
+		mockMvc.perform(post("/user/join")
+				.content(toJson(joinDto))
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk());
+	}
+
 	@DisplayName("[로그인 테스트]")
 	@Test
 	void loginTest() throws Exception {
 
 		// given
 		LoginDto loginDto = new LoginDto("abcd", "a1234");
+
+		User user = new User("abcd", "a1234", "홍길동", 1234);
+		given(userRepository.findByUserId("abcd")).willReturn(Optional.of(user));
+
+		// when, then
+		mockMvc.perform(post("/user/login")
+				.content(toJson(loginDto))
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk());
+	}
+
+	@DisplayName("[로그인 중 아이디를 찾을 수 없음으로 인한 예외 발생]")
+	@Test
+	void loginTestExceptionByUserId() throws Exception{
+		// given
+		LoginDto loginDto = new LoginDto("abcd", "a1234");
+
+		User user = new User("abcd", "a1234", "홍길동", 1234);
+		given(userRepository.findByUserId("aaaa")).willReturn(Optional.of(user));
+
+		// when, then
+		mockMvc.perform(post("/user/login")
+				.content(toJson(loginDto))
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk());
+	}
+
+	@DisplayName("[로그인 중 비밀번호를 찾을 수 없음으로 인한 예외 발생]")
+	@Test
+	void loginTestExceptionByUserPw() throws Exception{
+		// given
+		LoginDto loginDto = new LoginDto("abcd", "a12");
 
 		User user = new User("abcd", "a1234", "홍길동", 1234);
 		given(userRepository.findByUserId("abcd")).willReturn(Optional.of(user));
