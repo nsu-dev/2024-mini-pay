@@ -1,4 +1,4 @@
-package org.c4marathon.assignment.domain.account.entity.settlement;
+package org.c4marathon.assignment.domain.settlement.entity.settlement;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

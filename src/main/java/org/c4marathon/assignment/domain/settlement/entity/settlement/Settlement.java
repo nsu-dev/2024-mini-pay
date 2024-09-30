@@ -1,4 +1,4 @@
-package org.c4marathon.assignment.domain.account.entity.settlement;
+package org.c4marathon.assignment.domain.settlement.entity.settlement;
 
 import static jakarta.persistence.EnumType.*;
 
@@ -44,8 +44,10 @@ public class Settlement {
 	private List<SettlementUser> settlementUserList = new ArrayList<>();
 
 	@Builder
-	private Settlement(Long totalAmount, SettlementType settlementType, int numberOfUsers,
-		int remainingUsers, Long remainingAmount, SettlementStatus settlementStatus) {
+	private Settlement(Long totalAmount,
+		SettlementType settlementType, int numberOfUsers,
+		int remainingUsers, Long remainingAmount,
+		SettlementStatus settlementStatus) {
 		this.totalAmount = totalAmount;
 		this.settleType = settlementType;
 		this.numberOfUsers = numberOfUsers;

@@ -1,8 +1,8 @@
-package org.c4marathon.assignment.domain.account.dto.request;
+package org.c4marathon.assignment.domain.settlement.dto.request;
 
 import java.util.List;
 
-import org.c4marathon.assignment.domain.account.entity.settlement.SettlementType;
+import org.c4marathon.assignment.domain.settlement.entity.settlement.SettlementType;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
