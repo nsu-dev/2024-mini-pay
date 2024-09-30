@@ -49,6 +49,8 @@ public class Settlement {
 		this.totalAmount = totalAmount;
 		this.settleType = settlementType;
 		this.numberOfUsers = numberOfUsers;
+		this.remainingUsers = remainingUsers;
+		this.remainingAmount = remainingAmount;
 		this.settlementStatus = settlementStatus;
 	}
 }
