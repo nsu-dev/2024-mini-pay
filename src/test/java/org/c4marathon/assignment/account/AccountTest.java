@@ -1,9 +1,12 @@
 package org.c4marathon.assignment.account;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 import org.c4marathon.assignment.account.domain.Account;
@@ -12,6 +15,7 @@ import org.c4marathon.assignment.account.dto.ChargeDto;
 import org.c4marathon.assignment.account.dto.SavingAccountPwDto;
 import org.c4marathon.assignment.account.dto.SendDto;
 import org.c4marathon.assignment.account.repository.AccountRepository;
+import org.c4marathon.assignment.account.service.AccountService;
 import org.c4marathon.assignment.user.domain.User;
 import org.c4marathon.assignment.user.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -39,6 +43,9 @@ public class AccountTest {
 	private AccountRepository accountRepository;
 
 	@Autowired
+	private AccountService accountService;
+
+	@Autowired
 	private MockMvc mockMvc;
 
 	@Autowired
@@ -58,6 +65,29 @@ public class AccountTest {
 		accountRepository.deleteAll();
 	}
 
+	@DisplayName("[메인 계좌 충전 초기화 테스트]")
+	@Test
+	void resetLimitAccountTest() throws Exception {
+		// given
+		Account account1 = spy(new Account(12345678L, AccountType.MAIN_ACCOUNT, 0, 1234, 3000000,
+			new User("user123", "password", "홍길동", 1234)));
+		Account account2 = spy(new Account(1234567890L, AccountType.MAIN_ACCOUNT, 0, 1234, 3000000,
+			new User("userabc", "password", "고길동", 4321)));
+
+		List<Account> accounts = Arrays.asList(account1, account2);
+
+		// Mocking the repository to return the list of accounts
+		when(accountRepository.findAll()).thenReturn(accounts);
+
+		// when
+		accountService.resetLimitAccount();
+
+		// then
+		verify(accountRepository).findAll();
+		verify(account1).resetLimitAccount();
+		verify(account2).resetLimitAccount();
+	}
+
 	@DisplayName("[메인 계좌 충전 테스트]")
 	@Test
 	void chargeTest() throws Exception {
@@ -70,11 +100,14 @@ public class AccountTest {
 		// given: 충전할 계좌 번호와 금액
 		ChargeDto chargeDto = new ChargeDto(12345678L, 10000);
 
-		// when, then: 해당 계좌에 충전 테스트 수행
+		// when: 해당 계좌에 충전 테스트 수행
 		mockMvc.perform(post("/account/charge")
 				.content(toJson(chargeDto))
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk());
+
+		// then: 계좌의 잔액이 업데이트 되었는지 확인
+		assertEquals(10000, mainAccount.getAmount());
 	}
 
 	@DisplayName("[메인 계좌 충전시 한도 초과 예외처리 테스트]")
@@ -101,6 +134,9 @@ public class AccountTest {
 	void chargeExceptionNotMatchAccount() throws Exception {
 		// 회원가입 후 계좌 생성
 		User user = new User("user123", "password", "홍길동", 1234);
+
+		given(userRepository.findByUserId("user123")).willReturn(Optional.of(user));
+
 		Account mainAccount = new Account(12345678L, AccountType.MAIN_ACCOUNT, 0, 1234, 3000000, user);
 
 		given(accountRepository.findByAccount(12345678L)).willReturn(Optional.of(mainAccount));
@@ -127,11 +163,14 @@ public class AccountTest {
 
 		SavingAccountPwDto savingAccountPwDto = new SavingAccountPwDto(1111);
 
-		// when, then
+		// when
 		mockMvc.perform(post("/account/create/{userId}", user.getUserId())
 				.content(toJson(savingAccountPwDto))
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk());
+
+		// then
+		verify(accountRepository).save(any(Account.class));
 	}
 
 	@DisplayName("[적금 계좌 송금 테스트]")
@@ -157,11 +196,14 @@ public class AccountTest {
 
 		SendDto sendDto = new SendDto(11111111L, 5000, 1234);
 
-		// when, then
+		// when
 		mockMvc.perform(post("/account/send/{userId}", user.getUserId())
 				.content(toJson(sendDto))
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk());
+
+		// then
+		assertEquals(5000, savingAccount.getAmount());
 	}
 
 	@DisplayName("[적금 계좌 송금시 송금액이 잔액보다 높을 때 예외처리 테스트]")
