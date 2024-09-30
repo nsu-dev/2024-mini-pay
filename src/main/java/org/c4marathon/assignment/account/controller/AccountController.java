@@ -11,6 +11,7 @@ import org.c4marathon.assignment.account.dto.response.SavingAccountResponseDto;
 import org.c4marathon.assignment.account.dto.response.SendToOthersResponseDto;
 import org.c4marathon.assignment.account.dto.response.SendToSavingAccountResponseDto;
 import org.c4marathon.assignment.account.service.AccountService;
+import org.c4marathon.assignment.account.service.BankingService;
 import org.c4marathon.assignment.user.domain.User;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,6 +29,7 @@ import lombok.RequiredArgsConstructor;
 public class AccountController {
 
 	private final AccountService accountService;
+	private final BankingService bankingService;
 
 	@PostMapping("/api/user/saving-account")
 	public ResponseEntity<SavingAccountResponseDto> generateSavingAccount(
@@ -70,7 +72,7 @@ public class AccountController {
 		@AuthenticationPrincipal User user,
 		@Valid @RequestBody SendToOthersRequestDto requestDto
 	) {
-		SendToOthersResponseDto sendToOthersResponseDto = accountService.sendToOthers(
+		SendToOthersResponseDto sendToOthersResponseDto = bankingService.sendToOthers(
 			othersAccountId,
 			user,
 			requestDto
