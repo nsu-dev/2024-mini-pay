@@ -1,6 +1,6 @@
 package org.c4marathon.assignment.user.controller;
 
-import org.c4marathon.assignment.config.CommonResponse;
+import org.c4marathon.assignment.common.config.CommonResponse;
 import org.c4marathon.assignment.user.dto.JoinDto;
 import org.c4marathon.assignment.user.dto.LoginDto;
 import org.c4marathon.assignment.user.service.UserService;
@@ -24,25 +24,15 @@ public class UserController {
 		@RequestBody JoinDto joinDto
 	) {
 
-		boolean checkJoin = userService.save(joinDto);
+		userService.save(joinDto);
 
-		if (checkJoin) {
-			CommonResponse res = new CommonResponse(
-				200,
-				HttpStatus.OK,
-				"회원가입 성공",
-				null
-			);
-			return new ResponseEntity<>(res, res.getHttpStatus());
-		} else {
-			CommonResponse res = new CommonResponse(
-				400,
-				HttpStatus.BAD_REQUEST,
-				"회원가입 실패",
-				null
-			);
-			return new ResponseEntity<>(res, res.getHttpStatus());
-		}
+		CommonResponse res = new CommonResponse(
+			200,
+			HttpStatus.OK,
+			"회원가입 성공",
+			null
+		);
+		return new ResponseEntity<>(res, res.getHttpStatus());
 	}
 
 	// 로그인
@@ -57,7 +47,7 @@ public class UserController {
 				200,
 				HttpStatus.OK,
 				"로그인 성공",
-				null
+				loginDto
 			);
 			return new ResponseEntity<>(res, res.getHttpStatus());
 		} else {
