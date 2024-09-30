@@ -33,6 +33,10 @@ public class Settlement {
 	private SettlementType settleType;
 	@Column(name = "numberOfUsers")
 	private int numberOfUsers;
+	@Column(name = "remainingUsers")
+	private int remainingUsers;
+	@Column(name = "remainingAmount")
+	private Long remainingAmount;
 	@Column(name = "settlementStatus")
 	@Enumerated(STRING)
 	private SettlementStatus settlementStatus;
