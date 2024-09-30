@@ -95,7 +95,7 @@ public class AccountTest {
 		User user = new User("user123", "password", "홍길동", 1234);
 		Account mainAccount = new Account(12345678L, AccountType.MAIN_ACCOUNT, 0, 1234, 3000000, user);
 
-		given(accountRepository.findByAccount(12345678L)).willReturn(Optional.of(mainAccount));
+		given(accountRepository.findByAccount(mainAccount.getAccountNum())).willReturn(Optional.of(mainAccount));
 
 		// given: 충전할 계좌 번호와 금액
 		ChargeDto chargeDto = new ChargeDto(12345678L, 10000);
@@ -117,7 +117,7 @@ public class AccountTest {
 		User user = new User("user123", "password", "홍길동", 1234);
 		Account mainAccount = new Account(12345678L, AccountType.MAIN_ACCOUNT, 0, 1234, 3000000, user);
 
-		given(accountRepository.findByAccount(12345678L)).willReturn(Optional.of(mainAccount));
+		given(accountRepository.findByAccount(mainAccount.getAccountNum())).willReturn(Optional.of(mainAccount));
 
 		// given: 충전할 계좌 번호와 금액
 		ChargeDto chargeDto = new ChargeDto(12345678L, 3000001);
@@ -135,11 +135,11 @@ public class AccountTest {
 		// 회원가입 후 계좌 생성
 		User user = new User("user123", "password", "홍길동", 1234);
 
-		given(userRepository.findByUserId("user123")).willReturn(Optional.of(user));
+		given(userRepository.findByUserId(user.getUserId())).willReturn(Optional.of(user));
 
 		Account mainAccount = new Account(12345678L, AccountType.MAIN_ACCOUNT, 0, 1234, 3000000, user);
 
-		given(accountRepository.findByAccount(12345678L)).willReturn(Optional.of(mainAccount));
+		given(accountRepository.findByAccount(mainAccount.getAccountNum())).willReturn(Optional.of(mainAccount));
 
 		// given: 충전할 계좌 번호와 금액
 		ChargeDto chargeDto = new ChargeDto(123456L, 10000);
@@ -159,7 +159,7 @@ public class AccountTest {
 		// given
 		User user = new User("user123", "password", "홍길동", 1234);
 
-		given(userRepository.findByUserId("user123")).willReturn(Optional.of(user));
+		given(userRepository.findByUserId(user.getUserId())).willReturn(Optional.of(user));
 
 		SavingAccountPwDto savingAccountPwDto = new SavingAccountPwDto(1111);
 
@@ -181,7 +181,7 @@ public class AccountTest {
 		// 회원가입
 		User user = new User("user123", "password", "홍길동", 1234);
 
-		given(userRepository.findByUserId("user123")).willReturn(Optional.of(user));
+		given(userRepository.findByUserId(user.getUserId())).willReturn(Optional.of(user));
 
 		// 메인 계좌 생성
 		Account mainAccount = new Account(12345678L, AccountType.MAIN_ACCOUNT, 10000, 1234, 3000000, user);
@@ -192,7 +192,7 @@ public class AccountTest {
 		// 적금 계좌 생성
 		Account savingAccount = new Account(11111111L, AccountType.SAVING_ACCOUNT, 0, 1111, 3000000, user);
 
-		given(accountRepository.findByAccount(11111111L)).willReturn(Optional.of(savingAccount));
+		given(accountRepository.findByAccount(savingAccount.getAccountNum())).willReturn(Optional.of(savingAccount));
 
 		SendDto sendDto = new SendDto(11111111L, 5000, 1234);
 
@@ -214,7 +214,7 @@ public class AccountTest {
 		// 회원가입
 		User user = new User("user123", "password", "홍길동", 1234);
 
-		given(userRepository.findByUserId("user123")).willReturn(Optional.of(user));
+		given(userRepository.findByUserId(user.getUserId())).willReturn(Optional.of(user));
 
 		// 메인 계좌 생성
 		Account mainAccount = new Account(12345678L, AccountType.MAIN_ACCOUNT, 10000, 1234, 3000000, user);
@@ -225,7 +225,7 @@ public class AccountTest {
 		// 적금 계좌 생성
 		Account savingAccount = new Account(11111111L, AccountType.SAVING_ACCOUNT, 0, 1111, 3000000, user);
 
-		given(accountRepository.findByAccount(11111111L)).willReturn(Optional.of(savingAccount));
+		given(accountRepository.findByAccount(savingAccount.getAccountNum())).willReturn(Optional.of(savingAccount));
 
 		SendDto sendDto = new SendDto(11111111L, 15000, 1234);
 
@@ -244,7 +244,7 @@ public class AccountTest {
 		// 회원가입
 		User user = new User("user123", "password", "홍길동", 1234);
 
-		given(userRepository.findByUserId("user123")).willReturn(Optional.of(user));
+		given(userRepository.findByUserId(user.getUserId())).willReturn(Optional.of(user));
 
 		// 메인 계좌 생성
 		Account mainAccount = new Account(12345678L, AccountType.MAIN_ACCOUNT, 10000, 1234, 3000000, user);
@@ -255,7 +255,7 @@ public class AccountTest {
 		// 적금 계좌 생성
 		Account savingAccount = new Account(11111111L, AccountType.SAVING_ACCOUNT, 0, 1111, 3000000, user);
 
-		given(accountRepository.findByAccount(11111111L)).willReturn(Optional.of(savingAccount));
+		given(accountRepository.findByAccount(savingAccount.getAccountNum())).willReturn(Optional.of(savingAccount));
 
 		SendDto sendDto = new SendDto(11111111L, 5000, 1111);
 
