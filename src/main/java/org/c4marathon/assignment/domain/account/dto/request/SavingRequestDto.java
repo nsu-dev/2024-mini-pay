@@ -1,4 +1,4 @@
-package org.c4marathon.assignment.domain.account.dto;
+package org.c4marathon.assignment.domain.account.dto.request;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;

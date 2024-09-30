@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.c4marathon.assignment.domain.account.controller.AccountController;
-import org.c4marathon.assignment.domain.account.dto.AccountErrDto;
+import org.c4marathon.assignment.domain.account.dto.response.AccountErrDto;
 import org.c4marathon.assignment.domain.account.entity.AccountErrCode;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;

@@ -1,4 +1,4 @@
-package org.c4marathon.assignment.domain.account.dto;
+package org.c4marathon.assignment.domain.account.dto.response;
 
 import org.springframework.http.HttpStatus;
 

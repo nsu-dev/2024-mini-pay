@@ -7,10 +7,10 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Random;
 
-import org.c4marathon.assignment.domain.account.dto.CreateResponseDto;
-import org.c4marathon.assignment.domain.account.dto.RemittanceRequestDto;
-import org.c4marathon.assignment.domain.account.dto.RemittanceResponseDto;
-import org.c4marathon.assignment.domain.account.dto.SavingRequestDto;
+import org.c4marathon.assignment.domain.account.dto.response.CreateResponseDto;
+import org.c4marathon.assignment.domain.account.dto.request.RemittanceRequestDto;
+import org.c4marathon.assignment.domain.account.dto.response.RemittanceResponseDto;
+import org.c4marathon.assignment.domain.account.dto.request.SavingRequestDto;
 import org.c4marathon.assignment.domain.account.entity.Account;
 import org.c4marathon.assignment.domain.account.entity.AccountErrCode;
 import org.c4marathon.assignment.domain.account.entity.AccountRole;
