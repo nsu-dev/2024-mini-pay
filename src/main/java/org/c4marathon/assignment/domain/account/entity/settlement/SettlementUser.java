@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "settlement_user")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
-public class Settlement_User {
+public class SettlementUser {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long settlementUserId;
