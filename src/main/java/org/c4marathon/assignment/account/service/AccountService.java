@@ -45,7 +45,7 @@ public class AccountService {
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public boolean chargeMainAccount(ChargeDto chargeDto) {
 		Optional<Account> optionalAccount = accountRepository.findByAccount(chargeDto.accountNum());
-		optionalAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUNT_ACCOUNT));
+		optionalAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUND_ACCOUNT));
 		Account account = optionalAccount.get();
 		account.setAmount(chargeDto.chargeMoney());
 		return true;
@@ -53,21 +53,21 @@ public class AccountService {
 
 	// 적금 계좌 생성 서비스
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
-	public boolean craeteSavingAccount(String userId, SavingAccountPwDto savingAccountPwDto) {
+	public boolean createSavingAccount(String userId, SavingAccountPwDto savingAccountPwDto) {
 		Optional<User> userOptional = userRepository.findByUserId(userId);
-		userOptional.orElseThrow(()-> new BaseException(LoginException.NOT_FOUND_USER));
+		userOptional.orElseThrow(() -> new BaseException(LoginException.NOT_FOUND_USER));
 
-			User user = userOptional.get();
-			Account account = Account.builder()
-				.accountNum(randomAccountNum)
-				.type(AccountType.SAVING_ACCOUNT)
-				.accountPw(savingAccountPwDto.accountPw())
-				.amount(0)
-				.user(user)
-				.build();
+		User user = userOptional.get();
+		Account account = Account.builder()
+			.accountNum(randomAccountNum)
+			.type(AccountType.SAVING_ACCOUNT)
+			.accountPw(savingAccountPwDto.accountPw())
+			.amount(0)
+			.user(user)
+			.build();
 
-			accountRepository.save(account);
-			return true;
+		accountRepository.save(account);
+		return true;
 	}
 
 	// 메인 계좌 -> 적금 계좌로 송금 서비스
@@ -76,18 +76,16 @@ public class AccountService {
 		Optional<Account> optionalAccount = accountRepository.findByAccount(sendDto.accountNum());
 		Optional<Account> optionalMyAccount = accountRepository.findByMyAccount(sendDto.accountPw());
 
-		optionalAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUNT_ACCOUNT));
+		optionalAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUND_ACCOUNT));
 		optionalMyAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_MATCH_ACCOUNT));
 
 		Account main = optionalMyAccount.get();
 		Account saving = optionalAccount.get();
-		int checkMoney = main.getAmount() - sendDto.sendMoney();
+		int checkMoney = main.getAmount() - sendDto.sendToMoney();
 
 		if (checkMoney > 0) {
-			main.reduceAmount(sendDto.sendMoney());
-			saving.increaseAmount(sendDto.sendMoney());
-			accountRepository.save(main);
-			accountRepository.save(saving);
+			main.reduceAmount(sendDto.sendToMoney());
+			saving.increaseAmount(sendDto.sendToMoney());
 			return true;
 		} else {
 			throw new BaseException(MainAccountException.SHORT_MONEY);
@@ -101,21 +99,18 @@ public class AccountService {
 		Optional<Account> optionalAccount = accountRepository.findByAccount(sendDto.accountNum());
 
 		optionalMyAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_MATCH_ACCOUNT));
-		optionalAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUNT_ACCOUNT));
+		optionalAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUND_ACCOUNT));
 
 		Account mainAccount = optionalMyAccount.get();
 		Account otherAccount = optionalAccount.get();
-		int checkMoney = mainAccount.getAmount() - sendDto.sendMoney();
-		int lackingMoney = sendDto.sendMoney() - mainAccount.getAmount();
+		int lackingMoney = sendDto.sendToMoney() - mainAccount.getAmount();
 
-		if (checkMoney > 0) {
-			otherAccount.increaseAmount(sendDto.sendMoney());
-			mainAccount.reduceAmount(sendDto.sendMoney());
-			accountRepository.save(mainAccount);
-			accountRepository.save(otherAccount);
+		if (mainAccount.getAmount() > sendDto.sendToMoney()) {
+			otherAccount.increaseAmount(sendDto.sendToMoney());
+			mainAccount.reduceAmount(sendDto.sendToMoney());
 			return true;
-		}else {
-			int chargeMoney = (int)(Math.round(lackingMoney / 10000.0) * 10000);
+		} else {
+			int chargeMoney = (int)(Math.ceil(lackingMoney / 10000.0) * 10000);
 			chargeMainAccount(new ChargeDto(mainAccount.getAccountNum(), chargeMoney));
 		}
 		return false;
