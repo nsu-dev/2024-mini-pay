@@ -34,6 +34,7 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
+    checkstyle "com.puppycrawl.tools:checkstyle:10.0"
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation "org.junit.jupiter:junit-jupiter:5.10.0" // 최신 버전으로 변경
 }
@@ -41,7 +42,7 @@ dependencies {
 checkstyle {
     configFile = file("${rootDir}/naver-checkstyle.xml")
     configProperties = ["suppressionFile": "${rootDir}/naver-checkstyle-suppressions.xml"]
-    toolVersion = "10.12"
+    toolVersion = "10.0"
 }
 
 tasks.named('test') {

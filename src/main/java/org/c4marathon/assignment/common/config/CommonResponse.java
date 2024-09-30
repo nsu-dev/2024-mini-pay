@@ -1,4 +1,4 @@
-package org.c4marathon.assignment.config;
+package org.c4marathon.assignment.common.config;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

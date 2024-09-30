@@ -7,6 +7,7 @@ import org.c4marathon.assignment.user.dto.JoinDto;
 import org.c4marathon.assignment.user.dto.LoginDto;
 import org.c4marathon.assignment.user.exception.JoinException;
 import org.c4marathon.assignment.user.exception.LoginException;
+import org.c4marathon.assignment.user.exception.NotFoundException;
 import org.c4marathon.assignment.user.repository.UserRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,7 @@ public class UserService {
 
 	// 회원가입
 	@TransactionalEventListener
-	public boolean save(JoinDto joinDto) {
+	public void save(JoinDto joinDto) {
 		userRepository.findByUserId(joinDto.userId()).ifPresent(user -> {
 			throw new BaseException(JoinException.FOUND_USER);
 		});
@@ -36,13 +37,12 @@ public class UserService {
 
 		userRepository.save(user);
 		eventPublisher.publishEvent(new JoinEventDto(user));
-		return true;
 	}
 
 	// 로그인
 	public LoginDto login(LoginDto loginDto) {
 		User userEntity = userRepository.findByUserId(loginDto.userId())
-			.orElseThrow(() -> new BaseException(LoginException.NOT_FOUND_USER));
+			.orElseThrow(() -> new BaseException(NotFoundException.NOT_FOUND_USER));
 
 		if (userEntity.getUserPw().equals(loginDto.userPw())) {
 			return loginDto;
