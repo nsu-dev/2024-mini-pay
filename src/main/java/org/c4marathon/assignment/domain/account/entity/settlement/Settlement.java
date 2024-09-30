@@ -45,7 +45,7 @@ public class Settlement {
 
 	@Builder
 	private Settlement(Long totalAmount, SettlementType settlementType, int numberOfUsers,
-		SettlementStatus settlementStatus) {
+		int remainingUsers, Long remainingAmount, SettlementStatus settlementStatus) {
 		this.totalAmount = totalAmount;
 		this.settleType = settlementType;
 		this.numberOfUsers = numberOfUsers;
