@@ -9,6 +9,9 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.c4marathon.assignment.account.domain.Account;
 import org.c4marathon.assignment.account.dto.request.ChargeRequestDto;
@@ -436,5 +439,39 @@ class AccountServiceTest {
 		// then
 		verify(eventPublisher).publishEvent(any(WithdrawalFailEvent.class));
 		assertThat(baseException.getMessage()).isEqualTo("해당 계좌에 입금을 실패했습니다.");
+	}
+
+	@DisplayName("[동시간대에 100명의 사용자에게 입금을 받는다.]")
+	@Test
+	void depositWithOnehundred() throws Exception {
+		// given
+		int threadCount = 10000;
+		ExecutorService executorService = Executors.newFixedThreadPool(32);
+		CountDownLatch latch = new CountDownLatch(threadCount);
+
+		User owner = UserFixture.basicUser();
+		Account mainAccount = AccountFixture.accountWithTypeAndAmount(owner, MAIN_ACCOUNT, 100_000);
+		ReflectionTestUtils.setField(mainAccount, "id", 1L);
+		SendToOthersRequestDto requestDto = new SendToOthersRequestDto(
+			mainAccount.getId(),
+			100_000
+		);
+
+		given(accountRepository.findById(mainAccount.getId()))
+			.willReturn(Optional.of(mainAccount));
+		// when
+		for (int i = 0; i < threadCount; i++) {
+			executorService.submit(() -> {
+				try {
+					accountService.deposit(mainAccount.getId(), 100_000, requestDto);
+				} finally {
+					latch.countDown();
+				}
+			});
+		}
+		latch.await();
+
+		// then
+		assertThat(mainAccount.getAmount()).isEqualTo(1_000_100_000);
 	}
 }
