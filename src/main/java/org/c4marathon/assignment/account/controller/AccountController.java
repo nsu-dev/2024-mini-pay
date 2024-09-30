@@ -48,9 +48,9 @@ public class AccountController {
 
 	// 적금 계좌 생성
 	@PostMapping("/account/create/{userId}")
-	public ResponseEntity<CommonResponse> CreateSavingsAccount(@PathVariable String userId,
+	public ResponseEntity<CommonResponse> CreateSavingsAccount(@PathVariable("userId") String userId,
 		@Valid @RequestBody SavingAccountPwDto savingAccountPwDto) {
-		boolean checkSaving = accountService.craeteSavingAccount(userId, savingAccountPwDto);
+		boolean checkSaving = accountService.createSavingAccount(userId, savingAccountPwDto);
 
 		if (checkSaving) {
 			CommonResponse res = new CommonResponse(
