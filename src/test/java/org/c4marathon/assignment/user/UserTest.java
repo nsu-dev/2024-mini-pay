@@ -86,7 +86,7 @@ public class UserTest {
 		JoinDto joinDto = new JoinDto("aaaa", "a1234", "홍길동", 1234);
 
 		// Mocking userRepository to return the user when searching by userId
-		given(userRepository.findByUserId("aaaa")).willReturn(Optional.empty()); // User가 없다고 가정
+		given(userRepository.findByUserId(joinDto.userId())).willReturn(Optional.empty());
 
 		// when
 		mockMvc.perform(post("/user/join")
@@ -110,7 +110,7 @@ public class UserTest {
 		JoinDto joinDto = new JoinDto("aaaa", "ab12", "홍길동", 1234);
 
 		User user = new User("aaaa", "a1234", "홍길동", 1234);
-		given(userRepository.findByUserId("aaaa")).willReturn(Optional.of(user));
+		given(userRepository.findByUserId(user.getUserId())).willReturn(Optional.of(user));
 
 		// when, then
 		mockMvc.perform(post("/user/join")
@@ -127,7 +127,7 @@ public class UserTest {
 		LoginDto loginDto = new LoginDto("abcd", "a1234");
 
 		User user = new User("abcd", "a1234", "홍길동", 1234);
-		given(userRepository.findByUserId("abcd")).willReturn(Optional.of(user));
+		given(userRepository.findByUserId(user.getUserId())).willReturn(Optional.of(user));
 
 		// when, then
 		mockMvc.perform(post("/user/login")
@@ -161,7 +161,7 @@ public class UserTest {
 		LoginDto loginDto = new LoginDto("abcd", "a12");
 
 		User user = new User("abcd", "a1234", "홍길동", 1234);
-		given(userRepository.findByUserId("abcd")).willReturn(Optional.of(user));
+		given(userRepository.findByUserId(loginDto.userId())).willReturn(Optional.of(user));
 
 		// when, then
 		mockMvc.perform(post("/user/login")
