@@ -116,16 +116,7 @@ public class AccountService {
 		return Objects.equals(account.getType().getType(), MAIN_ACCOUNT.getType());
 	}
 
-	public SendToOthersResponseDto sendToOthers(
-		Long othersAccountId,
-		User user,
-		SendToOthersRequestDto requestDto
-	) {
-		int sendToMoney = withdrawal(user, requestDto);
-		return deposit(othersAccountId, sendToMoney, requestDto);
-	}
-
-	@Transactional(isolation = Isolation.REPEATABLE_READ)
+	@Transactional(isolation = Isolation.REPEATABLE_READ, rollbackFor = BaseException.class)
 	public int withdrawal(User user, SendToOthersRequestDto requestDto) {
 		Account userAccount = getAccount(requestDto.accountId());
 		int subAmount = userAccount.getAmount() - requestDto.remittanceAmount();
@@ -160,7 +151,7 @@ public class AccountService {
 		return (Math.abs(subAmount) + 9_999) / 10_000 * 10_000;
 	}
 
-	@Transactional(isolation = Isolation.REPEATABLE_READ)
+	@Transactional(isolation = Isolation.REPEATABLE_READ, rollbackFor = BaseException.class)
 	public SendToOthersResponseDto deposit(
 		Long othersAccountId,
 		int sendToMoney,
