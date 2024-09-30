@@ -8,7 +8,7 @@ public record SendDto(
         @NotNull(message = "계좌 번호는 필수 입력 항목입니다.")
         Long accountNum,
         @Min(value = 0, message = "송금액은 0원 이상이어야 합니다.")
-        int sendMoney,
+        int sendToMoney,
         @NotNull(message = "계좌 비밀번호는 필수 입력 항목입니다.")
         int accountPw
 ) {
