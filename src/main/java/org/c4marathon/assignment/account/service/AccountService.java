@@ -14,9 +14,9 @@ import org.c4marathon.assignment.account.exception.NotFountAccountException;
 import org.c4marathon.assignment.account.repository.AccountRepository;
 import org.c4marathon.assignment.common.exception.BaseException;
 import org.c4marathon.assignment.user.domain.User;
-import org.c4marathon.assignment.user.exception.LoginException;
 import org.c4marathon.assignment.user.exception.NotFoundException;
 import org.c4marathon.assignment.user.repository.UserRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -29,7 +29,10 @@ import lombok.RequiredArgsConstructor;
 public class AccountService {
 
 	private final AccountRepository accountRepository;
+
 	private final UserRepository userRepository;
+
+	private final ApplicationEventPublisher eventPublisher;
 	Long randomAccountNum = new Random().nextLong();
 
 	@Scheduled(cron = "0 0 0 * * *")
@@ -81,6 +84,7 @@ public class AccountService {
 		Optional<Account> mainAccount = accountRepository.findByMainAccount(userId, AccountType.MAIN_ACCOUNT);
 
 		optionalAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUNT_ACCOUNT));
+		mainAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUNT_MAIN_ACCOUNT));
 
 		Account main = mainAccount.get();
 
@@ -91,8 +95,6 @@ public class AccountService {
 			if (checkMoney > 0) {
 				main.reduceAmount(sendDto.sendMoney());
 				saving.increaseAmount(sendDto.sendMoney());
-				accountRepository.save(main);
-				accountRepository.save(saving);
 			} else {
 				throw new BaseException(MainAccountException.SHORT_MONEY);
 			}
