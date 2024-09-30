@@ -14,6 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -37,4 +38,13 @@ public class Settlement {
 	private SettlementStatus settlementStatus;
 	@OneToMany(mappedBy = "settlement")
 	private List<Settlement_User> settlementUserList = new ArrayList<>();
+
+	@Builder
+	private Settlement(Long totalAmount, SettlementType settlementType, int numberOfUsers,
+		SettlementStatus settlementStatus) {
+		this.totalAmount = totalAmount;
+		this.settleType = settlementType;
+		this.numberOfUsers = numberOfUsers;
+		this.settlementStatus = settlementStatus;
+	}
 }
