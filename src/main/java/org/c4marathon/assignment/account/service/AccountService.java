@@ -56,10 +56,11 @@ public class AccountService {
 
 			account.setAmount(chargeDto.chargeMoney());
 		} else {
-			throw new BaseException(NotFountAccountException.NOT_FOUNT_ACCOUNT);
+			throw new BaseException(NotFountAccountException.NOT_FOUND_ACCOUNT);
 		}
 	}
 
+	// 적금 계좌 생성 서비스
 	@Transactional
 	public void craeteSavingAccount(String userId, SavingAccountPwDto savingAccountPwDto) {
 		Optional<User> userOptional = userRepository.findByUserId(userId);
@@ -77,13 +78,14 @@ public class AccountService {
 		accountRepository.save(account);
 	}
 
+	// 적금 계좌로 송금할 때 서비스 ( 메인 -> 적금 )
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public void sendSavingAccount(String userId, SendDto sendDto) {
 		Optional<Account> optionalAccount = accountRepository.findByAccount(sendDto.accountNum());
 		Optional<Account> mainAccount = accountRepository.findByMainAccount(userId, AccountType.MAIN_ACCOUNT);
 
-		optionalAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUNT_ACCOUNT));
-		mainAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUNT_MAIN_ACCOUNT));
+		optionalAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUND_ACCOUNT));
+		mainAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUND_MAIN_ACCOUNT));
 
 		Account main = mainAccount.get();
 
@@ -102,27 +104,26 @@ public class AccountService {
 		}
 	}
 
-	// 메인 계좌 -> 다른 유저의 메인 계좌로 송금 서비스
+	// 메인 계좌로 송금할 때 서비스 ( 메인 -> 다른 사람의 메인 )
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
-	public boolean sendOtherAccount(String userId,SendDto sendDto) {
+	public void sendOtherAccount(String userId,SendDto sendDto) {
 		Optional<Account> optionalMyAccount = accountRepository.findByMainAccount(userId, AccountType.MAIN_ACCOUNT);
-		Optional<Account> optionalAccount = accountRepository.findByAccount(sendDto.accountNum());
+		Optional<Account> optionalAccount = accountRepository.findByOtherMainAccount(sendDto.accountNum(), AccountType.MAIN_ACCOUNT);
 
-		optionalMyAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUNT_MAIN_ACCOUNT));
-		optionalAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUNT_ACCOUNT));
+		optionalMyAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUND_MAIN_ACCOUNT));
+		optionalAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUND_OTHER_MAIN_ACCOUNT));
 
 		Account mainAccount = optionalMyAccount.get();
 		Account otherAccount = optionalAccount.get();
+
 		int lackingMoney = sendDto.sendToMoney() - mainAccount.getAmount();
 
 		if (mainAccount.getAmount() > sendDto.sendToMoney()) {
 			otherAccount.increaseAmount(sendDto.sendToMoney());
 			mainAccount.reduceAmount(sendDto.sendToMoney());
-			return true;
 		} else {
 			int chargeMoney = (int)(Math.ceil(lackingMoney / 10000.0) * 10000);
 			chargeMainAccount(new ChargeDto(mainAccount.getAccountNum(), chargeMoney));
 		}
-		return false;
 	}
 }
