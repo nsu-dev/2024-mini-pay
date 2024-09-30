@@ -3,10 +3,10 @@ package org.c4marathon.assignment.domain.user.service;
 import static org.c4marathon.assignment.domain.user.entity.UserErrCode.*;
 
 import org.c4marathon.assignment.domain.account.entity.ScheduleCreateEvent;
-import org.c4marathon.assignment.domain.user.dto.JoinResponseDto;
-import org.c4marathon.assignment.domain.user.dto.LoginRequestDto;
-import org.c4marathon.assignment.domain.user.dto.LoginResponseDto;
-import org.c4marathon.assignment.domain.user.dto.UserDto;
+import org.c4marathon.assignment.domain.user.dto.response.JoinResponseDto;
+import org.c4marathon.assignment.domain.user.dto.request.LoginRequestDto;
+import org.c4marathon.assignment.domain.user.dto.response.LoginResponseDto;
+import org.c4marathon.assignment.domain.user.dto.request.UserDto;
 import org.c4marathon.assignment.domain.user.dto.UserMapper;
 import org.c4marathon.assignment.domain.user.entity.JoinResponseMsg;
 import org.c4marathon.assignment.domain.user.entity.LoginResponseMsg;

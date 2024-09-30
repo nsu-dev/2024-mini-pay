@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.c4marathon.assignment.domain.user.controller.UserController;
-import org.c4marathon.assignment.domain.user.dto.UserErrDto;
+import org.c4marathon.assignment.domain.user.dto.response.UserErrDto;
 import org.c4marathon.assignment.domain.user.entity.UserErrCode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

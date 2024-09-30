@@ -1,4 +1,4 @@
-package org.c4marathon.assignment.domain.user.dto;
+package org.c4marathon.assignment.domain.user.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 

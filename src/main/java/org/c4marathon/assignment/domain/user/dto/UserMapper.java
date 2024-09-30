@@ -1,5 +1,6 @@
 package org.c4marathon.assignment.domain.user.dto;
 
+import org.c4marathon.assignment.domain.user.dto.request.UserDto;
 import org.c4marathon.assignment.domain.user.entity.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
