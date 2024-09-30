@@ -181,23 +181,19 @@ public class AccountTest {
 		// 회원가입
 		User user = new User("user123", "password", "홍길동", 1234);
 
-		given(userRepository.findByUserId(user.getUserId())).willReturn(Optional.of(user));
-
 		// 메인 계좌 생성
 		Account mainAccount = new Account(12345678L, AccountType.MAIN_ACCOUNT, 10000, 1234, 3000000, user);
-
 		given(accountRepository.findByMainAccount(user.getUserId(), AccountType.MAIN_ACCOUNT)).willReturn(
 			Optional.of(mainAccount));
 
 		// 적금 계좌 생성
 		Account savingAccount = new Account(11111111L, AccountType.SAVING_ACCOUNT, 0, 1111, 3000000, user);
-
 		given(accountRepository.findByAccount(savingAccount.getAccountNum())).willReturn(Optional.of(savingAccount));
 
 		SendDto sendDto = new SendDto(11111111L, 5000, 1234);
 
 		// when
-		mockMvc.perform(post("/account/send/{userId}", user.getUserId())
+		mockMvc.perform(post("/account/send/saving/{userId}", user.getUserId())
 				.content(toJson(sendDto))
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk());
@@ -214,23 +210,19 @@ public class AccountTest {
 		// 회원가입
 		User user = new User("user123", "password", "홍길동", 1234);
 
-		given(userRepository.findByUserId(user.getUserId())).willReturn(Optional.of(user));
-
 		// 메인 계좌 생성
 		Account mainAccount = new Account(12345678L, AccountType.MAIN_ACCOUNT, 10000, 1234, 3000000, user);
-
 		given(accountRepository.findByMainAccount(user.getUserId(), AccountType.MAIN_ACCOUNT)).willReturn(
 			Optional.of(mainAccount));
 
 		// 적금 계좌 생성
 		Account savingAccount = new Account(11111111L, AccountType.SAVING_ACCOUNT, 0, 1111, 3000000, user);
-
 		given(accountRepository.findByAccount(savingAccount.getAccountNum())).willReturn(Optional.of(savingAccount));
 
 		SendDto sendDto = new SendDto(11111111L, 15000, 1234);
 
 		// when, then
-		mockMvc.perform(post("/account/send/{userId}", user.getUserId())
+		mockMvc.perform(post("/account/send/saving/{userId}", user.getUserId())
 				.content(toJson(sendDto))
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk());
@@ -244,25 +236,54 @@ public class AccountTest {
 		// 회원가입
 		User user = new User("user123", "password", "홍길동", 1234);
 
-		given(userRepository.findByUserId(user.getUserId())).willReturn(Optional.of(user));
-
 		// 메인 계좌 생성
 		Account mainAccount = new Account(12345678L, AccountType.MAIN_ACCOUNT, 10000, 1234, 3000000, user);
-
 		given(accountRepository.findByMainAccount(user.getUserId(), AccountType.MAIN_ACCOUNT)).willReturn(
 			Optional.of(mainAccount));
 
 		// 적금 계좌 생성
 		Account savingAccount = new Account(11111111L, AccountType.SAVING_ACCOUNT, 0, 1111, 3000000, user);
-
 		given(accountRepository.findByAccount(savingAccount.getAccountNum())).willReturn(Optional.of(savingAccount));
 
 		SendDto sendDto = new SendDto(11111111L, 5000, 1111);
 
 		// when, then
-		mockMvc.perform(post("/account/send/{userId}", user.getUserId())
+		mockMvc.perform(post("/account/send/saving/{userId}", user.getUserId())
 				.content(toJson(sendDto))
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk());
+	}
+
+	@DisplayName("[다른 사람 메인 계좌 송금 테스트]")
+	@Test
+	void sendToOtherTest() throws Exception {
+
+		// given
+		// 유저 1
+		User user1 = new User("user123", "password", "홍길동", 1234);
+		// 유저 2
+		User user2 = new User("user111", "password", "고길동", 4321);
+
+		// 메인 계좌 생성
+		Account mainAccount1 = new Account(12345678L, AccountType.MAIN_ACCOUNT, 10000, 1234, 3000000, user1);
+		given(accountRepository.findByMainAccount(user1.getUserId(), AccountType.MAIN_ACCOUNT)).willReturn(
+			Optional.of(mainAccount1));
+
+		// 다른 사람 메인 계좌 생성
+		Account mainAccount2 = new Account(1234567890L, AccountType.MAIN_ACCOUNT, 10000, 4321, 3000000, user2);
+		given(accountRepository.findByOtherMainAccount(mainAccount2.getAccountNum(), AccountType.MAIN_ACCOUNT)).willReturn(
+			Optional.of(mainAccount2));
+
+		SendDto sendDto = new SendDto(mainAccount2.getAccountNum(), 5000, 1234);
+
+		// when
+		mockMvc.perform(post("/account/send/other/{userId}", user1.getUserId())
+				.content(toJson(sendDto))
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk());
+
+		// then
+		assertEquals(5000, mainAccount1.getAmount());
+		assertEquals(15000, mainAccount2.getAmount());
 	}
 }
