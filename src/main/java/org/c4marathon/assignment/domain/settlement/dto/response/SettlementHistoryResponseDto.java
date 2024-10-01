@@ -5,7 +5,7 @@ import org.c4marathon.assignment.domain.settlement.entity.settlement.SettlementT
 
 import lombok.Builder;
 
-public class SettlementResponseDto {
+public class SettlementHistoryResponseDto {
 	private Long settlementId;
 	private Long totalAmount;
 	private SettlementType settlementType;
@@ -15,7 +15,7 @@ public class SettlementResponseDto {
 	private SettlementStatus settlementStatus;
 
 	@Builder
-	SettlementResponseDto(Long settlementId, Long totalAmount, SettlementType settlementType, int numberOfUsers,
+	SettlementHistoryResponseDto(Long settlementId, Long totalAmount, SettlementType settlementType, int numberOfUsers,
 		int remainingUsers, Long remainingAmount, SettlementStatus settlementStatus) {
 		this.settlementId = settlementId;
 		this.totalAmount = totalAmount;

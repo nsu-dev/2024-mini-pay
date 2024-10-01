@@ -3,14 +3,15 @@ package org.c4marathon.assignment.domain.settlement.dto;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.c4marathon.assignment.domain.settlement.dto.response.SettlementResponseDto;
+import org.c4marathon.assignment.domain.settlement.dto.response.SettlementHistoryResponseDto;
 import org.c4marathon.assignment.domain.settlement.entity.settlement.SettlementUser;
 
 public class SettlementMapper {
-	public static List<SettlementResponseDto> toSettlementResponseDtoList(List<SettlementUser> settlementUserList) {
-		List<SettlementResponseDto> settlementResponseDtoList = new ArrayList<>();
+	public static List<SettlementHistoryResponseDto> toSettlementResponseDtoList(
+		List<SettlementUser> settlementUserList) {
+		List<SettlementHistoryResponseDto> settlementHistoryResponseDtoList = new ArrayList<>();
 		for (SettlementUser settlementUser : settlementUserList) {
-			SettlementResponseDto settlementResponseDto = SettlementResponseDto.builder()
+			SettlementHistoryResponseDto settlementHistoryResponseDto = SettlementHistoryResponseDto.builder()
 				.settlementId(settlementUser.getSettlement().getSettlementId())
 				.totalAmount(settlementUser.getSettlement().getTotalAmount())
 				.settlementType(settlementUser.getSettlement().getSettleType())
@@ -19,8 +20,8 @@ public class SettlementMapper {
 				.remainingAmount(settlementUser.getSettlement().getRemainingAmount())
 				.settlementStatus(settlementUser.getSettlement().getSettlementStatus())
 				.build();
-			settlementResponseDtoList.add(settlementResponseDto);
+			settlementHistoryResponseDtoList.add(settlementHistoryResponseDto);
 		}
-		return settlementResponseDtoList;
+		return settlementHistoryResponseDtoList;
 	}
 }
