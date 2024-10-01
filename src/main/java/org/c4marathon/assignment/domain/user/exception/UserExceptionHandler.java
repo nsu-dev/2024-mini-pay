@@ -30,18 +30,21 @@ public class UserExceptionHandler {
 		String invalidMsg = String.join(", ", invalidMsgList);
 		return getUserErrDto(USER_INVALID_FAIL, invalidMsg);
 	}
+
 	@ExceptionHandler({RuntimeException.class})
-	protected ResponseEntity<UserErrDto> handleUserRuntimeException(){
+	protected ResponseEntity<UserErrDto> handleUserRuntimeException() {
 		return getUserErrDto(USER_SERVER_ERROR);
 	}
+
 	private ResponseEntity<UserErrDto> getUserErrDto(UserErrCode errCode) {
 		return getUserErrDto(errCode, errCode.getMessage());
 	}
+
 	private ResponseEntity<UserErrDto> getUserErrDto(UserErrCode errCode, String errMsg) {
 		HttpStatus httpStatus;
 		try {
 			httpStatus = HttpStatus.valueOf(errCode.getStatus());
-		} catch (IllegalAccessError e) {
+		} catch (IllegalArgumentException e) {
 			httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
 		}
 		UserErrDto errDto = new UserErrDto(

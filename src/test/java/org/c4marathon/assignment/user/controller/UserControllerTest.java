@@ -5,18 +5,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import org.c4marathon.assignment.domain.user.controller.UserController;
 import org.c4marathon.assignment.domain.user.dto.JoinResponseDto;
 import org.c4marathon.assignment.domain.user.dto.LoginRequestDto;
 import org.c4marathon.assignment.domain.user.dto.UserDto;
 import org.c4marathon.assignment.domain.user.entity.JoinResponseMsg;
+import org.c4marathon.assignment.domain.user.entity.UserErrCode;
+import org.c4marathon.assignment.domain.user.exception.UserException;
 import org.c4marathon.assignment.domain.user.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.BDDMockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
@@ -64,5 +63,70 @@ public class UserControllerTest {
 			.contentType(MediaType.APPLICATION_JSON)
 			.content(new ObjectMapper().writeValueAsString(loginRequestDto))
 		).andExpect(status().isOk());
+	}
+	@DisplayName("로그인 시 전화번호나 비밀번호가 공백이면 예외가 발생한다.")
+	@Test
+	void loginValidationErr() throws Exception{
+		//given
+		LoginRequestDto loginRequestDto = new LoginRequestDto("", "pw111");
+		//when   //then
+		mockMvc.perform(post("/user/login")
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(new ObjectMapper().writeValueAsString(loginRequestDto))
+		).andExpect(status().isBadRequest());
+	}
+	@Test
+	@DisplayName("로그인 시 런타임 에러가 발생한다면 정상적으로 처리한다.")
+	void loginRuntimeException() throws Exception{
+		//given
+		LoginRequestDto loginRequestDto = new LoginRequestDto("010-8337-6023", "pw111");
+
+		given(userService.login(any(LoginRequestDto.class), any())).willThrow(new RuntimeException());
+
+		//when //then
+		mockMvc.perform(post("/user/login")
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(new ObjectMapper().writeValueAsString(loginRequestDto))
+		).andExpect(status().isInternalServerError());
+	}
+
+	@Test
+	@DisplayName("회원가입 시 런타임 에러가 발생한다면 정상적으로 처리한다.")
+	void joinRuntimeException() throws Exception{
+		//given
+		UserDto userDto = new UserDto("010-8337-6023", "조아빈", "20000604", "pw123");
+		given(userService.join(any(UserDto.class))).willThrow(new RuntimeException());
+
+		//when //then
+		mockMvc.perform(post("/user/join")
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(new ObjectMapper().writeValueAsString(userDto))
+		).andExpect(status().isInternalServerError());
+	}
+
+	@Test
+	@DisplayName("회원가입 시 공백인 요소가 있다면 예외가 발생하고 정상적으로 처리한다.")
+	void joinValidationErr() throws Exception{
+		//given
+		UserDto userDto = new UserDto("", "조아빈", "20000604", "pw123");
+
+		//when //then
+		mockMvc.perform(post("/user/join")
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(new ObjectMapper().writeValueAsString(userDto))
+		).andExpect(status().isBadRequest());
+	}
+
+	@Test
+	@DisplayName("로그인 시 전화번호나 비밀번호가 일치하지 않으면 예외가 발생하고 정상적으로 처리한다.")
+	void loginInvalidErr() throws Exception{
+		//given
+		LoginRequestDto loginRequestDto = new LoginRequestDto("010-8337-6024", "pw111");
+		given(userService.login(any(LoginRequestDto.class), any())).willThrow(new UserException(UserErrCode.USER_INVALID_FAIL));
+		//when //then
+		mockMvc.perform(post("/user/login")
+			.contentType(MediaType.APPLICATION_JSON)
+			.content(new ObjectMapper().writeValueAsString(loginRequestDto))
+		).andExpect(status().isBadRequest());
 	}
 }

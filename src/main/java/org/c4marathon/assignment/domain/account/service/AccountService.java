@@ -20,13 +20,12 @@ import org.c4marathon.assignment.domain.account.entity.RemittanceResponseMsg;
 import org.c4marathon.assignment.domain.account.entity.ScheduleCreateEvent;
 import org.c4marathon.assignment.domain.account.exception.AccountException;
 import org.c4marathon.assignment.domain.account.repository.AccountRepository;
+import org.c4marathon.assignment.domain.account.transaction.TransactionHandler;
 import org.c4marathon.assignment.domain.user.entity.User;
 import org.c4marathon.assignment.domain.user.exception.UserException;
 import org.c4marathon.assignment.domain.user.repository.UserRepository;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.event.TransactionPhase;
@@ -39,30 +38,37 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class AccountService {
+	private static final long MIN_ACCOUNT_NUM = 300_0000_0000_00L;
+	private static final long MAX_ACCOUNT_NUM = 399_9999_9999_99L;
+	private static final long MAX_DAILY_CHARGE_LIMIT = 3_000_000L;
+	private static final int BALANCE_UNIT = 10000;
+
 	private final AccountRepository accountRepository;
 	private final UserRepository userRepository;
+	private final TransactionHandler transactionHandler;
 
 	//메인계좌 생성
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void createMain(ScheduleCreateEvent scheduleCreateEvent) {
 		User user = scheduleCreateEvent.user();
-		Long accountNum = createRandomAccount();
+		Long accountNum = getAccountNum();
 		Account account = createAccount(user, accountNum, AccountRole.MAIN);
 		accountRepository.save(account);
 	}
 
 	//계좌번호 생성
-	private Long createRandomAccount() {
-		long min = 300_0000_0000_00L;
-		long max = 399_9999_9999_99L;
-		Random random = new Random();
-		Long accountNum = min + (long)(random.nextDouble() * (max - min + 1));
-
-		if (duplicatedAccount(accountNum)) {
-			return createRandomAccount();
-		}
+	private Long getAccountNum() {
+		Long accountNum;
+		do {
+			accountNum = createRandomAccount();
+		} while (duplicatedAccount(accountNum));
 		return accountNum;
+	}
+
+	private Long createRandomAccount() {
+		Random random = new Random();
+		return MIN_ACCOUNT_NUM + (long)(random.nextDouble() * (MAX_ACCOUNT_NUM - MIN_ACCOUNT_NUM + 1));
 	}
 
 	//계좌 Entity 생성
@@ -84,17 +90,14 @@ public class AccountService {
 	}
 
 	//메인계좌 충전
-	@Transactional(isolation = Isolation.REPEATABLE_READ)
-	public RemittanceResponseDto chargeMain(RemittanceRequestDto remittanceRequestDto, Long userId,
-		HttpServletRequest httpServletRequest) {
-		Long sessionId = getSessionId(httpServletRequest);
-		validateUser(sessionId, userId);
-
+	public RemittanceResponseDto chargeMain(RemittanceRequestDto remittanceRequestDto) {
 		Long accountNum = remittanceRequestDto.accountNum();
-		Account account = accountRepository.findByAccountNum(accountNum);
 		Long remittanceAmount = remittanceRequestDto.remittanceAmount();
-		validateCharge(account, remittanceAmount);
-		account.updateChargeAccount(remittanceAmount);
+		transactionHandler.runInRepeatableTransaction(() -> {
+			Account account = accountRepository.findByAccountNum(accountNum);
+			validateCharge(account, remittanceAmount);
+			account.updateChargeAccount(remittanceAmount);
+		});
 		return new RemittanceResponseDto(RemittanceResponseMsg.SUCCESS.getResponseMsg());
 	}
 
@@ -106,34 +109,23 @@ public class AccountService {
 		return (Long)session.getAttribute("userId");
 	}
 
-	private void validateUser(Long sessionId, Long requestUserId) {
-		if (!sessionId.equals(requestUserId)) {
-			throw new UserException(USER_SESSION_ERR);
-		}
-	}
-
 	//한도 및 계좌 상태 검사
 	private void validateCharge(Account account, Long remittanceAmount) {
-		if (account.getDailyChargeLimit() >= 3_000_000) {
+		if (account.getDailyChargeLimit() >= MAX_DAILY_CHARGE_LIMIT) {
 			throw new AccountException(AccountErrCode.ACCOUNT_DALIYCHARGELIMIT_ERR);
 		} else if (account.getAccountStatus() == AccountStatus.UNAVAILABLE) {
 			throw new AccountException(AccountErrCode.ACCOUNT_UNAVAILABLE);
-		} else if (account.getDailyChargeLimit() + remittanceAmount > 3_000_000) {
+		} else if (account.getDailyChargeLimit() + remittanceAmount > MAX_DAILY_CHARGE_LIMIT) {
 			throw new AccountException(AccountErrCode.ACCOUNT_DALIYCHARGELIMIT_ERR);
 		}
 	}
 
 	//메인 외 계좌 생성
-	public CreateResponseDto createAccountOther(Long userId, String createAccountRole, HttpServletRequest httpServletRequest) {
-		Long sessionId = getSessionId(httpServletRequest);
-		validateUser(sessionId, userId);
-
+	public CreateResponseDto createAccountOther(String createAccountRole, HttpServletRequest httpServletRequest) {
+		Long userId = getSessionId(httpServletRequest);
 		User user = userRepository.findById(userId).orElseThrow(NoSuchElementException::new);
-		Long accountNum = createRandomAccount();
+		Long accountNum = getAccountNum();
 		AccountRole accountRole = determineAccountRole(createAccountRole);
-		if (duplicatedAccount(accountNum)) {
-			throw new AccountException(AccountErrCode.ACCOUNT_CREATE_FAIL);
-		}
 		Account account = createAccount(user, accountNum, accountRole);
 		accountRepository.save(account);
 		return new CreateResponseDto(CreateResponseMsg.SUCCESS.getResponseMsg());
@@ -148,20 +140,51 @@ public class AccountService {
 		};
 	}
 
-	//메인계좌에서 인출 후 적금계좌에 입금
-	@Transactional(isolation = Isolation.REPEATABLE_READ)
-	public RemittanceResponseDto savingRemittance(Long savingId, SavingRequestDto savingRequestDto, HttpServletRequest httpServletRequest) {
-		Long sessionId = getSessionId(httpServletRequest);
-		validateUser(sessionId, savingId);
-
-		User user = accountRepository.findUserByAccount(savingId);
-		Account mainAccount = accountRepository.findMainAccount(user.getUserId(), AccountRole.MAIN);
-		Account saving = accountRepository.findById(savingId).orElseThrow(NoSuchElementException::new);
-		if (mainAccount.getAccountBalance() - savingRequestDto.amount() < 0) {
-			throw new AccountException(AccountErrCode.ACCOUNT_INSUFFICIENT_BALANCE);
+	private void chargeAccountBalance(Account account, Long amount) {
+		if (account.getAccountBalance() < amount) {
+			Long requiredAmount = calculateChargeBalance(account.getAccountBalance(), amount);
+			RemittanceRequestDto chargeRequest = new RemittanceRequestDto(account.getAccountNum(), requiredAmount);
+			chargeMain(chargeRequest);
 		}
-		mainAccount.updateSaving(mainAccount.getAccountBalance() - savingRequestDto.amount());
-		saving.updateSaving(saving.getAccountBalance() + savingRequestDto.amount());
+	}
+
+	private Long calculateChargeBalance(Long balance, Long remittanceAmount) {
+		return ((long)Math.ceil((double)Math.abs(balance - remittanceAmount) / BALANCE_UNIT)) * BALANCE_UNIT;
+	}
+
+	//메인계좌에서 인출 후 적금계좌에 입금
+	public RemittanceResponseDto savingRemittance(Long savingId, SavingRequestDto savingRequestDto,
+		HttpServletRequest httpServletRequest) {
+		Long userId = getSessionId(httpServletRequest);
+		User user = userRepository.findById(userId).orElseThrow(() -> new UserException(USER_NOT_FOUND));
+		transactionHandler.runInCommittedTransaction(() -> {
+			Account mainAccount = accountRepository.findMainAccount(user.getUserId(), AccountRole.MAIN);
+			Account saving = accountRepository.findById(savingId).orElseThrow(NoSuchElementException::new);
+			chargeAccountBalance(mainAccount, (long)savingRequestDto.amount());
+			mainAccount.updateSaving(mainAccount.getAccountBalance() - savingRequestDto.amount());
+			saving.updateSaving(saving.getAccountBalance() + savingRequestDto.amount());
+		});
+		return new RemittanceResponseDto(RemittanceResponseMsg.SUCCESS.getResponseMsg());
+	}
+
+	//메인계좌간의 거래
+	public RemittanceResponseDto remittanceOtherMain(RemittanceRequestDto remittanceRequestDto,
+		HttpServletRequest httpServletRequest) {
+		Long userId = getSessionId(httpServletRequest);
+		Long receiveAccountNum = remittanceRequestDto.accountNum();
+		Long remittanceAmount = remittanceRequestDto.remittanceAmount();
+		transactionHandler.runInRepeatableTransaction(() -> {
+			Account mainAccount = accountRepository.findMainAccount(userId, AccountRole.MAIN);
+			Account receiveAccount = accountRepository.findByAccountNum(receiveAccountNum);
+			if (!receiveAccount.getAccountRole().equals(AccountRole.MAIN)) {
+				throw new AccountException(AccountErrCode.NOT_MAIN_ACCOUNT);
+			}
+			validateCharge(receiveAccount, remittanceAmount);
+			chargeAccountBalance(mainAccount, remittanceAmount);
+			mainAccount.updateSaving(mainAccount.getAccountBalance() - remittanceAmount);
+			receiveAccount.updateChargeAccount(remittanceAmount);
+		});
+
 		return new RemittanceResponseDto(RemittanceResponseMsg.SUCCESS.getResponseMsg());
 	}
 

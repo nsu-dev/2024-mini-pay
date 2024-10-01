@@ -1,12 +1,9 @@
 package org.c4marathon.assignment.domain.user.controller;
 
-import static org.c4marathon.assignment.domain.user.entity.UserErrCode.*;
-
 import org.c4marathon.assignment.domain.user.dto.JoinResponseDto;
 import org.c4marathon.assignment.domain.user.dto.LoginRequestDto;
 import org.c4marathon.assignment.domain.user.dto.LoginResponseDto;
 import org.c4marathon.assignment.domain.user.dto.UserDto;
-import org.c4marathon.assignment.domain.user.exception.UserException;
 import org.c4marathon.assignment.domain.user.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
