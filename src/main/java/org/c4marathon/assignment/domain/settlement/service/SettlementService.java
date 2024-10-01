@@ -5,9 +5,11 @@ import static org.c4marathon.assignment.domain.user.entity.UserErrCode.*;
 
 import java.util.List;
 
+import org.c4marathon.assignment.domain.settlement.dto.SettlementMapper;
 import org.c4marathon.assignment.domain.settlement.dto.response.SettlementResponseDto;
 import org.c4marathon.assignment.domain.settlement.entity.settlement.SettlementUser;
 import org.c4marathon.assignment.domain.settlement.exception.SettlementException;
+import org.c4marathon.assignment.domain.settlement.repository.SettlementRepository;
 import org.c4marathon.assignment.domain.settlement.repository.SettlementUserRepository;
 import org.c4marathon.assignment.domain.user.entity.User;
 import org.c4marathon.assignment.domain.user.exception.UserException;
@@ -23,12 +25,15 @@ import lombok.RequiredArgsConstructor;
 public class SettlementService {
 	private SettlementUserRepository settlementUserRepository;
 	private UserRepository userRepository;
+	private SettlementRepository settlementRepository;
 
+	//정산 목록 불러오는 메서드
 	public List<SettlementResponseDto> findAllSettlement(HttpServletRequest httpServletRequest) {
 		Long userId = getSessionId(httpServletRequest);
 		User user = userRepository.findById(userId).orElseThrow(() -> new UserException(USER_NOT_FOUND));
 		List<SettlementUser> settlementUserList = settlementUserRepository.findAllByUser(user)
 			.orElseThrow(() -> new SettlementException(SETTLEMENT_NOT_FOUND));
+		return SettlementMapper.toSettlementResponseDtoList(settlementUserList);
 	}
 
 	private Long getSessionId(HttpServletRequest httpServletRequest) {
