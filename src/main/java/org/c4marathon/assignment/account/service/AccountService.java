@@ -106,24 +106,49 @@ public class AccountService {
 
 	// 메인 계좌로 송금할 때 서비스 ( 메인 -> 다른 사람의 메인 )
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
-	public void sendOtherAccount(String userId,SendDto sendDto) {
+	public void sendOtherAccount(String userId, SendDto sendDto) {
 		Optional<Account> optionalMyAccount = accountRepository.findByMainAccount(userId, AccountType.MAIN_ACCOUNT);
-		Optional<Account> optionalAccount = accountRepository.findByOtherMainAccount(sendDto.accountNum(), AccountType.MAIN_ACCOUNT);
+		Optional<Account> optionalAccount = accountRepository.findByOtherMainAccount(sendDto.accountNum(),
+			AccountType.MAIN_ACCOUNT);
 
 		optionalMyAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUND_MAIN_ACCOUNT));
 		optionalAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUND_OTHER_MAIN_ACCOUNT));
 
-		Account mainAccount = optionalMyAccount.get();
+		Account myAccount = optionalMyAccount.get();
 		Account otherAccount = optionalAccount.get();
 
-		int lackingMoney = sendDto.sendToMoney() - mainAccount.getAmount();
+		int lackingMoney = sendDto.sendToMoney() - myAccount.getAmount();
 
-		if (mainAccount.getAmount() > sendDto.sendToMoney()) {
+		if (myAccount.getAmount() > sendDto.sendToMoney()) {
 			otherAccount.increaseAmount(sendDto.sendToMoney());
-			mainAccount.reduceAmount(sendDto.sendToMoney());
+			myAccount.reduceAmount(sendDto.sendToMoney());
 		} else {
 			int chargeMoney = (int)(Math.ceil(lackingMoney / 10000.0) * 10000);
-			chargeMainAccount(new ChargeDto(mainAccount.getAccountNum(), chargeMoney));
+			chargeMainAccount(new ChargeDto(myAccount.getAccountNum(), chargeMoney));
+		}
+	}
+
+	// SERIALIZABLE 성능 테스트 서비스
+	@Transactional(isolation = Isolation.SERIALIZABLE)
+	public void sendOtherAccountSERIALIZABLE(String userId, SendDto sendDto) {
+		Optional<Account> optionalMyAccount = accountRepository.findByMainAccount(userId, AccountType.MAIN_ACCOUNT);
+		Optional<Account> optionalAccount = accountRepository.findByAccountNumber(sendDto.accountNum(),
+			AccountType.MAIN_ACCOUNT);
+
+		optionalMyAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUND_MAIN_ACCOUNT));
+		optionalAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUND_OTHER_MAIN_ACCOUNT));
+
+		Account myAccount = optionalMyAccount.get();
+		Account otherAccount = optionalAccount.get();
+
+		int lackingMoney = sendDto.sendToMoney() - myAccount.getAmount();
+
+		if (myAccount.getAmount() > sendDto.sendToMoney()) {
+			otherAccount.increaseAmount(sendDto.sendToMoney());
+			myAccount.reduceAmount(sendDto.sendToMoney());
+		} else {
+			int chargeMoney = (int)(Math.ceil(lackingMoney / 10000.0) * 10000);
+			chargeMainAccount(new ChargeDto(myAccount.getAccountNum(), chargeMoney));
 		}
 	}
 }
