@@ -5,9 +5,14 @@ import static org.mockito.BDDMockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import org.c4marathon.assignment.account.domain.Account;
 import org.c4marathon.assignment.account.domain.AccountType;
@@ -28,6 +33,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -45,6 +51,8 @@ public class AccountTest {
 	@Autowired
 	private AccountService accountService;
 
+	private ExecutorService executorService;
+
 	@Autowired
 	private MockMvc mockMvc;
 
@@ -58,6 +66,7 @@ public class AccountTest {
 	@BeforeEach
 	void start() {
 		accountRepository.deleteAll();
+		executorService = Executors.newFixedThreadPool(10);
 	}
 
 	@AfterEach
@@ -181,23 +190,19 @@ public class AccountTest {
 		// 회원가입
 		User user = new User("user123", "password", "홍길동", 1234);
 
-		given(userRepository.findByUserId(user.getUserId())).willReturn(Optional.of(user));
-
 		// 메인 계좌 생성
 		Account mainAccount = new Account(12345678L, AccountType.MAIN_ACCOUNT, 10000, 1234, 3000000, user);
-
 		given(accountRepository.findByMainAccount(user.getUserId(), AccountType.MAIN_ACCOUNT)).willReturn(
 			Optional.of(mainAccount));
 
 		// 적금 계좌 생성
 		Account savingAccount = new Account(11111111L, AccountType.SAVING_ACCOUNT, 0, 1111, 3000000, user);
-
 		given(accountRepository.findByAccount(savingAccount.getAccountNum())).willReturn(Optional.of(savingAccount));
 
 		SendDto sendDto = new SendDto(11111111L, 5000, 1234);
 
 		// when
-		mockMvc.perform(post("/account/send/{userId}", user.getUserId())
+		mockMvc.perform(post("/account/send/saving/{userId}", user.getUserId())
 				.content(toJson(sendDto))
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk());
@@ -214,23 +219,19 @@ public class AccountTest {
 		// 회원가입
 		User user = new User("user123", "password", "홍길동", 1234);
 
-		given(userRepository.findByUserId(user.getUserId())).willReturn(Optional.of(user));
-
 		// 메인 계좌 생성
 		Account mainAccount = new Account(12345678L, AccountType.MAIN_ACCOUNT, 10000, 1234, 3000000, user);
-
 		given(accountRepository.findByMainAccount(user.getUserId(), AccountType.MAIN_ACCOUNT)).willReturn(
 			Optional.of(mainAccount));
 
 		// 적금 계좌 생성
 		Account savingAccount = new Account(11111111L, AccountType.SAVING_ACCOUNT, 0, 1111, 3000000, user);
-
 		given(accountRepository.findByAccount(savingAccount.getAccountNum())).willReturn(Optional.of(savingAccount));
 
 		SendDto sendDto = new SendDto(11111111L, 15000, 1234);
 
 		// when, then
-		mockMvc.perform(post("/account/send/{userId}", user.getUserId())
+		mockMvc.perform(post("/account/send/saving/{userId}", user.getUserId())
 				.content(toJson(sendDto))
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk());
@@ -244,25 +245,145 @@ public class AccountTest {
 		// 회원가입
 		User user = new User("user123", "password", "홍길동", 1234);
 
-		given(userRepository.findByUserId(user.getUserId())).willReturn(Optional.of(user));
-
 		// 메인 계좌 생성
 		Account mainAccount = new Account(12345678L, AccountType.MAIN_ACCOUNT, 10000, 1234, 3000000, user);
-
 		given(accountRepository.findByMainAccount(user.getUserId(), AccountType.MAIN_ACCOUNT)).willReturn(
 			Optional.of(mainAccount));
 
 		// 적금 계좌 생성
 		Account savingAccount = new Account(11111111L, AccountType.SAVING_ACCOUNT, 0, 1111, 3000000, user);
-
 		given(accountRepository.findByAccount(savingAccount.getAccountNum())).willReturn(Optional.of(savingAccount));
 
 		SendDto sendDto = new SendDto(11111111L, 5000, 1111);
 
 		// when, then
-		mockMvc.perform(post("/account/send/{userId}", user.getUserId())
+		mockMvc.perform(post("/account/send/saving/{userId}", user.getUserId())
 				.content(toJson(sendDto))
 				.contentType(MediaType.APPLICATION_JSON))
 			.andExpect(status().isOk());
+	}
+
+	@DisplayName("[다른 사람 메인 계좌 송금 테스트]")
+	@Test
+	void sendToOtherTest() throws Exception {
+
+		// given
+		// 유저 1
+		User user1 = new User("user123", "password", "홍길동", 1234);
+		// 유저 2
+		User user2 = new User("user111", "password", "고길동", 4321);
+
+		// 메인 계좌 생성
+		Account mainAccount1 = new Account(12345678L, AccountType.MAIN_ACCOUNT, 10000, 1234, 3000000, user1);
+		given(accountRepository.findByMainAccount(user1.getUserId(), AccountType.MAIN_ACCOUNT)).willReturn(
+			Optional.of(mainAccount1));
+
+		// 다른 사람 메인 계좌 생성
+		Account mainAccount2 = new Account(1234567890L, AccountType.MAIN_ACCOUNT, 10000, 4321, 3000000, user2);
+		given(accountRepository.findByOtherMainAccount(mainAccount2.getAccountNum(),
+			AccountType.MAIN_ACCOUNT)).willReturn(
+			Optional.of(mainAccount2));
+
+		SendDto sendDto = new SendDto(mainAccount2.getAccountNum(), 5000, 1234);
+
+		// when
+		mockMvc.perform(post("/account/send/other/{userId}", user1.getUserId())
+				.content(toJson(sendDto))
+				.contentType(MediaType.APPLICATION_JSON))
+			.andExpect(status().isOk());
+
+		// then
+		assertEquals(5000, mainAccount1.getAmount());
+		assertEquals(15000, mainAccount2.getAmount());
+	}
+
+	@DisplayName("[다른 사람 메인 계좌 송금 테스트 ( RepeatableRead와 비관적 락을 사용 ) ]")
+	@Test
+	@Transactional
+	public void testSendOtherAccountWithRepeatableRead() throws InterruptedException {
+		// given
+		List<Callable<Void>> tasks = new ArrayList<>();
+		// 유저 1
+		User user1 = new User("user123", "password", "홍길동", 1234);
+		// 유저 2
+		User user2 = new User("user111", "password", "고길동", 4321);
+
+		// 메인 계좌 생성
+		Account mainAccount1 = new Account(12345678L, AccountType.MAIN_ACCOUNT, 10000, 1234, 3000000, user1);
+		given(accountRepository.findByMainAccount(user1.getUserId(), AccountType.MAIN_ACCOUNT)).willReturn(
+			Optional.of(mainAccount1));
+
+		// 다른 사람 메인 계좌 생성
+		Account mainAccount2 = new Account(1234567890L, AccountType.MAIN_ACCOUNT, 10000, 4321, 3000000, user2);
+		given(accountRepository.findByOtherMainAccount(mainAccount2.getAccountNum(),
+			AccountType.MAIN_ACCOUNT)).willReturn(
+			Optional.of(mainAccount2));
+
+		// 100명이 동시에 송금 시도 (각각 100원씩 송금)
+		for (int i = 0; i < 100; i++) {
+			tasks.add(() -> {
+				SendDto sendDto = new SendDto(1234567890L, 100, 4321); // 1234567890L 계좌로 100원 송금
+				accountService.sendOtherAccount(user1.getUserId(), sendDto);
+				return null;
+			});
+		}
+
+		long startTime = System.currentTimeMillis();
+		List<Future<Void>> futures = executorService.invokeAll(tasks); // 100개의 송금 작업 실행
+		long endTime = System.currentTimeMillis();
+
+		Account senderAccount = accountRepository.findByMainAccount(user1.getUserId(), AccountType.MAIN_ACCOUNT)
+			.orElseThrow();
+		Account receiverAccount = accountRepository.findByOtherMainAccount(mainAccount2.getAccountNum(),
+			AccountType.MAIN_ACCOUNT).orElseThrow();
+
+		System.out.println("REPEATABLE READ - 송신 계좌 잔액: " + senderAccount.getAmount());
+		System.out.println("REPEATABLE READ - 수신 계좌 잔액: " + receiverAccount.getAmount());
+		System.out.println("REPEATABLE READ - 실행 시간: " + (endTime - startTime) + "ms");
+	}
+
+	@DisplayName("[다른 사람 메인 계좌 송금 테스트 ( Serializable만 사용 ) ]")
+	@Test
+	@Transactional
+	public void testSendOtherAccountWithSerializable() throws InterruptedException {
+		// given
+		List<Callable<Void>> tasks = new ArrayList<>();
+		// 유저 1
+		User user1 = new User("user123", "password", "홍길동", 1234);
+		// 유저 2
+		User user2 = new User("user111", "password", "고길동", 4321);
+
+		// 메인 계좌 생성
+		Account mainAccount1 = new Account(12345678L, AccountType.MAIN_ACCOUNT, 10000, 1234, 3000000, user1);
+		given(accountRepository.findByMainAccount(user1.getUserId(), AccountType.MAIN_ACCOUNT)).willReturn(
+			Optional.of(mainAccount1));
+
+		// 다른 사람 메인 계좌 생성
+		Account mainAccount2 = new Account(1234567890L, AccountType.MAIN_ACCOUNT, 10000, 4321, 3000000, user2);
+		given(accountRepository.findByAccountNumber(mainAccount2.getAccountNum(),
+			AccountType.MAIN_ACCOUNT)).willReturn(
+			Optional.of(mainAccount2));
+
+		// 100명이 동시에 송금 시도 (각각 100원씩 송금)
+		for (int i = 0; i < 100; i++) {
+			tasks.add(() -> {
+				SendDto sendDto = new SendDto(1234567890L, 100, 4321); // 1234567890L 계좌로 100원 송금
+				accountService.sendOtherAccountSERIALIZABLE(user1.getUserId(), sendDto);
+				return null;
+			});
+		}
+
+		long startTime = System.currentTimeMillis();
+		List<Future<Void>> futures = executorService.invokeAll(tasks); // 100개의 송금 작업 실행
+		long endTime = System.currentTimeMillis();
+
+		Account senderAccount = accountRepository.findByMainAccount(user1.getUserId(), AccountType.MAIN_ACCOUNT)
+			.orElseThrow();
+		Account receiverAccount = accountRepository.findByAccountNumber(mainAccount2.getAccountNum(),
+			AccountType.MAIN_ACCOUNT).orElseThrow();
+
+		System.out.println("SERIALIZABLE - 송신 계좌 잔액: " + senderAccount.getAmount());
+		System.out.println("SERIALIZABLE - 수신 계좌 잔액: " + receiverAccount.getAmount());
+		System.out.println("SERIALIZABLE - 실행 시간: " + (endTime - startTime) + "ms");
 	}
 }

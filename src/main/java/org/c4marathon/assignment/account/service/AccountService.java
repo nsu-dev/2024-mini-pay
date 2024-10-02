@@ -35,6 +35,7 @@ public class AccountService {
 	private final ApplicationEventPublisher eventPublisher;
 	Long randomAccountNum = new Random().nextLong();
 
+	// 정각마다 일일한도 초기화 서비스
 	@Scheduled(cron = "0 0 0 * * *")
 	@Transactional(isolation = Isolation.SERIALIZABLE)
 	public void resetLimitAccount() {
@@ -44,6 +45,7 @@ public class AccountService {
 		}
 	}
 
+	// 메인 계좌 충전 서비스
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public void chargeMainAccount(ChargeDto chargeDto) {
 
@@ -53,53 +55,100 @@ public class AccountService {
 			Account account = optionalAccount.get();
 
 			account.setAmount(chargeDto.chargeMoney());
-		}else {
-			throw new BaseException(NotFountAccountException.NOT_FOUNT_ACCOUNT);
+		} else {
+			throw new BaseException(NotFountAccountException.NOT_FOUND_ACCOUNT);
 		}
 	}
 
+	// 적금 계좌 생성 서비스
 	@Transactional
 	public void craeteSavingAccount(String userId, SavingAccountPwDto savingAccountPwDto) {
 		Optional<User> userOptional = userRepository.findByUserId(userId);
+		userOptional.orElseThrow(() -> new BaseException(NotFoundException.NOT_FOUND_USER));
 
-		if (userOptional.isPresent()) {
-			User user = userOptional.get();
-			Account account = Account.builder()
-				.accountNum(randomAccountNum)
-				.type(AccountType.SAVING_ACCOUNT)
-				.accountPw(savingAccountPwDto.accountPw())
-				.amount(0)
-				.user(user)
-				.build();
+		User user = userOptional.get();
+		Account account = Account.builder()
+			.accountNum(randomAccountNum)
+			.type(AccountType.SAVING_ACCOUNT)
+			.accountPw(savingAccountPwDto.accountPw())
+			.amount(0)
+			.user(user)
+			.build();
 
-			accountRepository.save(account);
-		} else {
-			throw new BaseException(NotFoundException.NOT_FOUND_USER);
-		}
+		accountRepository.save(account);
 	}
 
+	// 적금 계좌로 송금할 때 서비스 ( 메인 -> 적금 )
 	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public void sendSavingAccount(String userId, SendDto sendDto) {
 		Optional<Account> optionalAccount = accountRepository.findByAccount(sendDto.accountNum());
 		Optional<Account> mainAccount = accountRepository.findByMainAccount(userId, AccountType.MAIN_ACCOUNT);
 
-		optionalAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUNT_ACCOUNT));
-		mainAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUNT_MAIN_ACCOUNT));
+		optionalAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUND_ACCOUNT));
+		mainAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUND_MAIN_ACCOUNT));
 
 		Account main = mainAccount.get();
 
 		if (main.getAccountPw() == sendDto.accountPw()) {
 			Account saving = optionalAccount.get();
-			int checkMoney = main.getAmount() - sendDto.sendMoney();
+			int checkMoney = main.getAmount() - sendDto.sendToMoney();
 
 			if (checkMoney > 0) {
-				main.reduceAmount(sendDto.sendMoney());
-				saving.increaseAmount(sendDto.sendMoney());
+				main.reduceAmount(sendDto.sendToMoney());
+				saving.increaseAmount(sendDto.sendToMoney());
 			} else {
 				throw new BaseException(MainAccountException.SHORT_MONEY);
 			}
 		} else {
 			throw new BaseException(NotFountAccountException.NOT_MATCH_ACCOUNT);
+		}
+	}
+
+	// 메인 계좌로 송금할 때 서비스 ( 메인 -> 다른 사람의 메인 )
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
+	public void sendOtherAccount(String userId, SendDto sendDto) {
+		Optional<Account> optionalMyAccount = accountRepository.findByMainAccount(userId, AccountType.MAIN_ACCOUNT);
+		Optional<Account> optionalAccount = accountRepository.findByOtherMainAccount(sendDto.accountNum(),
+			AccountType.MAIN_ACCOUNT);
+
+		optionalMyAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUND_MAIN_ACCOUNT));
+		optionalAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUND_OTHER_MAIN_ACCOUNT));
+
+		Account myAccount = optionalMyAccount.get();
+		Account otherAccount = optionalAccount.get();
+
+		int lackingMoney = sendDto.sendToMoney() - myAccount.getAmount();
+
+		if (myAccount.getAmount() > sendDto.sendToMoney()) {
+			otherAccount.increaseAmount(sendDto.sendToMoney());
+			myAccount.reduceAmount(sendDto.sendToMoney());
+		} else {
+			int chargeMoney = (int)(Math.ceil(lackingMoney / 10000.0) * 10000);
+			chargeMainAccount(new ChargeDto(myAccount.getAccountNum(), chargeMoney));
+		}
+	}
+
+	// SERIALIZABLE 성능 테스트 서비스
+	@Transactional(isolation = Isolation.SERIALIZABLE)
+	public void sendOtherAccountSERIALIZABLE(String userId, SendDto sendDto) {
+		Optional<Account> optionalMyAccount = accountRepository.findByMainAccount(userId, AccountType.MAIN_ACCOUNT);
+		Optional<Account> optionalAccount = accountRepository.findByAccountNumber(sendDto.accountNum(),
+			AccountType.MAIN_ACCOUNT);
+
+		optionalMyAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUND_MAIN_ACCOUNT));
+		optionalAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUND_OTHER_MAIN_ACCOUNT));
+
+		Account myAccount = optionalMyAccount.get();
+		Account otherAccount = optionalAccount.get();
+
+		int lackingMoney = sendDto.sendToMoney() - myAccount.getAmount();
+
+		if (myAccount.getAmount() > sendDto.sendToMoney()) {
+			otherAccount.increaseAmount(sendDto.sendToMoney());
+			myAccount.reduceAmount(sendDto.sendToMoney());
+		} else {
+			int chargeMoney = (int)(Math.ceil(lackingMoney / 10000.0) * 10000);
+			chargeMainAccount(new ChargeDto(myAccount.getAccountNum(), chargeMoney));
 		}
 	}
 }

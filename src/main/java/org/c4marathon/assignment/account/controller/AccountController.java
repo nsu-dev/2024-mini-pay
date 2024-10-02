@@ -52,10 +52,25 @@ public class AccountController {
 	}
 
 	// 적금 계좌로 돈 송금
-	@PostMapping("/account/send/{userId}")
-	public ResponseEntity<CommonResponse> sendMoney(@PathVariable("userId") @RequestBody String userId,
+	@PostMapping("/account/send/saving/{userId}")
+	public ResponseEntity<CommonResponse> sendMoneyToSaving(@PathVariable("userId") @RequestBody String userId,
 		@Valid @RequestBody SendDto sendDto) {
 		accountService.sendSavingAccount(userId, sendDto);
+
+		CommonResponse res = new CommonResponse(
+			200,
+			HttpStatus.OK,
+			"송금완료",
+			null
+		);
+		return new ResponseEntity<>(res, res.getHttpStatus());
+	}
+
+	// 다른 사람의 메인 계좌로 돈 송금
+	@PostMapping("/account/send/other/{userId}")
+	public ResponseEntity<CommonResponse> sendMoneyToOther(@PathVariable("userId") @RequestBody String userId,
+		@Valid @RequestBody SendDto sendDto) {
+		accountService.sendOtherAccount(userId, sendDto);
 
 		CommonResponse res = new CommonResponse(
 			200,
