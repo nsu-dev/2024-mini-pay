@@ -1,5 +1,6 @@
 package org.c4marathon.assignment.account.controller;
 
+import org.c4marathon.assignment.account.dto.CalculatePaymentDto;
 import org.c4marathon.assignment.account.dto.ChargeDto;
 import org.c4marathon.assignment.account.dto.SavingAccountPwDto;
 import org.c4marathon.assignment.account.dto.SendDto;
@@ -78,6 +79,24 @@ public class AccountController {
 			"송금완료",
 			null
 		);
+		return new ResponseEntity<>(res, res.getHttpStatus());
+	}
+
+	// A가 B와 C에게 정산 요청을 보낼 때 호출
+	@PostMapping("/account/settlement/request")
+	public ResponseEntity<CommonResponse> requestSettlement(@RequestBody CalculatePaymentDto calculatePaymentDto) {
+		accountService.requestSettlement(calculatePaymentDto);
+
+		CommonResponse res = new CommonResponse(200, HttpStatus.OK, "정산 요청 완료", null);
+		return new ResponseEntity<>(res, res.getHttpStatus());
+	}
+
+	// B나 C가 정산을 수락하고 정산을 진행할 때 호출
+	@PostMapping("/account/settlement/process")
+	public ResponseEntity<CommonResponse> processSettlement(@RequestBody SendDto sendDto) {
+		accountService.processSettlement(sendDto);
+
+		CommonResponse res = new CommonResponse(200, HttpStatus.OK, "정산 완료", null);
 		return new ResponseEntity<>(res, res.getHttpStatus());
 	}
 
