@@ -21,7 +21,7 @@ public class AccountService {
 	private final UserRepository userRepository;
 
 	// 적금 계좌 추가
-	@Transactional(isolation = Isolation.REPEATABLE_READ)
+	@Transactional
 	public boolean addSavingsAccount(Long userId, AccountType type, int balance) {
 		User user = findUserById(userId);
 		// 적금 계좌 생성 및 저장
@@ -35,7 +35,7 @@ public class AccountService {
 	}
 
 	// 메인 계좌에서 적금 계좌로 송금
-	@Transactional(isolation = Isolation.SERIALIZABLE)
+	@Transactional
 	public boolean transferToSavings(Long userId, Long savingsAccountId, int money) {
 		User user = findUserById(userId);
 		Account mainAccount = user.getMainAccount();

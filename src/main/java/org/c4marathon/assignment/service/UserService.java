@@ -8,7 +8,6 @@ import org.c4marathon.assignment.domain.User;
 import org.c4marathon.assignment.repository.AccountRepository;
 import org.c4marathon.assignment.repository.UserRepository;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.Getter;
@@ -22,7 +21,7 @@ public class UserService {
 	private final AccountRepository accountRepository;
 
 	//사용자 회원가입(메인 계좌 생성)
-	@Transactional(isolation = Isolation.READ_COMMITTED)
+	@Transactional
 	public UserResponseDto registerUser(UserRequestDto userRequestDto) {
 		// User 객체를 빌더 패턴으로 생성
 		User user = User.builder()
