@@ -8,6 +8,7 @@ import lombok.Getter;
 @Getter
 public enum SettlementErrCode {
 	SETTLEMENT_FAIL(400, SettlementResponseMsg.REQUEST_FAIL.getResponseMsg()),
+	SETTLEMENT_INVALID_TYPE(400, SettlementResponseMsg.SETTLEMENT_INVALID_TYPE.getResponseMsg()),
 	SETTLEMENT_NOT_FOUND(404, SettlementResponseMsg.SETTLEMENT_NOT_FOUND.getResponseMsg());
 
 	private final int status;
