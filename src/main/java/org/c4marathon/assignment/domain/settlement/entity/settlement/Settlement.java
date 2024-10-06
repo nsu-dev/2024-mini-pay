@@ -1,6 +1,7 @@
 package org.c4marathon.assignment.domain.settlement.entity.settlement;
 
 import static jakarta.persistence.EnumType.*;
+import static org.c4marathon.assignment.domain.settlement.entity.settlement.SettlementStatus.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,6 +54,21 @@ public class Settlement {
 		this.numberOfUsers = numberOfUsers;
 		this.remainingUsers = remainingUsers;
 		this.remainingAmount = remainingAmount;
+		this.settlementStatus = settlementStatus;
+	}
+
+	public void updateRemainingAmount(Long remittanceAmount) {
+		this.remainingAmount -= remittanceAmount;
+		if (remittanceAmount == 0) {
+			updateSettlementStatus(COMPLETED);
+		}
+	}
+
+	public void updateRemainingUsers() {
+		this.remainingUsers -= 1;
+	}
+
+	private void updateSettlementStatus(SettlementStatus settlementStatus) {
 		this.settlementStatus = settlementStatus;
 	}
 }
