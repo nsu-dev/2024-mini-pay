@@ -64,8 +64,8 @@ public class Settlement {
 		}
 	}
 
-	public void updateRemainingUsers() {
-		this.remainingUsers -= 1;
+	public void updateRemainingUsers(int remainingUsers) {
+		this.remainingUsers = remainingUsers;
 	}
 
 	private void updateSettlementStatus(SettlementStatus settlementStatus) {
