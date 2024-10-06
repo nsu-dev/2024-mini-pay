@@ -2,6 +2,7 @@ package org.c4marathon.assignment.service;
 
 import java.time.LocalDate;
 
+import org.c4marathon.assignment.Exception.InsufficientBalanceException;
 import org.c4marathon.assignment.domain.Account;
 import org.c4marathon.assignment.domain.AccountType;
 import org.c4marathon.assignment.domain.User;
@@ -41,6 +42,10 @@ public class AccountService {
 		Account mainAccount = user.getMainAccount();
 		Account savingsAccount = findAccountById(savingsAccountId);
 
+		if (mainAccount.getBalance() < money) {
+			throw new InsufficientBalanceException("잔랙이 부족합니다.");
+		}
+
 		executeTransfer(mainAccount, savingsAccount, money);
 		return true;
 	}
@@ -50,7 +55,7 @@ public class AccountService {
 	public boolean transferFromExternalAccount(Long userId, Long externalUserId, int money) {
 		//사용자와 외부 사용자 찾기
 		User user = findUserById(userId);
-		User externalUser = findUserById(userId);
+		User externalUser = findUserById(externalUserId);
 
 		Account userMainAccount = user.getMainAccount();
 		Account externalMainAccount = externalUser.getMainAccount();
@@ -128,7 +133,7 @@ public class AccountService {
 	}
 
 	// 자동 충전 처리
-	private void handleAutoCharge(Account userMainAccount, int money) {
+	protected void handleAutoCharge(Account userMainAccount, int money) {
 		LocalDate today = LocalDate.now();
 		int remainingMoney = money - userMainAccount.getBalance(); // 부족 금액 계산
 

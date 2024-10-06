@@ -1,6 +1,7 @@
 package org.c4marathon.assignment.controller;
 
 import org.c4marathon.assignment.Dto.TransferRequestDto;
+import org.c4marathon.assignment.Exception.InsufficientBalanceException;
 import org.c4marathon.assignment.domain.AccountType;
 import org.c4marathon.assignment.service.AccountService;
 import org.c4marathon.assignment.service.QueueService;
@@ -34,9 +35,12 @@ public class AccountController {
 	public ResponseEntity<String> transferToSavings(@PathVariable Long userId,
 		@RequestParam Long savingsAccountId,
 		@RequestParam int money) {
-		TransferRequestDto request = new TransferRequestDto(userId, savingsAccountId, money);
-		queueService.addToQueue(request);
-		return ResponseEntity.ok("송금 요청이 접수되었습니다.");
+		try {
+			accountService.transferToSavings(userId, savingsAccountId, money);
+			return ResponseEntity.ok("송금 요청이 접수되었습니다.");
+		} catch (InsufficientBalanceException e) {
+			return ResponseEntity.badRequest().body("잘못된 요청: " + e.getMessage());
+		}
 	}
 
 	// 외부 메인 계좌로 송금

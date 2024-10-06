@@ -3,7 +3,6 @@ package org.c4marathon.assignment.controller;
 import org.c4marathon.assignment.Dto.TransferRequestDto;
 import org.c4marathon.assignment.Dto.UserRequestDto;
 import org.c4marathon.assignment.Dto.UserResponseDto;
-import org.c4marathon.assignment.service.AccountService;
 import org.c4marathon.assignment.service.QueueService;
 import org.c4marathon.assignment.service.UserService;
 import org.springframework.http.ResponseEntity;
@@ -22,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 public class UserController {
 
 	private final UserService userService;
-	private final AccountService accountService;
 	private final QueueService queueService;
 
 	//사용자 회원가입

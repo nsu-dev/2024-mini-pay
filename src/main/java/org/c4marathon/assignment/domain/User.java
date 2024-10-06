@@ -37,7 +37,8 @@ public class User {
 
 	//@Builer를 통해 객체 생성 시 필드 값을 초기화
 	@Builder
-	public User(String password, String name, String registrationNum) {
+	public User(Long userId, String password, String name, String registrationNum) {
+		this.userId = userId;
 		this.password = password;
 		this.name = name;
 		this.registrationNum = registrationNum;
