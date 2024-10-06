@@ -12,6 +12,7 @@ import org.c4marathon.assignment.domain.account.entity.account.Account;
 import org.c4marathon.assignment.domain.account.entity.account.AccountRole;
 import org.c4marathon.assignment.domain.account.repository.AccountRepository;
 import org.c4marathon.assignment.domain.account.service.AccountService;
+import org.c4marathon.assignment.domain.account.transaction.TransactionHandler;
 import org.c4marathon.assignment.domain.settlement.dto.SettlementMapper;
 import org.c4marathon.assignment.domain.settlement.dto.request.SettlementRequestDto;
 import org.c4marathon.assignment.domain.settlement.dto.response.SettlementHistoryResponseDto;
@@ -37,6 +38,7 @@ public class SettlementService {
 	private UserRepository userRepository;
 	private AccountRepository accountRepository;
 	private AccountService accountService;
+	private TransactionHandler transactionHandler;
 
 	//정산 목록 불러오는 메서드
 	public List<SettlementHistoryResponseDto> findAllSettlement(HttpServletRequest httpServletRequest) {
@@ -87,8 +89,11 @@ public class SettlementService {
 			}
 			default -> throw new SettlementException(SETTLEMENT_INVALID_TYPE);
 		}
-		settlementUserRepository.deleteById(settlementUser.getSettlementUserId());
-		settlement.updateRemainingUsers(settlementUserRepository.countRemainingUsers(settlement));
+		//테스트를 통해서 delete가 바로 적용되는지 알아보기
+		transactionHandler.runInCommittedTransaction(() -> {
+			settlementUserRepository.deleteById(settlementUser.getSettlementUserId());
+			settlement.updateRemainingUsers(settlementUserRepository.countRemainingUsers(settlement));
+		});
 		return accountService.remittanceOtherMain(remittanceRequestDto, httpServletRequest);
 	}
 
@@ -97,7 +102,9 @@ public class SettlementService {
 		int remainingUsers = settlement.getRemainingUsers();
 		Long remainingAmount = settlement.getRemainingAmount();
 		Long remittanceAmount = calculateSplitEquals(remainingUsers, remainingAmount);
-		settlement.updateRemainingAmount(remittanceAmount);
+		transactionHandler.runInCommittedTransaction(() -> {
+			settlement.updateRemainingAmount(remittanceAmount);
+		});
 		Account account = accountRepository.findMainAccount(receiver.getUserId(), AccountRole.MAIN);
 		return new RemittanceRequestDto(account.getAccountNum(), remittanceAmount);
 	}
