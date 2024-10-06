@@ -64,7 +64,6 @@ public class SettlementService {
 		Long settlementUserId,
 		HttpServletRequest httpServletRequest
 	) {
-		Long userId = getSessionId(httpServletRequest);
 		SettlementUser settlementUser = settlementUserRepository.findById(settlementUserId)
 			.orElseThrow(() -> new SettlementException(SETTLEMENT_NOT_FOUND));
 		User receiver = settlementUserRepository.findReceiver(RECEIVER, settlementUser.getSettlement());
