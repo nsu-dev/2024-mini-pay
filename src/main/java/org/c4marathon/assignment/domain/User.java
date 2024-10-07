@@ -11,11 +11,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
+@Table(name = "users")
 @Getter
 @NoArgsConstructor // 기본 생성자 자동 추가
 public class User {
@@ -37,10 +39,10 @@ public class User {
 
 	//@Builer를 통해 객체 생성 시 필드 값을 초기화
 	@Builder
-	public User(Long userId, String password, String name, String registrationNum) {
+	public User(Long userId, String name, String password, String registrationNum) {
 		this.userId = userId;
-		this.password = password;
 		this.name = name;
+		this.password = password;
 		this.registrationNum = registrationNum;
 		this.savingAccounts = new ArrayList<>();
 	}

@@ -1,19 +1,25 @@
 package org.c4marathon.assignment;
 
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import java.time.LocalDate;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.c4marathon.assignment.Exception.InsufficientBalanceException;
+import org.c4marathon.assignment.domain.Account;
 import org.c4marathon.assignment.domain.AccountType;
+import org.c4marathon.assignment.domain.User;
+import org.c4marathon.assignment.repository.AccountRepository;
 import org.c4marathon.assignment.service.AccountService;
 import org.c4marathon.assignment.service.QueueService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,7 +29,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-public class AccountTest {
+public class AccountControllerTest {
 
 	@Autowired
 	private MockMvc mockMvc;
@@ -33,6 +39,11 @@ public class AccountTest {
 
 	@MockBean
 	private QueueService queueService;
+	@MockBean
+	private AccountRepository accountRepository;
+
+	@InjectMocks
+	private AccountControllerTest accountControllerTest;
 
 	private static final Long USER_ID = 1L;
 	private static final Long SAVINGS_ACCOUNT_ID = 2L;
@@ -205,4 +216,84 @@ public class AccountTest {
 		verify(accountService, times(1)).transferToSavings(USER_ID, 999L, MONEY);
 	}
 
+	@Test
+	@DisplayName("정상적인 출금 테스트")
+	public void testWithdraw_Success() {
+		// Given
+		User user = UserFixture.createDefaultUser();
+		Account account = new Account(AccountType.MAIN, 1000000, user); // 잔액 1,000,000원
+		LocalDate today = LocalDate.now();
+
+		// When
+		account.withdraw(500000, today); // 500,000원 출금
+
+		// Then
+		assertEquals(500000, account.getBalance()); // 잔액 500,000원 확인
+		assertEquals(500000, account.getTodayChargeMoney()); // 당일 출금 금액 500,000원 확인
+	}
+
+	@Test
+	@DisplayName("잔액 초과 출금 테스트")
+	public void testWithdraw_InsufficientBalance() {
+		// Given
+		User user = UserFixture.createDefaultUser();
+		Account account = new Account(AccountType.MAIN, 300000, user); // 잔액 300,000원
+		LocalDate today = LocalDate.now();
+
+		// When & Then
+		assertThrows(IllegalArgumentException.class, () -> {
+			account.withdraw(500000, today); // 500,000원 출금 시도 (잔액 초과)
+		});
+	}
+
+	@Test
+	@DisplayName("하루 충전 한도 초과 테스트")
+	public void testWithdraw_ExceedDailyLimit() {
+		// Given
+		User user = UserFixture.createDefaultUser();
+		Account account = new Account(AccountType.MAIN, 5000000, user); // 잔액 5,000,000원
+		LocalDate today = LocalDate.now();
+
+		// 하루 충전 한도 내에서 출금 (한도 3,000,000원 중 2,900,000원 출금)
+		account.withdraw(2900000, today); // 이미 2,900,000원 출금
+
+		// When & Then
+		assertThrows(IllegalArgumentException.class, () -> {
+			// 추가로 200,000원을 출금 시도 (출금 한도 초과)
+			account.withdraw(200000, today);
+		});
+	}
+
+	@Test
+	@DisplayName("하루 충전 한도 경계 테스트")
+	public void transferDailyLimitBoundary_Test() {
+		// Given
+		User user = UserFixture.createDefaultUser();  // UserFixture로 기본 사용자 생성
+		Account mainAccount = user.getMainAccount();  // 메인 계좌
+		Account savingsAccount = new Account(AccountType.SAVINGS, 0, user);  // 적금 계좌 생성
+
+		// Mocking
+		when(accountService.transferToSavings(anyLong(), anyLong(), anyInt())).thenAnswer(invocation -> {
+			int amount = invocation.getArgument(2);
+			savingsAccount.deposit(amount);  // 적금 계좌에 금액 입금
+			when(accountRepository.save(any(Account.class))).thenReturn(savingsAccount);  // 적금 계좌 저장
+			return true;
+		});
+
+		// When
+		accountService.transferToSavings(user.getUserId(), savingsAccount.getAccountId(), 2_999_999);
+
+		// Then
+		assertEquals(2_999_999, savingsAccount.getBalance());  // 적금 계좌에 제대로 입금되었는지 확인
+	}
+
+	@Test
+	@DisplayName("잘못된 매개변수로 송금 요청 시도")
+	public void transferMissingParameters_Test() throws Exception {
+		// When - 필수 매개변수인 savingsAccountId와 money가 빠진 경우
+		mockMvc.perform(post("/users/{userId}/move-to-savings", USER_ID)
+				.contentType(MediaType.APPLICATION_JSON))
+			// Then - 필수 매개변수가 없기 때문에 400 Bad Request가 나와야 함
+			.andExpect(status().isBadRequest());
+	}
 }

@@ -43,10 +43,16 @@ public class AccountService {
 		Account savingsAccount = findAccountById(savingsAccountId);
 
 		if (mainAccount.getBalance() < money) {
-			throw new InsufficientBalanceException("잔랙이 부족합니다.");
+			throw new InsufficientBalanceException("잔액이 부족합니다.");
 		}
 
+		// 송금 처리
 		executeTransfer(mainAccount, savingsAccount, money);
+
+		// 변경된 계좌 정보 저장
+		accountRepository.save(mainAccount);
+		accountRepository.save(savingsAccount);
+
 		return true;
 	}
 
@@ -122,8 +128,7 @@ public class AccountService {
 	private void executeTransfer(Account fromAccount, Account toAccount, int money) {
 		LocalDate today = LocalDate.now();
 		fromAccount.withdraw(money, today);
-		toAccount.deposit(money);
-		toAccount.addTodayChargeMoney(money);
+		toAccount.deposit(money);  // 적금 계좌에 돈을 입금
 	}
 
 	// 적금 계좌 생성 및 저장

@@ -37,6 +37,15 @@ public class Account {
 	@JoinColumn(name = "userId")
 	private User user;
 
+	// accountId까지 설정하는 생성자 추가
+	public Account(Long accountId, AccountType type, int balance, User user) {
+		this.accountId = accountId;  // 수동으로 ID 설정
+		this.type = type;
+		this.balance = balance;
+		this.lastWithdrawalDate = LocalDate.now(); // 계좌 생성 시 초기화
+		this.user = user;
+	}
+
 	//사용자와의 관계를 설정하는 생성자
 	public Account(AccountType type, int initialBalance, User user) {
 		this.type = type;
