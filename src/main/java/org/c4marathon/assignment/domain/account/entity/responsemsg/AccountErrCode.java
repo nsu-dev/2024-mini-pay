@@ -1,4 +1,4 @@
-package org.c4marathon.assignment.domain.account.entity.responseMsg;
+package org.c4marathon.assignment.domain.account.entity.responsemsg;
 
 import org.c4marathon.assignment.domain.account.entity.account.AccountStatus;
 
