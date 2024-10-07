@@ -24,7 +24,8 @@ public class SettlementMapper {
 	private static UserRepository userRepository;
 
 	public static List<SettlementHistoryResponseDto> toSettlementResponseDtoList(
-		List<SettlementUser> settlementUserList) {
+		List<SettlementUser> settlementUserList
+	) {
 		List<SettlementHistoryResponseDto> settlementHistoryResponseDtoList = new ArrayList<>();
 		for (SettlementUser settlementUser : settlementUserList) {
 			SettlementHistoryResponseDto settlementHistoryResponseDto = SettlementHistoryResponseDto.builder()
@@ -51,7 +52,7 @@ public class SettlementMapper {
 			.settlementStatus(SettlementStatus.REQUESTED)
 			.build();
 	}
-	
+
 	public static void toSettlementUser(SettlementRequestDto settlementRequestDto, User user, Settlement settlement) {
 		SettlementUser settlementUser = new SettlementUser(RECEIVER, user, settlement);
 		settlementUserRepository.save(settlementUser);
