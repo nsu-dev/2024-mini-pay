@@ -153,8 +153,11 @@ public class AccountService {
 	}
 
 	//메인계좌에서 인출 후 적금계좌에 입금
-	public RemittanceResponseDto savingRemittance(Long savingId, SavingRequestDto savingRequestDto,
-		HttpServletRequest httpServletRequest) {
+	public RemittanceResponseDto savingRemittance(
+		Long savingId,
+		SavingRequestDto savingRequestDto,
+		HttpServletRequest httpServletRequest
+	) {
 		Long userId = getSessionId(httpServletRequest);
 		User user = userRepository.findById(userId).orElseThrow(() -> new UserException(USER_NOT_FOUND));
 		transactionHandler.runInCommittedTransaction(() -> {
@@ -168,8 +171,10 @@ public class AccountService {
 	}
 
 	//메인계좌간의 거래
-	public RemittanceResponseDto remittanceOtherMain(RemittanceRequestDto remittanceRequestDto,
-		HttpServletRequest httpServletRequest) {
+	public RemittanceResponseDto remittanceOtherMain(
+		RemittanceRequestDto remittanceRequestDto,
+		HttpServletRequest httpServletRequest
+	) {
 		Long userId = getSessionId(httpServletRequest);
 		Long receiveAccountNum = remittanceRequestDto.accountNum();
 		Long remittanceAmount = remittanceRequestDto.remittanceAmount();
