@@ -1,4 +1,4 @@
-package org.c4marathon.assignment.config;
+package org.c4marathon.assignment.global.config;
 
 import static org.c4marathon.assignment.domain.user.entity.UserErrCode.*;
 
