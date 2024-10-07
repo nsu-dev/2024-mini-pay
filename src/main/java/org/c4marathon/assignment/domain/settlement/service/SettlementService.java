@@ -42,7 +42,6 @@ public class SettlementService {
 	private final UserRepository userRepository;
 	private final AccountRepository accountRepository;
 	private final AccountService accountService;
-	// private final TransactionHandler transactionHandler;
 
 	//정산 목록 불러오는 메서드
 	public List<SettlementHistoryResponseDto> findAllSettlement(HttpServletRequest httpServletRequest) {
