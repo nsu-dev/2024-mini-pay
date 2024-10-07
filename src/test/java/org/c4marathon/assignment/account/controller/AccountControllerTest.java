@@ -6,13 +6,13 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-import org.c4marathon.assignment.domain.account.dto.CreateResponseDto;
-import org.c4marathon.assignment.domain.account.dto.RemittanceRequestDto;
-import org.c4marathon.assignment.domain.account.dto.RemittanceResponseDto;
-import org.c4marathon.assignment.domain.account.dto.SavingRequestDto;
-import org.c4marathon.assignment.domain.account.entity.AccountErrCode;
-import org.c4marathon.assignment.domain.account.entity.CreateResponseMsg;
-import org.c4marathon.assignment.domain.account.entity.RemittanceResponseMsg;
+import org.c4marathon.assignment.domain.account.dto.request.RemittanceRequestDto;
+import org.c4marathon.assignment.domain.account.dto.request.SavingRequestDto;
+import org.c4marathon.assignment.domain.account.dto.response.CreateResponseDto;
+import org.c4marathon.assignment.domain.account.dto.response.RemittanceResponseDto;
+import org.c4marathon.assignment.domain.account.entity.responseMsg.AccountErrCode;
+import org.c4marathon.assignment.domain.account.entity.responseMsg.CreateResponseMsg;
+import org.c4marathon.assignment.domain.account.entity.responseMsg.RemittanceResponseMsg;
 import org.c4marathon.assignment.domain.account.exception.AccountException;
 import org.c4marathon.assignment.domain.account.service.AccountService;
 import org.junit.jupiter.api.DisplayName;

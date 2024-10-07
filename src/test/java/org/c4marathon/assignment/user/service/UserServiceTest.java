@@ -7,14 +7,14 @@ import static org.mockito.BDDMockito.*;
 
 import java.util.Optional;
 
-import org.c4marathon.assignment.domain.user.dto.JoinResponseDto;
-import org.c4marathon.assignment.domain.user.dto.LoginRequestDto;
-import org.c4marathon.assignment.domain.user.dto.LoginResponseDto;
-import org.c4marathon.assignment.domain.user.dto.UserDto;
-import org.c4marathon.assignment.domain.user.entity.JoinResponseMsg;
-import org.c4marathon.assignment.domain.user.entity.LoginResponseMsg;
-import org.c4marathon.assignment.domain.user.entity.User;
-import org.c4marathon.assignment.domain.user.entity.UserErrCode;
+import org.c4marathon.assignment.domain.user.dto.response.JoinResponseDto;
+import org.c4marathon.assignment.domain.user.dto.request.LoginRequestDto;
+import org.c4marathon.assignment.domain.user.dto.response.LoginResponseDto;
+import org.c4marathon.assignment.domain.user.dto.request.UserDto;
+import org.c4marathon.assignment.domain.user.entity.responsemsg.JoinResponseMsg;
+import org.c4marathon.assignment.domain.user.entity.responsemsg.LoginResponseMsg;
+import org.c4marathon.assignment.domain.user.entity.user.User;
+import org.c4marathon.assignment.domain.user.entity.responsemsg.UserErrCode;
 import org.c4marathon.assignment.domain.user.exception.UserException;
 import org.c4marathon.assignment.domain.user.repository.UserRepository;
 import org.c4marathon.assignment.domain.user.service.UserService;
