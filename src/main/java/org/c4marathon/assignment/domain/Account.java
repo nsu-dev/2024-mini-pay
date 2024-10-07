@@ -76,7 +76,6 @@ public class Account {
 		// 출금 처리
 		balance -= money;
 		todayChargeMoney += money;
-
 	}
 
 	//메인 계좌인지 확인하는 메소드

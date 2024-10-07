@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.LocalDate;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -15,11 +16,12 @@ import org.c4marathon.assignment.domain.Account;
 import org.c4marathon.assignment.domain.AccountType;
 import org.c4marathon.assignment.domain.User;
 import org.c4marathon.assignment.repository.AccountRepository;
+import org.c4marathon.assignment.repository.UserRepository;
 import org.c4marathon.assignment.service.AccountService;
 import org.c4marathon.assignment.service.QueueService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -41,9 +43,8 @@ public class AccountControllerTest {
 	private QueueService queueService;
 	@MockBean
 	private AccountRepository accountRepository;
-
-	@InjectMocks
-	private AccountControllerTest accountControllerTest;
+	@Mock
+	private UserRepository userRepository;
 
 	private static final Long USER_ID = 1L;
 	private static final Long SAVINGS_ACCOUNT_ID = 2L;
@@ -268,23 +269,35 @@ public class AccountControllerTest {
 	@DisplayName("하루 충전 한도 경계 테스트")
 	public void transferDailyLimitBoundary_Test() {
 		// Given
-		User user = UserFixture.createDefaultUser();  // UserFixture로 기본 사용자 생성
-		Account mainAccount = user.getMainAccount();  // 메인 계좌
-		Account savingsAccount = new Account(AccountType.SAVINGS, 0, user);  // 적금 계좌 생성
+		User user = UserFixture.createDefaultUser();
+		Account mainAccount = new Account(AccountType.MAIN, 3_000_000, user); // 초기 잔액을 3백만원으로 설정
+		Account savingsAccount = new Account(AccountType.SAVINGS, 0, user); // 적금 계좌
 
-		// Mocking
-		when(accountService.transferToSavings(anyLong(), anyLong(), anyInt())).thenAnswer(invocation -> {
-			int amount = invocation.getArgument(2);
-			savingsAccount.deposit(amount);  // 적금 계좌에 금액 입금
-			when(accountRepository.save(any(Account.class))).thenReturn(savingsAccount);  // 적금 계좌 저장
-			return true;
-		});
+		user.setMainAccount(mainAccount);
+		user.addSavingAccount(savingsAccount);
+
+		when(userRepository.findById(user.getUserId())).thenReturn(Optional.of(user)); // 사용자 정보 Mock
+		when(accountRepository.save(any(Account.class))).thenAnswer(
+			invocation -> invocation.getArgument(0)); // 계좌 저장 Mock
 
 		// When
 		accountService.transferToSavings(user.getUserId(), savingsAccount.getAccountId(), 2_999_999);
 
-		// Then
-		assertEquals(2_999_999, savingsAccount.getBalance());  // 적금 계좌에 제대로 입금되었는지 확인
+		// 중간 상태 출력
+		System.out.println("메인 계좌 잔액: " + mainAccount.getBalance());
+		System.out.println("적금 계좌 잔액: " + savingsAccount.getBalance());
+
+		// Then - 적금 계좌에 금액이 제대로 반영되었는지 확인
+		assertEquals(2_999_999, savingsAccount.getBalance());
+		assertEquals(1, mainAccount.getBalance());  // 메인 계좌에 남은 금액 확인
+
+		// 중간 상태 출력
+		System.out.println("메인 계좌 잔액: " + mainAccount.getBalance());
+		System.out.println("적금 계좌 잔액: " + savingsAccount.getBalance());
+
+		// Verify - 메인 계좌와 적금 계좌가 저장되었는지 확인
+		verify(accountRepository, times(1)).save(mainAccount);
+		verify(accountRepository, times(1)).save(savingsAccount);
 	}
 
 	@Test
