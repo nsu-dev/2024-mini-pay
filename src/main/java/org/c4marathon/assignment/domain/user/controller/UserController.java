@@ -1,9 +1,9 @@
 package org.c4marathon.assignment.domain.user.controller;
 
-import org.c4marathon.assignment.domain.user.dto.response.JoinResponseDto;
 import org.c4marathon.assignment.domain.user.dto.request.LoginRequestDto;
-import org.c4marathon.assignment.domain.user.dto.response.LoginResponseDto;
 import org.c4marathon.assignment.domain.user.dto.request.UserDto;
+import org.c4marathon.assignment.domain.user.dto.response.JoinResponseDto;
+import org.c4marathon.assignment.domain.user.dto.response.LoginResponseDto;
 import org.c4marathon.assignment.domain.user.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,8 +28,10 @@ public class UserController {
 	}
 
 	@PostMapping("/login")
-	public ResponseEntity<LoginResponseDto> userLogin(@Valid @RequestBody LoginRequestDto loginRequestDto,
-		HttpServletRequest httpServletRequest) {
+	public ResponseEntity<LoginResponseDto> userLogin(
+		@Valid @RequestBody LoginRequestDto loginRequestDto,
+		HttpServletRequest httpServletRequest
+	) {
 		LoginResponseDto loginResponseDto = userService.login(loginRequestDto, httpServletRequest);
 		return ResponseEntity.ok().body(loginResponseDto);
 	}
