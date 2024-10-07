@@ -21,25 +21,14 @@ public class Settlement {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	//총 정산 금액
 	private int totalAmount;
-
-	//정산 요청 날짜
 	private LocalDate requestDate;
-
-	//정산 방식(1/n 또는 랜덤)
 	@Enumerated(EnumType.STRING)
 	private SettlementType settlementType;
-
-	//참여자 리스트
 	@ElementCollection
 	private List<Long> participants;
-
-	//각 사용자가 내야 할 금액
 	@ElementCollection
 	private List<Integer> amounts;
-
-	// 정산 상태
 	@Enumerated(EnumType.STRING)
 	private SettlementStatus status;
 
@@ -50,10 +39,9 @@ public class Settlement {
 		this.settlementType = settlementType;
 		this.participants = participants;
 		this.amounts = amounts;
-		this.status = SettlementStatus.PENDING;  // 기본 상태는 PENDING
+		this.status = SettlementStatus.PENDING;
 	}
 
-	//상태를 완료로 변경하는 메서드
 	public void completeSettlement() {
 		this.status = SettlementStatus.COMPLETED;
 	}

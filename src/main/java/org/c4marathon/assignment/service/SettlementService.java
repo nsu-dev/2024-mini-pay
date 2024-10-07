@@ -46,7 +46,7 @@ public class SettlementService {
 	}
 
 	// 금액 분배 로직 (1/n 또는 랜덤)
-	private List<Integer> calculateAmounts(int totalAmount, SettlementType type, int participantCount) {
+	public List<Integer> calculateAmounts(int totalAmount, SettlementType type, int participantCount) {
 		if (participantCount <= 0) {
 			throw new IllegalArgumentException("참여자 수는 0보다 커야 합니다.");
 		}
@@ -83,7 +83,7 @@ public class SettlementService {
 	}
 
 	// 1/n 정산
-	private List<Integer> distributeEqually(int totalAmount, int participantCount) {
+	public List<Integer> distributeEqually(int totalAmount, int participantCount) {
 		List<Integer> amounts = new ArrayList<>();
 		int equalAmount = totalAmount / participantCount;
 		int remainder = totalAmount % participantCount;
@@ -105,7 +105,7 @@ public class SettlementService {
 	}
 
 	// 랜덤 정산: 총 금액 내에서 무작위로 분배 (합계는 totalAmount와 동일)
-	private List<Integer> distributeRandomly(int totalAmount, int participantCount) {
+	public List<Integer> distributeRandomly(int totalAmount, int participantCount) {
 		List<Integer> amounts = new ArrayList<>();
 		Random random = new Random();
 		int remainingAmount = totalAmount;
