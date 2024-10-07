@@ -1,6 +1,6 @@
 package org.c4marathon.assignment.domain.user.exception;
 
-import static org.c4marathon.assignment.domain.user.entity.UserErrCode.*;
+import static org.c4marathon.assignment.domain.user.entity.responsemsg.UserErrCode.*;
 
 import java.util.List;
 import java.util.stream.Collectors;

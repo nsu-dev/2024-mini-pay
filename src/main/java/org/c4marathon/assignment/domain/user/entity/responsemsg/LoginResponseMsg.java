@@ -1,4 +1,4 @@
-package org.c4marathon.assignment.domain.user.entity;
+package org.c4marathon.assignment.domain.user.entity.responsemsg;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

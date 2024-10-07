@@ -1,6 +1,6 @@
 package org.c4marathon.assignment.domain.account.service;
 
-import static org.c4marathon.assignment.domain.user.entity.UserErrCode.*;
+import static org.c4marathon.assignment.domain.user.entity.responsemsg.UserErrCode.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,7 +21,7 @@ import org.c4marathon.assignment.domain.account.entity.responseMsg.RemittanceRes
 import org.c4marathon.assignment.domain.account.exception.AccountException;
 import org.c4marathon.assignment.domain.account.repository.AccountRepository;
 import org.c4marathon.assignment.domain.account.transaction.TransactionHandler;
-import org.c4marathon.assignment.domain.user.entity.User;
+import org.c4marathon.assignment.domain.user.entity.user.User;
 import org.c4marathon.assignment.domain.user.exception.UserException;
 import org.c4marathon.assignment.domain.user.repository.UserRepository;
 import org.springframework.scheduling.annotation.Scheduled;

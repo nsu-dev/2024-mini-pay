@@ -2,7 +2,7 @@ package org.c4marathon.assignment.domain.account.entity.account;
 
 import java.time.LocalDateTime;
 
-import org.c4marathon.assignment.domain.user.entity.User;
+import org.c4marathon.assignment.domain.user.entity.user.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

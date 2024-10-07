@@ -1,6 +1,6 @@
 package org.c4marathon.assignment.global.config;
 
-import static org.c4marathon.assignment.domain.user.entity.UserErrCode.*;
+import static org.c4marathon.assignment.domain.user.entity.responsemsg.UserErrCode.*;
 
 import org.c4marathon.assignment.domain.user.exception.UserException;
 import org.springframework.context.annotation.Bean;

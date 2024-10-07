@@ -1,7 +1,7 @@
 package org.c4marathon.assignment.domain.settlement.dto;
 
 import static org.c4marathon.assignment.domain.settlement.entity.settlement.SettlementRole.*;
-import static org.c4marathon.assignment.domain.user.entity.UserErrCode.*;
+import static org.c4marathon.assignment.domain.user.entity.responsemsg.UserErrCode.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +12,7 @@ import org.c4marathon.assignment.domain.settlement.entity.settlement.Settlement;
 import org.c4marathon.assignment.domain.settlement.entity.settlement.SettlementStatus;
 import org.c4marathon.assignment.domain.settlement.entity.settlement.SettlementUser;
 import org.c4marathon.assignment.domain.settlement.repository.SettlementUserRepository;
-import org.c4marathon.assignment.domain.user.entity.User;
+import org.c4marathon.assignment.domain.user.entity.user.User;
 import org.c4marathon.assignment.domain.user.exception.UserException;
 import org.c4marathon.assignment.domain.user.repository.UserRepository;
 

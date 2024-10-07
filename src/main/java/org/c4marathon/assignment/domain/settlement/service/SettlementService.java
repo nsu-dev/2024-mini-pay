@@ -2,7 +2,7 @@ package org.c4marathon.assignment.domain.settlement.service;
 
 import static org.c4marathon.assignment.domain.settlement.entity.responsemsg.SettlementErrCode.*;
 import static org.c4marathon.assignment.domain.settlement.entity.settlement.SettlementRole.*;
-import static org.c4marathon.assignment.domain.user.entity.UserErrCode.*;
+import static org.c4marathon.assignment.domain.user.entity.responsemsg.UserErrCode.*;
 
 import java.util.List;
 
@@ -22,7 +22,7 @@ import org.c4marathon.assignment.domain.settlement.entity.settlement.Settlement;
 import org.c4marathon.assignment.domain.settlement.entity.settlement.SettlementUser;
 import org.c4marathon.assignment.domain.settlement.exception.SettlementException;
 import org.c4marathon.assignment.domain.settlement.repository.SettlementUserRepository;
-import org.c4marathon.assignment.domain.user.entity.User;
+import org.c4marathon.assignment.domain.user.entity.user.User;
 import org.c4marathon.assignment.domain.user.exception.UserException;
 import org.c4marathon.assignment.domain.user.repository.UserRepository;
 import org.springframework.stereotype.Service;

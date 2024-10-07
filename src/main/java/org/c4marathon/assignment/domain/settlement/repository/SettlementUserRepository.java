@@ -6,7 +6,7 @@ import java.util.Optional;
 import org.c4marathon.assignment.domain.settlement.entity.settlement.Settlement;
 import org.c4marathon.assignment.domain.settlement.entity.settlement.SettlementRole;
 import org.c4marathon.assignment.domain.settlement.entity.settlement.SettlementUser;
-import org.c4marathon.assignment.domain.user.entity.User;
+import org.c4marathon.assignment.domain.user.entity.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
