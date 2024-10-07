@@ -4,6 +4,7 @@ import static org.c4marathon.assignment.domain.settlement.entity.responsemsg.Set
 import static org.c4marathon.assignment.domain.settlement.entity.settlement.SettlementRole.*;
 import static org.c4marathon.assignment.domain.user.entity.responsemsg.UserErrCode.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.c4marathon.assignment.domain.account.dto.request.RemittanceRequestDto;
@@ -12,7 +13,6 @@ import org.c4marathon.assignment.domain.account.entity.account.Account;
 import org.c4marathon.assignment.domain.account.entity.account.AccountRole;
 import org.c4marathon.assignment.domain.account.repository.AccountRepository;
 import org.c4marathon.assignment.domain.account.service.AccountService;
-import org.c4marathon.assignment.domain.account.transaction.TransactionHandler;
 import org.c4marathon.assignment.domain.settlement.dto.SettlementMapper;
 import org.c4marathon.assignment.domain.settlement.dto.request.SettlementRequestDto;
 import org.c4marathon.assignment.domain.settlement.dto.response.SettlementHistoryResponseDto;
@@ -21,6 +21,7 @@ import org.c4marathon.assignment.domain.settlement.entity.responsemsg.Settlement
 import org.c4marathon.assignment.domain.settlement.entity.settlement.Settlement;
 import org.c4marathon.assignment.domain.settlement.entity.settlement.SettlementUser;
 import org.c4marathon.assignment.domain.settlement.exception.SettlementException;
+import org.c4marathon.assignment.domain.settlement.repository.SettlementRepository;
 import org.c4marathon.assignment.domain.settlement.repository.SettlementUserRepository;
 import org.c4marathon.assignment.domain.user.entity.user.User;
 import org.c4marathon.assignment.domain.user.exception.UserException;
@@ -36,11 +37,12 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class SettlementService {
-	private SettlementUserRepository settlementUserRepository;
-	private UserRepository userRepository;
-	private AccountRepository accountRepository;
-	private AccountService accountService;
-	private TransactionHandler transactionHandler;
+	private final SettlementRepository settlementRepository;
+	private final SettlementUserRepository settlementUserRepository;
+	private final UserRepository userRepository;
+	private final AccountRepository accountRepository;
+	private final AccountService accountService;
+	// private final TransactionHandler transactionHandler;
 
 	//정산 목록 불러오는 메서드
 	public List<SettlementHistoryResponseDto> findAllSettlement(HttpServletRequest httpServletRequest) {
@@ -59,8 +61,23 @@ public class SettlementService {
 		Settlement settlement = SettlementMapper.toSettlement(settlementRequestDto);
 		Long userId = getSessionId(httpServletRequest);
 		User user = userRepository.findById(userId).orElseThrow(() -> new UserException(USER_NOT_FOUND));
-		SettlementMapper.toSettlementUser(settlementRequestDto, user, settlement);
+		settlementRepository.save(settlement);
+
+		List<User> senderList = convertTargetList(settlementRequestDto.settlementTargetList());
+		List<SettlementUser> settlementUserList = SettlementMapper.toSettlementUser(senderList, user, settlement);
+		settlementUserRepository.saveAll(settlementUserList);
 		return new SettlementResponseDto(SettlementResponseMsg.REQUEST_COMPLETED.getResponseMsg());
+	}
+
+	// 정산 대상자 리스트 변환
+	private List<User> convertTargetList(List<String> targetPhoneNumList) {
+		List<User> senderList = new ArrayList<>();
+		for (String senderPhone : targetPhoneNumList) {
+			User sender = userRepository.findByUserPhone(senderPhone)
+				.orElseThrow(() -> new UserException(USER_NOT_FOUND));
+			senderList.add(sender);
+		}
+		return senderList;
 	}
 
 	//정산 시작 메서드
