@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.c4marathon.assignment.domain.account.entity.account.Account;
-import org.c4marathon.assignment.domain.account.entity.settlement.Settlement_User;
+import org.c4marathon.assignment.domain.settlement.entity.settlement.SettlementUser;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -44,7 +44,7 @@ public class User {
 	private List<Account> accountList = new ArrayList<>();
 
 	@OneToMany(mappedBy = "user")
-	private List<Settlement_User> settlementUserList = new ArrayList<>();
+	private List<SettlementUser> settlementUserList = new ArrayList<>();
 
 	@Builder
 	private User(String userPhone, String userPassword, String userName, String userBirth) {
