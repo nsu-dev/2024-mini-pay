@@ -1,6 +1,6 @@
 package org.c4marathon.assignment.domain.account.exception;
 
-import static org.c4marathon.assignment.domain.account.entity.responseMsg.AccountErrCode.*;
+import static org.c4marathon.assignment.domain.account.entity.responsemsg.AccountErrCode.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
