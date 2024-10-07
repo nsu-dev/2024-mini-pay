@@ -4,8 +4,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 
-import org.c4marathon.assignment.account.controller.AccountCalculateController;
+import org.c4marathon.assignment.account.controller.AccountController;
 import org.c4marathon.assignment.account.domain.Account;
+import org.c4marathon.assignment.account.dto.SettlementDto;
 import org.c4marathon.assignment.account.enums.AccountType;
 import org.c4marathon.assignment.account.dto.CalculatePaymentDto;
 import org.c4marathon.assignment.account.dto.ChargeDto;
@@ -35,7 +36,7 @@ public class AccountService {
 
 	private final UserRepository userRepository;
 
-	private final AccountCalculateController accountCalculateController;
+	private final AccountController accountController;
 
 	Long randomAccountNum = new Random().nextLong();
 
@@ -143,21 +144,21 @@ public class AccountService {
 		}
 	}
 
-	// A가 B와 C에게 정산 요청을 보낼 때 서비스 로직
-	@Transactional
+	// 1명의 사용자가 n명의 사용자에게 정산 요청 서비스
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public void requestSettlement(CalculatePaymentDto calculatePaymentDto) {
 		// 정산 요청을 받은 사용자 ID
 		List<String> participants = calculatePaymentDto.usersId();
 
 		// 유저에게 SSE 이벤트 발송 (정산 요청 도착)
 		for (String participant : participants) {
-			accountCalculateController.sendEventToClient(participant, "settlement-request", "정산 요청이 도착했습니다.");
+			accountController.sendEventToClient(participant, "settlement-request", calculatePaymentDto.paymentType());
 		}
 	}
 
-	// B나 C가 정산 요청을 수락하고 정산을 진행할 때
-	@Transactional
-	public void processSettlement(SendDto sendDto) {
+	// n명이 정산 요청을 수락하고 정산 진행 서비스
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
+	public void processSettlement(SettlementDto settlementDto) {
 		Optional<Account> optionalMainAccount = accountRepository.findByMainAccount(userId, AccountType.MAIN_ACCOUNT);
 		optionalMainAccount.orElseThrow(() -> new BaseException(NotFountAccountException.NOT_FOUND_MAIN_ACCOUNT));
 
@@ -168,7 +169,7 @@ public class AccountService {
 		account.reduceAmount(amount);
 
 		// 정산 완료 후 A에게 SSE 이벤트 발송 (정산 완료 알림)
-		accountCalculateController.sendEventToClient(sendDto, "settlement-complete", "사용자 " + userId + "가 정산을 완료했습니다.");
+		accountController.sendEventToClient(sendDto, "settlement-complete", "사용자 " + userId + "가 정산을 완료했습니다.");
 	}
 
 	// 정산하기 ( 랜덤타입 )
