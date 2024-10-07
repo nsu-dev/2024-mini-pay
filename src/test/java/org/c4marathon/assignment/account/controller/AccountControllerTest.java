@@ -10,9 +10,9 @@ import org.c4marathon.assignment.domain.account.dto.request.RemittanceRequestDto
 import org.c4marathon.assignment.domain.account.dto.request.SavingRequestDto;
 import org.c4marathon.assignment.domain.account.dto.response.CreateResponseDto;
 import org.c4marathon.assignment.domain.account.dto.response.RemittanceResponseDto;
-import org.c4marathon.assignment.domain.account.entity.responseMsg.AccountErrCode;
-import org.c4marathon.assignment.domain.account.entity.responseMsg.CreateResponseMsg;
-import org.c4marathon.assignment.domain.account.entity.responseMsg.RemittanceResponseMsg;
+import org.c4marathon.assignment.domain.account.entity.responsemsg.AccountErrCode;
+import org.c4marathon.assignment.domain.account.entity.responsemsg.CreateResponseMsg;
+import org.c4marathon.assignment.domain.account.entity.responsemsg.RemittanceResponseMsg;
 import org.c4marathon.assignment.domain.account.exception.AccountException;
 import org.c4marathon.assignment.domain.account.service.AccountService;
 import org.junit.jupiter.api.DisplayName;
