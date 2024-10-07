@@ -26,6 +26,8 @@ import org.c4marathon.assignment.domain.user.entity.user.User;
 import org.c4marathon.assignment.domain.user.exception.UserException;
 import org.c4marathon.assignment.domain.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -62,6 +64,7 @@ public class SettlementService {
 	}
 
 	//정산 시작 메서드
+	@Transactional(isolation = Isolation.REPEATABLE_READ)
 	public RemittanceResponseDto settlementSplit(
 		Long settlementUserId,
 		HttpServletRequest httpServletRequest
@@ -90,10 +93,8 @@ public class SettlementService {
 			default -> throw new SettlementException(SETTLEMENT_INVALID_TYPE);
 		}
 		//테스트를 통해서 delete가 바로 적용되는지 알아보기
-		transactionHandler.runInCommittedTransaction(() -> {
-			settlementUserRepository.deleteById(settlementUser.getSettlementUserId());
-			settlement.updateRemainingUsers(settlementUserRepository.countRemainingUsers(settlement));
-		});
+		settlementUserRepository.deleteById(settlementUser.getSettlementUserId());
+		settlement.updateRemainingUsers(settlementUserRepository.countRemainingUsers(settlement));
 		return accountService.remittanceOtherMain(remittanceRequestDto, httpServletRequest);
 	}
 
@@ -102,9 +103,7 @@ public class SettlementService {
 		int remainingUsers = settlement.getRemainingUsers();
 		Long remainingAmount = settlement.getRemainingAmount();
 		Long remittanceAmount = calculateSplitEquals(remainingUsers, remainingAmount);
-		transactionHandler.runInCommittedTransaction(() -> {
-			settlement.updateRemainingAmount(remittanceAmount);
-		});
+		settlement.updateRemainingAmount(remittanceAmount);
 		Account account = accountRepository.findMainAccount(receiver.getUserId(), AccountRole.MAIN);
 		return new RemittanceRequestDto(account.getAccountNum(), remittanceAmount);
 	}
