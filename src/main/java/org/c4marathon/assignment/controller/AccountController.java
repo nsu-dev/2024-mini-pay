@@ -23,7 +23,7 @@ public class AccountController {
 
 	//적금 계좌 추가
 	@PostMapping("/{userId}/savings")
-	public ResponseEntity<Void> addSavingsAccount(@PathVariable Long userId,
+	public ResponseEntity<Void> addSavingsAccount(@PathVariable(value = "userId") Long userId,
 		@RequestParam AccountType type,
 		@RequestParam int balance) {
 		accountService.addSavingsAccount(userId, type, balance);
@@ -32,7 +32,7 @@ public class AccountController {
 
 	//사용자 메인 계좌에서 적금 계좌로 송금
 	@PostMapping("/{userId}/move-to-savings")
-	public ResponseEntity<String> transferToSavings(@PathVariable Long userId,
+	public ResponseEntity<String> transferToSavings(@PathVariable(value = "userId") Long userId,
 		@RequestParam Long savingsAccountId,
 		@RequestParam int money) {
 		try {
@@ -45,8 +45,8 @@ public class AccountController {
 
 	// 외부 메인 계좌로 송금
 	@PostMapping("/{userId}/transfer-to-external/{externalUserId}")
-	public ResponseEntity<String> transferToExternalMainAccount(@PathVariable Long userId,
-		@PathVariable Long externalUserId,
+	public ResponseEntity<String> transferToExternalMainAccount(@PathVariable(value = "userId") Long userId,
+		@PathVariable(value = "externalUserId") Long externalUserId,
 		@RequestParam int money) {
 		TransferRequestDto request = new TransferRequestDto(userId, externalUserId, money);
 		queueService.addToQueue(request);
