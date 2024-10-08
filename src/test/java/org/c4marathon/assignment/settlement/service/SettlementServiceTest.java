@@ -46,6 +46,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import jakarta.transaction.Transactional;
 
 @ExtendWith(MockitoExtension.class)
 class SettlementServiceTest {
@@ -287,6 +288,7 @@ class SettlementServiceTest {
 
 	@DisplayName("n/1 정산 분배")
 	@Test
+	@Transactional
 	void settlementSplitEquals() {
 		// given
 		given(httpServletRequest.getSession(false)).willReturn(httpSession);
@@ -302,11 +304,9 @@ class SettlementServiceTest {
 		// then
 		assertEquals(result.responseMsg(), RemittanceResponseMsg.SUCCESS.getResponseMsg());
 
-		// 추가적으로 확인: 남은 금액, 정산 내역 업데이트 여부 등
 		assertEquals(testSettlement.getRemainingAmount(), 500L);
 		assertEquals(testSettlement.getRemainingUsers(), 1);
 
-		// repository 상호작용 검증
 		then(settlementUserRepository).should(times(1)).findById(1L);
 		then(accountRepository).should(times(1)).findMainAccount(1L, AccountRole.MAIN);
 	}
@@ -315,10 +315,16 @@ class SettlementServiceTest {
 	@Test
 	void settlementSplitRandom() {
 		// given
-		testSettlement = Settlement.builder().settlementType(SettlementType.RANDOM).build();
+		Settlement testSettlementRandom = Settlement.builder()
+			.settlementType(SettlementType.RANDOM)
+			.remainingAmount(1001L)
+			.remainingUsers(2)
+			.build();
+		testSettlementSender = new SettlementUser(SENDER, testSender, testSettlementRandom);
 		given(httpServletRequest.getSession(false)).willReturn(httpSession);
 		given(httpSession.getAttribute("userId")).willReturn(1L);
-		given(settlementUserRepository.findReceiver(RECEIVER, testSettlementUser.getSettlement())).willReturn(testUser);
+		given(settlementUserRepository.findReceiver(RECEIVER, testSettlementSender.getSettlement()))
+			.willReturn(testUser);
 		given(settlementUserRepository.findById(1L)).willReturn(Optional.of(testSettlementSender));
 		given(accountRepository.findMainAccount(1L, AccountRole.MAIN)).willReturn(mainAccount);
 		given(accountService.remittanceOtherMain(any(RemittanceRequestDto.class), eq(httpServletRequest)))
@@ -333,35 +339,7 @@ class SettlementServiceTest {
 		assertThat(testSettlement.getRemainingAmount()).isBetween(1L, 1000L);
 		assertEquals(testSettlement.getRemainingUsers(), 1);
 
-		// repository 상호작용 검증
 		then(settlementUserRepository).should(times(1)).findById(1L);
 		then(accountRepository).should(times(1)).findMainAccount(1L, AccountRole.MAIN);
 	}
-	//
-	// @DisplayName("랜덤 정산 분배")
-	// @Test
-	// void settlementSplitRandom() {
-	// 	// given
-	// 	given(accountRepository.findMainAccount(1L, AccountRole.MAIN)).willReturn(null); // 모킹된 데이터
-	// 	given(settlementUserRepository.findById(1L)).willReturn(Optional.of(testSettlementUser));
-	//
-	// 	// when
-	// 	RemittanceRequestDto result = settlementService.settlementSplitRandom(testSettlement, testUser);
-	//
-	// 	// then
-	// 	assertThat(result).isNotNull();
-	// 	assertThat(result.remittanceAmount()).isBetween(1L, 1000L); // 랜덤값 검증
-	// }
-	//
-	// @DisplayName("정산 대상 사용자 조회 실패 시 예외 발생")
-	// @Test
-	// void settlementUserNotFound() {
-	// 	// given
-	// 	given(settlementUserRepository.findById(anyLong())).willReturn(Optional.empty());
-	//
-	// 	// when // then
-	// 	assertThatThrownBy(() -> settlementService.settlementSplit(1L, httpServletRequest))
-	// 		.isInstanceOf(SettlementException.class)
-	// 		.hasMessage("Settlement user not found");
-	// }
 }
