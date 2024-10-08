@@ -110,7 +110,7 @@ public class SettlementService {
 		}
 		//테스트를 통해서 delete가 바로 적용되는지 알아보기
 		settlementUserRepository.deleteById(settlementUser.getSettlementUserId());
-		settlement.updateRemainingUsers(settlementUserRepository.countRemainingUsers(settlement));
+		settlement.updateRemainingUsers(settlementUserRepository.countRemainingUsers(settlement, SENDER));
 		return accountService.remittanceOtherMain(remittanceRequestDto, httpServletRequest);
 	}
 

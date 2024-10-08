@@ -20,6 +20,9 @@ public interface SettlementUserRepository extends JpaRepository<SettlementUser, 
 		@Param("settlement") Settlement settlement
 	);
 
-	@Query("select count(*) from SettlementUser where settlement = :settlement")
-	int countRemainingUsers(@Param("settlement") Settlement settlement);
+	@Query("select count(*) from SettlementUser where settlement = :settlement and settlementRole = :settlementRole")
+	int countRemainingUsers(
+		@Param("settlement") Settlement settlement,
+		@Param("settlementRole") SettlementRole settlementRole
+	);
 }
