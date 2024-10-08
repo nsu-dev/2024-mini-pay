@@ -26,7 +26,7 @@ public class SettlementUser {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long settlementUserId;
 
-	@Column(name = "settlementRole")
+	@Column(name = "settlementRole", nullable = false)
 	@Enumerated(STRING)
 	private SettlementRole settlementRole;
 
