@@ -1,27 +1,27 @@
 package org.c4marathon.assignment.domain.account.service;
 
-import static org.c4marathon.assignment.domain.user.entity.UserErrCode.*;
+import static org.c4marathon.assignment.domain.user.entity.responsemsg.UserErrCode.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Random;
 
-import org.c4marathon.assignment.domain.account.dto.CreateResponseDto;
-import org.c4marathon.assignment.domain.account.dto.RemittanceRequestDto;
-import org.c4marathon.assignment.domain.account.dto.RemittanceResponseDto;
-import org.c4marathon.assignment.domain.account.dto.SavingRequestDto;
-import org.c4marathon.assignment.domain.account.entity.Account;
-import org.c4marathon.assignment.domain.account.entity.AccountErrCode;
-import org.c4marathon.assignment.domain.account.entity.AccountRole;
-import org.c4marathon.assignment.domain.account.entity.AccountStatus;
-import org.c4marathon.assignment.domain.account.entity.CreateResponseMsg;
-import org.c4marathon.assignment.domain.account.entity.RemittanceResponseMsg;
+import org.c4marathon.assignment.domain.account.dto.request.RemittanceRequestDto;
+import org.c4marathon.assignment.domain.account.dto.request.SavingRequestDto;
+import org.c4marathon.assignment.domain.account.dto.response.CreateResponseDto;
+import org.c4marathon.assignment.domain.account.dto.response.RemittanceResponseDto;
 import org.c4marathon.assignment.domain.account.entity.ScheduleCreateEvent;
+import org.c4marathon.assignment.domain.account.entity.account.Account;
+import org.c4marathon.assignment.domain.account.entity.account.AccountRole;
+import org.c4marathon.assignment.domain.account.entity.account.AccountStatus;
+import org.c4marathon.assignment.domain.account.entity.responsemsg.AccountErrCode;
+import org.c4marathon.assignment.domain.account.entity.responsemsg.CreateResponseMsg;
+import org.c4marathon.assignment.domain.account.entity.responsemsg.RemittanceResponseMsg;
 import org.c4marathon.assignment.domain.account.exception.AccountException;
 import org.c4marathon.assignment.domain.account.repository.AccountRepository;
 import org.c4marathon.assignment.domain.account.transaction.TransactionHandler;
-import org.c4marathon.assignment.domain.user.entity.User;
+import org.c4marathon.assignment.domain.user.entity.user.User;
 import org.c4marathon.assignment.domain.user.exception.UserException;
 import org.c4marathon.assignment.domain.user.repository.UserRepository;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -153,8 +153,11 @@ public class AccountService {
 	}
 
 	//메인계좌에서 인출 후 적금계좌에 입금
-	public RemittanceResponseDto savingRemittance(Long savingId, SavingRequestDto savingRequestDto,
-		HttpServletRequest httpServletRequest) {
+	public RemittanceResponseDto savingRemittance(
+		Long savingId,
+		SavingRequestDto savingRequestDto,
+		HttpServletRequest httpServletRequest
+	) {
 		Long userId = getSessionId(httpServletRequest);
 		User user = userRepository.findById(userId).orElseThrow(() -> new UserException(USER_NOT_FOUND));
 		transactionHandler.runInCommittedTransaction(() -> {
@@ -168,8 +171,10 @@ public class AccountService {
 	}
 
 	//메인계좌간의 거래
-	public RemittanceResponseDto remittanceOtherMain(RemittanceRequestDto remittanceRequestDto,
-		HttpServletRequest httpServletRequest) {
+	public RemittanceResponseDto remittanceOtherMain(
+		RemittanceRequestDto remittanceRequestDto,
+		HttpServletRequest httpServletRequest
+	) {
 		Long userId = getSessionId(httpServletRequest);
 		Long receiveAccountNum = remittanceRequestDto.accountNum();
 		Long remittanceAmount = remittanceRequestDto.remittanceAmount();
