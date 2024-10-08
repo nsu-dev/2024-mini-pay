@@ -64,7 +64,9 @@ jacocoTestReport {
                 '**/*Application*',
                 '**/dto/**',
                 '**/config/**',
-                '**/transaction/**'
+                '**/transaction/**',
+                '**/exception/**',
+                '**/responsemsg/**'
         ])
     }))
     reports {
