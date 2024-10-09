@@ -112,7 +112,8 @@ public class SettlementService {
 
 		// 마지막 사람을 제외한 인원에게 랜덤으로 금액 분배
 		for (int i = 0; i < participantCount - 1; i++) {
-			int randomAmount = random.nextInt(remainingAmount / (participantCount - i) * 2);  // 남은 금액에서 랜덤한 값을 할당
+			int maxAmount = remainingAmount - (participantCount - i - 1); // 나머지 참여자들에게 최소 1원을 남기기 위한 계산
+			int randomAmount = random.nextInt(maxAmount) + 1;  // 최소 1원, 최대 maxAmount
 			amounts.add(randomAmount);
 			remainingAmount -= randomAmount;
 		}

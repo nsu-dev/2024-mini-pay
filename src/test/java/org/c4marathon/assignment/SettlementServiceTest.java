@@ -32,21 +32,38 @@ public class SettlementServiceTest {
 	}
 
 	@Test
-	@DisplayName("1/n 정산이 정확히 계산되는지 테스트")
-	void testDistributeEqually() {
-		int totalAmount = 20000;
+	@DisplayName("1/n 정산 계산 테스트")
+	void testCalculateAmounts_EqualDistribution() {
+		// Given
+		int totalAmount = 10000;
 		int participantCount = 3;
+		SettlementType type = SettlementType.EQUA;
 
-		List<Integer> result = settlementService.distributeEqually(totalAmount, participantCount);
+		// When
+		List<Integer> result = settlementService.calculateAmounts(totalAmount, type, participantCount);
 
-		// 각 참여자의 금액 확인
-		assertEquals(6667, result.get(0));  // 첫 번째 참여자가 6667원을 받음
-		assertEquals(6666, result.get(1));  // 두 번째 참여자가 6666원을 받음
-		assertEquals(6667, result.get(2));  // 세 번째 참여자가 6667원을 받음
+		// Then
+		assertEquals(3334, result.get(0)); // 첫 번째 참여자가 3334원을 받음
+		assertEquals(3333, result.get(1)); // 두 번째 참여자가 3333원을 받음
+		assertEquals(3333, result.get(2)); // 세 번째 참여자가 3333원을 받음
+		assertEquals(totalAmount, result.stream().mapToInt(Integer::intValue).sum()); // 총합이 totalAmount와 같음
+	}
 
-		// 금액의 총합이 정확한지 확인
+	@Test
+	@DisplayName("랜덤 정산 계산 테스트")
+	void testCalculateAmounts_RandomDistribution() {
+		// Given
+		int totalAmount = 10000;
+		int participantCount = 3;
+		SettlementType type = SettlementType.RANDOM;
+
+		// When
+		List<Integer> result = settlementService.calculateAmounts(totalAmount, type, participantCount);
+
+		// Then
 		int sum = result.stream().mapToInt(Integer::intValue).sum();
-		assertEquals(totalAmount, sum);
+		assertEquals(totalAmount, sum); // 총합이 totalAmount와 같음
+		assertEquals(participantCount, result.size()); // 참여자 수만큼 금액이 분배되었는지 확인
 	}
 
 	@Test
