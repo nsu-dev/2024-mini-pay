@@ -1,12 +1,13 @@
 package org.c4marathon.assignment.account.service;
 
-import static org.c4marathon.assignment.account.domain.AccountType.*;
+import static org.c4marathon.assignment.account.domain.AccountType.MAIN_ACCOUNT;
+import static org.c4marathon.assignment.account.domain.AccountType.SAVING_ACCOUNT;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
-
+import lombok.RequiredArgsConstructor;
 import org.c4marathon.assignment.account.domain.Account;
 import org.c4marathon.assignment.account.dto.AccountMapper;
 import org.c4marathon.assignment.account.dto.request.ChargeRequestDto;
@@ -27,150 +28,148 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
-import lombok.RequiredArgsConstructor;
-
 @Service
 @RequiredArgsConstructor
 public class AccountService {
 
-	public static final String TIME_ZONE = "Asia/Seoul";
-	private final AccountRepository accountRepository;
-	private final ApplicationEventPublisher eventPublisher;
+    public static final String TIME_ZONE = "Asia/Seoul";
+    private final AccountRepository accountRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
-	@Transactional
-	public SavingAccountResponseDto generateSavingAccount(User user) {
-		Account savingAccount = Account.builder()
-			.type(SAVING_ACCOUNT)
-			.amount(0)
-			.limitAmount(3_000_000)
-			.user(user)
-			.build();
+    @Transactional
+    public SavingAccountResponseDto generateSavingAccount(User user) {
+        Account savingAccount = Account.builder()
+                .type(SAVING_ACCOUNT)
+                .amount(0)
+                .limitAmount(3_000_000)
+                .user(user)
+                .build();
 
-		accountRepository.save(savingAccount);
-		return AccountMapper.toSavingAccountResponseDto(savingAccount);
-	}
+        accountRepository.save(savingAccount);
+        return AccountMapper.toSavingAccountResponseDto(savingAccount);
+    }
 
-	@Transactional(readOnly = true)
-	public List<AccountResponseDto> getAccounts(User user) {
-		List<Account> accounts = accountRepository.findAllByUser(user);
+    @Transactional(readOnly = true)
+    public List<AccountResponseDto> getAccounts(User user) {
+        List<Account> accounts = accountRepository.findAllByUser(user);
 
-		return AccountMapper.toAccountResponseDtos(accounts);
-	}
+        return AccountMapper.toAccountResponseDtos(accounts);
+    }
 
-	@Transactional(isolation = Isolation.SERIALIZABLE)
-	public SendToSavingAccountResponseDto sendToSavingAccount(User user,
-		SendToSavingAccountRequestDto sendToSavingAccountRequestDto) {
-		int sendToMoney = sendToSavingAccountRequestDto.remittanceMoney();
+    @Transactional(isolation = Isolation.SERIALIZABLE)
+    public SendToSavingAccountResponseDto sendToSavingAccount(User user,
+                                                              SendToSavingAccountRequestDto sendToSavingAccountRequestDto) {
+        int sendToMoney = sendToSavingAccountRequestDto.remittanceMoney();
 
-		Account toAccount = getAccount(sendToSavingAccountRequestDto.toAccountId());
-		Account fromAccount = getAccount(sendToSavingAccountRequestDto.fromAccountId());
+        Account toAccount = getAccount(sendToSavingAccountRequestDto.toAccountId());
+        Account fromAccount = getAccount(sendToSavingAccountRequestDto.fromAccountId());
 
-		if (!verifyAccountByUser(user, toAccount) || !verifyAccountByUser(user, fromAccount)) {
-			throw new BaseException(AccountErrorCode.NOT_AUTHORIZED_ACCOUNT);
-		}
+        if (!verifyAccountByUser(user, toAccount) || !verifyAccountByUser(user, fromAccount)) {
+            throw new BaseException(AccountErrorCode.NOT_AUTHORIZED_ACCOUNT);
+        }
 
-		toAccount.decreaseAmount(sendToMoney);
-		fromAccount.increaseAmount(sendToMoney);
+        toAccount.decreaseAmount(sendToMoney);
+        fromAccount.increaseAmount(sendToMoney);
 
-		return AccountMapper.toSendResponseDto(toAccount, fromAccount);
-	}
+        return AccountMapper.toSendResponseDto(toAccount, fromAccount);
+    }
 
-	private Account getAccount(Long accountId) {
+    private Account getAccount(Long accountId) {
 
-		return accountRepository.findById(accountId)
-			.orElseThrow(() -> new BaseException(AccountErrorCode.NOT_FOUND_ACCOUNT));
-	}
+        return accountRepository.findById(accountId)
+                .orElseThrow(() -> new BaseException(AccountErrorCode.NOT_FOUND_ACCOUNT));
+    }
 
-	private boolean verifyAccountByUser(User user, Account account) {
-		return user.equals(account.getUser());
-	}
+    private boolean verifyAccountByUser(User user, Account account) {
+        return user.equals(account.getUser());
+    }
 
-	@Transactional(isolation = Isolation.REPEATABLE_READ)
-	public ChargeResponseDto chargeMainAccount(User user, ChargeRequestDto requestDto) {
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    public ChargeResponseDto chargeMainAccount(User user, ChargeRequestDto requestDto) {
 
-		Account findAccount = accountRepository.findById(requestDto.accountId())
-			.orElseThrow(() -> new BaseException(AccountErrorCode.NOT_FOUND_ACCOUNT));
+        Account findAccount = accountRepository.findById(requestDto.accountId())
+                .orElseThrow(() -> new BaseException(AccountErrorCode.NOT_FOUND_ACCOUNT));
 
-		if (!verifyAccountByUser(user, findAccount)) {
-			throw new BaseException(AccountErrorCode.NOT_AUTHORIZED_ACCOUNT);
-		}
+        if (!verifyAccountByUser(user, findAccount)) {
+            throw new BaseException(AccountErrorCode.NOT_AUTHORIZED_ACCOUNT);
+        }
 
-		if (!verifyMainAccount(findAccount)) {
-			throw new BaseException(AccountErrorCode.NOT_ACCESS_CHARGE);
-		}
+        if (!verifyMainAccount(findAccount)) {
+            throw new BaseException(AccountErrorCode.NOT_ACCESS_CHARGE);
+        }
 
-		verifyLastChargeDate(findAccount);
+        verifyLastChargeDate(findAccount);
 
-		findAccount.chargeAmount(requestDto.chargeAmount());
+        findAccount.chargeAmount(requestDto.chargeAmount());
 
-		return AccountMapper.toChargeResponseDto(findAccount);
-	}
+        return AccountMapper.toChargeResponseDto(findAccount);
+    }
 
-	private void verifyLastChargeDate(Account account) {
-		if (!Objects.equals(account.getLastChargeDate(), LocalDate.now(ZoneId.of(TIME_ZONE)))) {
-			account.resetLimitAmount();
-		}
-	}
+    private void verifyLastChargeDate(Account account) {
+        if (!Objects.equals(account.getLastChargeDate(), LocalDate.now(ZoneId.of(TIME_ZONE)))) {
+            account.resetLimitAmount();
+        }
+    }
 
-	private boolean verifyMainAccount(Account account) {
-		return Objects.equals(account.getType().getType(), MAIN_ACCOUNT.getType());
-	}
+    private boolean verifyMainAccount(Account account) {
+        return Objects.equals(account.getType().getType(), MAIN_ACCOUNT.getType());
+    }
 
-	@Transactional(isolation = Isolation.REPEATABLE_READ, rollbackFor = BaseException.class)
-	public int withdrawal(User user, SendToOthersRequestDto requestDto) {
-		Account userAccount = getAccount(requestDto.accountId());
-		int subAmount = userAccount.getAmount() - requestDto.remittanceAmount();
+    @Transactional(isolation = Isolation.REPEATABLE_READ, rollbackFor = BaseException.class)
+    public int withdrawal(User user, SendToOthersRequestDto requestDto) {
+        Account userAccount = getAccount(requestDto.accountId());
+        int subAmount = userAccount.getAmount() - requestDto.remittanceAmount();
 
-		if (!verifyAccountByUser(user, userAccount)) {
-			throw new BaseException(AccountErrorCode.NOT_AUTHORIZED_ACCOUNT);
-		}
+        if (!verifyAccountByUser(user, userAccount)) {
+            throw new BaseException(AccountErrorCode.NOT_AUTHORIZED_ACCOUNT);
+        }
 
-		if (!verifyMainAccount(userAccount)) {
-			throw new BaseException(AccountErrorCode.NOT_MAIN_ACCOUNT);
-		}
+        if (!verifyMainAccount(userAccount)) {
+            throw new BaseException(AccountErrorCode.NOT_MAIN_ACCOUNT);
+        }
 
-		// 부족한 금액은 10_000 단위로 충전 한도 내에서 자동 충전
-		if (subAmount < 0) {
-			autoChargingAmount(userAccount, subAmount);
-		}
+        // 부족한 금액은 10_000 단위로 충전 한도 내에서 자동 충전
+        if (subAmount < 0) {
+            autoChargingAmount(userAccount, subAmount);
+        }
 
-		return userAccount.decreaseAmount(requestDto.remittanceAmount());
-	}
+        return userAccount.decreaseAmount(requestDto.remittanceAmount());
+    }
 
-	private void autoChargingAmount(Account userAccount, int subAmount) {
-		try {
-			verifyLastChargeDate(userAccount);
-			int chargeAmount = calculateChargingAmount(subAmount);
-			userAccount.chargeAmount(chargeAmount);
-		} catch (Exception e) {
-			throw new BaseException(AccountErrorCode.FAILED_AUTO_CHARGING);
-		}
-	}
+    private void autoChargingAmount(Account userAccount, int subAmount) {
+        try {
+            verifyLastChargeDate(userAccount);
+            int chargeAmount = calculateChargingAmount(subAmount);
+            userAccount.chargeAmount(chargeAmount);
+        } catch (Exception e) {
+            throw new BaseException(AccountErrorCode.FAILED_AUTO_CHARGING);
+        }
+    }
 
-	private int calculateChargingAmount(int subAmount) {
-		return (Math.abs(subAmount) + 9_999) / 10_000 * 10_000;
-	}
+    private int calculateChargingAmount(int subAmount) {
+        return (Math.abs(subAmount) + 9_999) / 10_000 * 10_000;
+    }
 
-	@Transactional(isolation = Isolation.REPEATABLE_READ, rollbackFor = BaseException.class)
-	public SendToOthersResponseDto deposit(
-		Long othersAccountId,
-		int sendToMoney,
-		SendToOthersRequestDto requestDto
-	) {
-		try {
-			Account othersAccount = getAccount(othersAccountId);
+    @Transactional(isolation = Isolation.REPEATABLE_READ, rollbackFor = BaseException.class)
+    public SendToOthersResponseDto deposit(
+            Long othersAccountId,
+            int sendToMoney,
+            SendToOthersRequestDto requestDto
+    ) {
+        try {
+            Account othersAccount = getAccount(othersAccountId);
 
-			if (!verifyMainAccount(othersAccount)) {
-				throw new BaseException(AccountErrorCode.NOT_MAIN_ACCOUNT);
-			}
+            if (!verifyMainAccount(othersAccount)) {
+                throw new BaseException(AccountErrorCode.NOT_MAIN_ACCOUNT);
+            }
 
-			othersAccount.increaseAmount(sendToMoney);
+            othersAccount.increaseAmount(sendToMoney);
 
-			return AccountMapper.sendToOthersResponseDto(othersAccount.getUser(), sendToMoney);
-		} catch (Exception e) {
-			Account userAccount = getAccount(requestDto.accountId());
-			eventPublisher.publishEvent(new WithdrawalFailEvent(userAccount, requestDto.remittanceAmount()));
-			throw new BaseException(AccountErrorCode.FAILED_ACCOUNT_DEPOSIT);
-		}
-	}
+            return AccountMapper.sendToOthersResponseDto(othersAccount.getUser(), sendToMoney);
+        } catch (Exception e) {
+            Account userAccount = getAccount(requestDto.accountId());
+            eventPublisher.publishEvent(new WithdrawalFailEvent(userAccount, requestDto.remittanceAmount()));
+            throw new BaseException(AccountErrorCode.FAILED_ACCOUNT_DEPOSIT);
+        }
+    }
 }
