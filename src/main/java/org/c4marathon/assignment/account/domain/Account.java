@@ -60,11 +60,13 @@ public class Account {
 		this.user = user;
 	}
 
-	public void decreaseAmount(int amount) {
+	public int decreaseAmount(int amount) {
 		if (this.amount < amount) {
 			throw new BaseException(AccountErrorCode.NOT_ENOUGH_AMOUNT);
 		}
 		this.amount -= amount;
+
+		return amount;
 	}
 
 	public void increaseAmount(int amount) {

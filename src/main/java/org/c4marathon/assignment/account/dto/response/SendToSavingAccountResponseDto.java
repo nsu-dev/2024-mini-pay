@@ -1,6 +1,6 @@
 package org.c4marathon.assignment.account.dto.response;
 
-public record SendResponseDto(
+public record SendToSavingAccountResponseDto(
 	Long toAccountId,
 	String toAccountType,
 	int toAccountMoney,

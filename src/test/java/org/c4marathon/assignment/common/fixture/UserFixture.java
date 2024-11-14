@@ -20,6 +20,15 @@ public class UserFixture {
 			.build();
 	}
 
+	public static User others() {
+		return User.builder()
+			.email("dasf@mini.com")
+			.name("김상대")
+			.password("mini1234")
+			.role(USER)
+			.build();
+	}
+
 	public static User userWithEncodingPassword(PasswordEncoder passwordEncoder) {
 		return User.builder()
 			.email("abc@mini.com")

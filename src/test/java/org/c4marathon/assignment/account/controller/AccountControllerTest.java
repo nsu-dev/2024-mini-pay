@@ -10,9 +10,12 @@ import java.util.List;
 import org.c4marathon.assignment.account.domain.Account;
 import org.c4marathon.assignment.account.domain.AccountType;
 import org.c4marathon.assignment.account.dto.request.ChargeRequestDto;
-import org.c4marathon.assignment.account.dto.request.SendRequestDto;
+import org.c4marathon.assignment.account.dto.request.SendToOthersRequestDto;
+import org.c4marathon.assignment.account.dto.request.SendToSavingAccountRequestDto;
 import org.c4marathon.assignment.common.fixture.AccountFixture;
+import org.c4marathon.assignment.common.fixture.UserFixture;
 import org.c4marathon.assignment.common.support.ApiTestSupport;
+import org.c4marathon.assignment.user.domain.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -49,16 +52,14 @@ class AccountControllerTest extends ApiTestSupport {
 		Account savingAccount = AccountFixture.accountWithTypeAndAmount(loginUser, SAVING_ACCOUNT, 0);
 		accountRepository.saveAll(List.of(mainAccount, savingAccount));
 
-		SendRequestDto requestDto = new SendRequestDto(
+		SendToSavingAccountRequestDto requestDto = new SendToSavingAccountRequestDto(
 			mainAccount.getId(),
-			mainAccount.getType().getType(),
 			300_000,
-			savingAccount.getId(),
-			savingAccount.getType().getType()
+			savingAccount.getId()
 		);
 
 		// when		// then
-		mockMvc.perform(post("/api/send")
+		mockMvc.perform(post("/api/send-saving")
 				.header("Authorization", "Bearer " + token)
 				.content(toJson(requestDto))
 				.contentType(APPLICATION_JSON)
@@ -116,8 +117,39 @@ class AccountControllerTest extends ApiTestSupport {
 			)
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.accountId").value(mainAccount.getId()))
-			.andExpect(jsonPath("$.amount").value(mainAccount.getAmount() + 300_000))
+			.andExpect(jsonPath("$.chargedAmount").value(mainAccount.getAmount() + 300_000))
 			.andExpect(jsonPath("$.limitAmount").value(mainAccount.getLimitAmount() - 300_000)
+			);
+	}
+
+	@DisplayName("[유저 메인계좌 간 송금한다.]")
+	@Test
+	void sendToOthers() throws Exception {
+		// given
+		final int sendToAmount = 100_000;
+
+		User others = UserFixture.others();
+		userRepository.save(others);
+
+		Account mainAccount1 = AccountFixture.accountWithTypeAndAmount(loginUser, MAIN_ACCOUNT, 300_000);
+		Account mainAccount2 = AccountFixture.accountWithTypeAndAmount(others, MAIN_ACCOUNT, 200_000);
+		accountRepository.saveAll(List.of(mainAccount1, mainAccount2));
+
+		SendToOthersRequestDto requestDto = new SendToOthersRequestDto(
+			mainAccount1.getId(),
+			sendToAmount
+		);
+
+		// when		// then
+		mockMvc.perform(
+				post("/api/send/{othersAccountId}", mainAccount2.getId())
+					.header("Authorization", "Bearer " + token)
+					.content(toJson(requestDto))
+					.contentType(APPLICATION_JSON)
+			)
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.sendFromUserName").value(others.getName()))
+			.andExpect(jsonPath("$.remittanceAmount").value(sendToAmount)
 			);
 	}
 }
